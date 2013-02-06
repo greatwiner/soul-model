@@ -46,8 +46,10 @@ clean:
 	(cd package/module;\
 	rm -f *.o;)
 	(cd package/model;\
-	rm -f *.o;)	
+	rm -f *. o;)	
 	(cd package/command;\
+	rm -f *.exe;)
+	(cd package/test;\
 	rm -f *.exe;)
 test:
 	(cd package/test;\

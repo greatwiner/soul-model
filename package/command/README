@@ -1,0 +1,80 @@
+### Functions for n-gram language models, some of them can be used with other types of models ###
+
+# Create prototype
+createPrototype.exe type inputVocFileName outputVocFileName mapIUnk mapOUnk  n dimensionSize nonLinearType hiddenLayerSizeCode codeWordFileName outputNetworkSizeFileName outputModelFileName
+type = cn, ovn, rovn, maxovn, lbl
+inputVocFileName, outputVocFileName are for input and output vocabularies
+mapIUnj, mapOUnk: consider unknown word in the input(output) side as <unk>?
+n: order of model
+dimensionSize: dimension of the projection space (in look-up table)
+nonLinearType = l (linear), s (sigmoid), t (tangent hyperbolic)
+hiddenLayerSizeCode, e.g., 1000_500: 2 hidden layers of 1000, 500 nodes
+codeWordFileName: binary file contains codeWord 
+outputNetworkSizeFileName: binary file contains outputNetworkSize  
+
+# Resampling data, read texts, write to files with prefixOutputFileName{minEpoch, ..., maxEpoch}
+resamplingData.exe dataDesFileName inputVocFileName outputVocFileName n mapIUnk mapOUnk prefixOutputFileName minEpoch maxEpoch
+dataDesFileName: file where each line contains file_name line_number resampling_rate
+minEpoch maxEpoch: Integers
+
+# Train a model for several epochs
+sequenceTrain.exe prefixModel prefixData maxExampleNumber validationFileName validType learningRateType minIteration maxIteration
+validType: n(normal-text), l(ngram list), id (binary id ngram)
+learningRateType = n (normal): updated with number of seen examples, d (down): fixed in one epoch, only changed (divided by learningRateDecay) if dev perplexity increases
+Read model in $prefixModel$minIteration, parameters in $prefixModel$minIteration.par, train it with $prefixData$minIteration, then write to $prefixModel($minIteration+1),
+ $prefixModel($minIteration+1).par, then repeat until meet maxIteration
+
+# Compute perplexity for a text file
+text2Perplexity.exe modelFileName blockSize textFileName textType
+textType: n:normal(text), l:list of ngram (words), id:list of ngram (ids)
+blockSize should be 128 
+
+# Compute probabilities for words in a text file, write to probFileName (each line has one float)
+text2Prob.exe modelFileName blockSize textFileName outputFileName
+
+# Read model file, print main information about configuration
+infoModel.exe modelFileName
+
+# Read ngram file, print header (number of ngrams, order), then 10 first n-grams
+infoNgram.exe ngramFileName
+
+# Write indices of words in the text file according to the vocabulary, words here contain </s>
+text2Index.exe textFileName vocFileName indexFileName
+
+# Write to mapOutputFileName the indices of words in vocFileName according to baseVocFileName
+mapVoc.exe vocFileName baseVocFileName mapOutputFileName
+
+# Read parameters for baseNetwork from files
+takeBaseParameter.exe modelFileName prefixParas outputModelFileName
+$prefixParas{LookupTable, BaseWeight{0,1,2...}, BaseBias{0,1,2...}}, {0,1,2...} is the indices of layers
+
+# Read parameter for look-up table (projection space) from a file $prefixParasLookupTable
+takeLookupTable.exe modelFileName prefixParas outputModelFileName
+
+# Read parameters for all (baseNetwork, outputNetwork) from files
+takeParameter.exe modelFileName prefixParas outputModelFileName
+$prefixParas{LookupTable, BaseWeight{0,1,2...}, BaseBias{0,1,2...}, outputNetwork{0,1,2}}, {0,1,2...} is the indices of layers of baseNetork or of softmax layers in outputNetwork
+
+# Read a model, write weight, bias into files in binary format
+pushAllParameter.exe modelFileName prefixParas what
+what:l, b, o, c, v, a
+l: lookuptable
+b: baseNetwork
+o: outputNetwork
+c: code (codeWord and outputNetworkSize) encoding a tree structure
+v: vocabulary
+a: all
+
+# Modify the output side of a model
+growPredictionSpace.exe inModelFileName newOutputVocFileName mapIUnk mapOUnk codeWordFileName outputNetworkSizeFileName outModelFileName
+Change the output vocabulary and the tree structure to given newOutputVoc and codeWord, outputNetworkSize
+For the main softmax layer (outputNetwork[0]), weight is copied from the weight of the main softmax layer in the input model according to codes of words in old and new vocabularies
+
+# Create a model with out-of-shortlist words (Step 3) from a model with shortlist words (Step 1) 
+growOutPredictionSpace.exe shortlistModelFileName oShortlistModelFileName outModelFileName
+
+# Resampling data with index files 
+resamplingIdData.exe dataDesFileName n prefixOutputFileName minEpoch maxEpoch
+dataDesFileName: file where each line contains file_name n-gram_number resampling_rate
+file is the index format, meaning that it has header (one integer: order n), then several blocks of (indices of n-grams),
+

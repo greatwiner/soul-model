@@ -3,9 +3,8 @@
  (C) Copyright 2009 - 2012 Hai-Son LE LIMSI-CNRS
 
  General class for data set.
- It can read data from text, read; sort and rasampling n-gram,
+ It can read data from text, sort and rasampling n-grams,
  read, write n-gram to a file as tensor, output probabilities...
-
  *******************************************************************/
 
 class DataSet
@@ -15,10 +14,21 @@ public:
   virtual
   ~DataSet();
 
-  // Data type, see sub-classes for detail
-  int type;
-  // Pointer to integer array for all n-grams
+  // Vocabulary for input and output words. These may differ. 
+  SoulVocab* inputVoc;
+  SoulVocab* outputVoc;
+
+  // Pointer to integer array for all n-grams. A text is mostly a
+  // stream of word ids. Word ids are provided by vocabularies. 
+  // See subclasses for details, especially NgramDataSet.
   int* data;
+
+
+  // Data type, see sub-classes for details
+  int type;
+
+
+
   // Maximal ngram number can be handled
   int maxNgramNumber;
 
@@ -49,9 +59,7 @@ public:
   // but don't care <s> <s> <s> x
   // Now always use BOS = n - 1 (process all n-grams possible)
   int BOS;
-  // Vocabulary for the input and output sizes, can be different
-  SoulVocab* inputVoc;
-  SoulVocab* outputVoc;
+
   // Map the index for unknown words to the index of UNK or not
   int mapIUnk;
   int mapOUnk;
@@ -68,40 +76,35 @@ public:
 
   // Some functions are virtual (see sub-classes for actual implementation)
 
-  // addLine: read one line and stock all satisfying n-grams in data
-  // array
+  // addLine: read one line and stock all satisfying n-grams in data array.
   virtual
-  int
-  addLine(string line) = 0;
-  virtual int
-  addLine(ioFile* iof) = 0;
-  // output the random subset of indices of setences in the training
-  // data
-  virtual int
-  resamplingSentence(int totalLineNumber, int resamplingLineNumber,
-      int* resamplingLineId) = 0;
+  int  addLine(string line) = 0;
+  
+  // add one line from the file. 
+  virtual int  addLine(ioFile* iof) = 0;
+
+  // output the random subset of indices of setences in the training data. 
+  virtual int resamplingSentence(int totalLineNumber, int resamplingLineNumber,
+				 int* resamplingLineId) = 0;
 
   // Read a file, meaning call addLine with all lines of this file
-  virtual int
-  readText(ioFile* iof) = 0;
+  virtual int readText(ioFile* iof) = 0;
 
   // Resampling n-gram from files, meaning call addLine with
   // subset of lines of this file
-  virtual int
-  resamplingText(ioFile* iof, int totalLineNumber, int resamplingLineNumber) = 0;
+  virtual int  resamplingText(ioFile* iof, int totalLineNumber, 
+			      int resamplingLineNumber) = 0;
 
   // Read file data description to do data resampling
   // Format of dataDesFile:
   // name_of_file number_of_lines resampling_rate
-  int
-  resamplingDataDes(char* dataDesFileName, int type);
+  int  resamplingDataDes(char* dataDesFileName, int type);
 
-  // Map dataTensor to data, sorting n-gram if model is n-gram
+  // Create the dataTensor from the data, sorting n-gram if model is n-gram
   // and context grouping is set. Create also memory for probTensor.
   // To process with other classes (computing probability)
   // using DataSet.dataTensor
-  virtual intTensor&
-  createTensor() = 0;
+  virtual intTensor&  createTensor() = 0;
 
   // From probTensor, computing perplexity (for special models, can be
   // actually a score, not perplexity)
@@ -111,19 +114,16 @@ public:
   // Read n-gram from n-gram text, each line has n words, for example
   // a b c d
   // e f g h
-  virtual int
-  readTextNgram(ioFile* iof) = 0;
+  virtual int  readTextNgram(ioFile* iof) = 0;
 
   // Write n-grams to binary file with resampling format (model will use it
   // to learn parameters. It has a header with 2 integers:
   // number_of_examples and order
-  virtual void
-  writeReBiNgram(ioFile* iof) = 0;
+  virtual void   writeReBiNgram(ioFile* iof) = 0;
 
   // Write n-grams to binary file with computing format (model will use it
   // to compute probabilities. It has a header with 1 integer:
   // number_of_examples
-  virtual int
-  readCoBiNgram(ioFile* iof) = 0;
+  virtual int  readCoBiNgram(ioFile* iof) = 0;
 
 };

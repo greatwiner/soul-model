@@ -1,1 +1,59 @@
-Hello
+### Prerequisites ###
+
+1) python with numpy, scipy, mdp
+http://www.numpy.org/
+http://www.scipy.org/
+http://mdp-toolkit.sourceforge.net/
+For scipy
+2) BLAS library, 1 of 4:
+- MKL, buy or 30-day free trial, the fastest library
+http://software.intel.com/en-us/intel-mkl
+- ACML, free, slower than MKL but has very good performance, even with Intel processors
+http://developer.amd.com/tools/cpu-development/amd-core-math-library-acml/
+- CBLAS, BLAS from netlib, free but only for reference, very slow
+http://www.netlib.org/blas/
+- OPENBLAS, free optimized library for Intel processors, faster than netlib's library but seems slower than ACML
+https://github.com/xianyi/OpenBLAS
+Depend on libraries, you may need to install other libraries, gfortran, openmp, see documents for the library used for detail
+
+3) make, g++, ar, r, echo... (see Makefile)
+
+### Install ###
+
+1) Modify Makefile.in:
+Change DIR_INSTALL to the target directory where you want to have /lib, /include/, /bin, /script
+Set PROC to an appropriate value, then point DIR_INCLUDE_BLAS or DIR_LIB_BLAS to a directory that contains libraries or include files for BLAS
+
+2) Modify package/config/soulConfig.H
+Change <UNK> to <unk> if you want to use it as a token for unknown words
+Change RESAMPLING_NGRAM_NUMBER to max number of examples that can be read in RAM to 
+Change BLOCK_NGRAM_NUMBER to max number of examples you want to be read in RAM at once while computing
+
+3) To install:
+
+make all
+
+4) To test:
+Attention, need to add to $LD_LIBRARY_PATH the path to BLAS libraries and if required, to other libraries (gfortran, openmp ...)
+make forwardTrainTest (included in make all)
+If all posterior probs are 0.99..., test models are sucessfully trained
+
+### Complete test for neural network language models###
+
+1) Add to $LD_LIBRARY_PATH the path to BLAS libraries and if required, to other libraries (gfortran, openmp ...). Run make forwardTrainTest to make sure that it works fine
+
+2) Modify PYTHONPATH, add $DIR_INSTALL/script and don't forget to add paths for numpy, scipy if needed. Then run:
+python
+import numpy
+import scipy
+import soul
+to make sure it works
+
+3) Add to $PATH: $DIR_INSTALL/bin, $DIR_INSTALL/script, then test with: 
+sequenceTrain.exe
+train_createPrototype.sh
+
+4) Change OMP_NUM_THREADS to the number of threads that you want to use
+export OMP_NUM_THREADS=2
+
+5) Go to directory '/example', follow (should not run) command.sh

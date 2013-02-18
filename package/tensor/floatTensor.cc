@@ -614,3 +614,44 @@ floatTensor::readStrip(ioFile* iof)
         }
     }
 }
+
+void
+floatTensor::initializeNormal() {
+	for (int i = 0; i < this->size[0]; i ++) {
+		for (int j = 0; j < this->size[1]; j ++) {
+			data[i*stride[0] + j*stride[1]] = initializeNormalOneElement();
+		}
+	}
+}
+
+void
+floatTensor::log(floatTensor& src)
+{
+	log_(length, src.data, data); // y = exp(-x)
+}
+
+float
+floatTensor::initializeNormalOneElement() {
+	// uniformly distributed float numbers
+	float U1=((float)rand()/(float)RAND_MAX);
+	float U2=((float)rand()/(float)RAND_MAX);
+	floatTensor U;
+	U.resize(2,1);
+	U(0,0) = U1;
+	U(1,0) = U2;
+	floatTensor lU;
+	lU.resize(2,1);
+	lU.log(U);
+	float u = lU(0);
+	// for test
+	//cout << "ngay dau tien" << endl;
+	// Box–Muller transform
+	//for test
+	//cout << sqrt(-2*u)*cos(2*M_PI*U2) << " ";
+	return sqrt(-2*u)*cos(2*M_PI*U2);
+}
+
+float
+floatTensor::sumSquared() {
+	return this->dot(*this);
+}

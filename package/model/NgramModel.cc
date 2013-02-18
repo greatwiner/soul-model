@@ -40,7 +40,13 @@ NgramModel::allocation()
       hiddenStep = 2;
     }
 
-  baseNetwork = new Sequential(hiddenLayerSizeArray.length * hiddenStep);
+  if (name == OVNB) {
+  	  baseNetwork = new Sequential_Bayes(hiddenLayerSizeArray.length * hiddenStep);
+  }
+  else {
+  	  baseNetwork = new Sequential(hiddenLayerSizeArray.length * hiddenStep);
+  }
+
   int i;
   // Lookup table with classical or one vector initialization
   if (name == CN || name == LBL)
@@ -48,10 +54,16 @@ NgramModel::allocation()
       baseNetwork->lkt = new LookupTable(inputVoc->wordNumber, dimensionSize,
           n - 1, blockSize, 0, otl);
     }
-  else if (name == OVN || name == ROVN || name == MAXOVN)
+  else if (name == OVN || name == OVNB || name == ROVN || name == MAXOVN)
     {
-      baseNetwork->lkt = new LookupTable(inputVoc->wordNumber, dimensionSize,
-          n - 1, blockSize, 1, otl);
+	    if (name == OVNB) {
+	    	baseNetwork->lkt = new LookupTable_Bayes(inputVoc->wordNumber, dimensionSize,
+	  				  n - 1, blockSize, 1, otl);
+	    }
+	    else {
+	    	baseNetwork->lkt = new LookupTable(inputVoc->wordNumber, dimensionSize,
+	  				  n - 1, blockSize, 1, otl);
+	    }
     }
   Module* module;
   // First module depends on the type of model
@@ -88,13 +100,19 @@ NgramModel::allocation()
         }
       hiddenLayerSizeArray(hiddenLayerSizeArray.length - 1) = dimensionSize;
     }
-  // CN, OVN
+  // CN, OVN, OVNB
   else
     {
-
-      module = new Linear((n - 1) * dimensionSize, hiddenLayerSizeArray(0),
-          blockSize, otl);
-      baseNetwork->add(module);
+	    if (name == OVNB) {
+	    	module = new Linear_Bayes((n-1)*dimensionSize, hiddenLayerSizeArray(0),
+	      	          blockSize, otl);
+	    	baseNetwork->add(module);
+		}
+		else {
+			module = new Linear((n - 1) * dimensionSize, hiddenLayerSizeArray(0),
+	      			  blockSize, otl);
+			baseNetwork->add(module);
+		}
     }
   // Add non linear activation
   if (nonLinearType == TANH)
@@ -110,9 +128,16 @@ NgramModel::allocation()
   // Add several hidden layers with linear or non linear activation
   for (i = 1; i < hiddenLayerSizeArray.size[0]; i++)
     {
-      module = new Linear(hiddenLayerSizeArray(i - 1), hiddenLayerSizeArray(i),
-          blockSize, otl);
-      baseNetwork->add(module);
+	  if (name == OVNB) {
+		  module = new Linear_Bayes(hiddenLayerSizeArray(i - 1), hiddenLayerSizeArray(i),
+	  		          blockSize, otl);
+		  baseNetwork->add(module);
+	  }
+	  else {
+		  module = new Linear(hiddenLayerSizeArray(i - 1), hiddenLayerSizeArray(i),
+	  				  blockSize, otl);
+		  baseNetwork->add(module);
+	  }
       if (nonLinearType == TANH)
         {
           module = new Tanh(hiddenLayerSizeArray(i), blockSize); // non linear
@@ -127,15 +152,28 @@ NgramModel::allocation()
   probabilityOne.resize(blockSize, 1);
   int outputNetworkNumber = outputNetworkSize.size[0];
   // Create outputNetwork => softmax layers for tree
-  outputNetwork = new LinearSoftmax*[outputNetworkNumber];
-  LinearSoftmax* sl = new LinearSoftmax(hiddenLayerSize, outputNetworkSize(0),
-      blockSize, otl);
-  outputNetwork[0] = sl;
-  for (i = 1; i < outputNetworkNumber; i++)
-    {
-      sl = new LinearSoftmax(hiddenLayerSize, outputNetworkSize(i), 1, otl);
-      outputNetwork[i] = sl;
-    }
+  if (name == OVNB) {
+  	  outputNetwork = (LinearSoftmax**)(new LinearSoftmax_Bayes*[outputNetworkNumber]);
+  	  LinearSoftmax_Bayes* sl = new LinearSoftmax_Bayes(hiddenLayerSize, outputNetworkSize(0),
+  			  blockSize, otl);
+  	  outputNetwork[0] = sl;
+  	  for (i = 1; i < outputNetworkNumber; i++)
+	  {
+  		  sl = new LinearSoftmax_Bayes(hiddenLayerSize, outputNetworkSize(i), 1, otl);
+  		  outputNetwork[i] = sl;
+	  }
+  }
+  else {
+  	  outputNetwork = new LinearSoftmax*[outputNetworkNumber];
+  	  LinearSoftmax* sl = new LinearSoftmax(hiddenLayerSize, outputNetworkSize(0),
+  		  blockSize, otl);
+  	  outputNetwork[0] = sl;
+  	  for (i = 1; i < outputNetworkNumber; i++)
+  	  {
+  		  sl = new LinearSoftmax(hiddenLayerSize, outputNetworkSize(i), 1, otl);
+  		  outputNetwork[i] = sl;
+  	  }
+  }
   doneForward.resize(outputNetworkNumber, 1);
   // contextFeature is the last hidden layer
   contextFeature = baseNetwork->output;

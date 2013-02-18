@@ -106,6 +106,18 @@ public:
   float
   dot(floatTensor& src);
 
+  float
+  sumSquared();
+
+  float
+  initializeNormalOneElement();
+
+  void
+  log(floatTensor& src);
+
+  void
+  initializeNormal();
+
   // Read write function,
   // when haveMemory = 0, we don't write it, so when read it,
   // we must use the same code to create the pointer data.

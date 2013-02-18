@@ -78,6 +78,7 @@ using namespace std;
 
 #define CN  "cn" // classical n-gram (of Bengio, Schwenk)
 #define OVN  "ovn" // one vector n-gram
+#define OVNB "ovnb" // one vector n-gram with Bayesian inference
 // Two names below for translation models are kepth to work with old
 // models
 // dwt: discriminative word tuple => word translation model

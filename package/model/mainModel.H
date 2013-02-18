@@ -5,6 +5,7 @@
 #include "text.H"
 #include "NeuralModel.H"
 #include "NgramModel.H"
+#include "NgramModel_Bayes.H"
 #include "NgramRankModel.H"
 #include "NgramWordTranslationModel.H"
 #include "NgramPhraseTranslationModel.H"
@@ -29,6 +30,10 @@
   else if (name##sourceModel == RANKOVN || name##sourceModel == RANKCN)\
   {\
     sourceModel = new NgramRankModel();\
+  }\
+  else if (name##sourceModel == OVNB)\
+  {\
+	  sourceModel = new NgramModel_Bayes();\
   }\
   else\
   {\

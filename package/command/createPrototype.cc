@@ -34,7 +34,7 @@ main(int argc, char *argv[])
           << " n dimensionSize nonLinearType"
           << " hiddenLayerSizeCode codeWordFileName outputNetworkSizeFileName outputModelFileName"
           << endl;
-      cout << "type = cn, ovn, rovn, maxovn, lbl" << endl;
+      cout << "type = cn, ovn, ovnb, rovn, maxovn, lbl" << endl;
       cout << "nonLinearType = l (linear), s (sigmoid), t (tangent hyperbolic)"
           << endl;
       cout
@@ -48,7 +48,7 @@ main(int argc, char *argv[])
       srand(time(NULL));
       NeuralModel* modelPrototype;
       string name = argv[1];
-      if (name != CN && name != OVN && name != MAXOVN && name != ROVN && name
+      if (name != CN && name != OVN && name != OVNB && name != MAXOVN && name != ROVN && name
           != LBL)
         {
           cerr << "Which model do you want?" << endl;
@@ -106,15 +106,26 @@ main(int argc, char *argv[])
         }
       intTensor hiddenLayerSizeArray;
       getHiddenCode(hiddenLayerSizeCode, hiddenLayerSizeArray);
-      modelPrototype = new NgramModel(name, contextVocFileName,
-          predictVocFileName, mapIUnk, mapOUnk, BOS, blockSize, n,
-          dimensionSize, nonLinearType, hiddenLayerSizeArray, codeWordFileName,
-          outputNetworkSizeFileName);
       ioFile mIof;
-      mIof.takeWriteFile(outputModelFileName);
-      modelPrototype->write(&mIof);
-
-      delete modelPrototype;
+      // Bayesian model
+      if (name == OVNB) {
+		  NgramModel_Bayes* modelPrototypeBayes = new NgramModel_Bayes(name, contextVocFileName,
+				  predictVocFileName, mapIUnk, mapOUnk, BOS, blockSize, n,
+				  dimensionSize, nonLinearType, hiddenLayerSizeArray, codeWordFileName,
+				  outputNetworkSizeFileName);
+		  mIof.takeWriteFile(outputModelFileName);
+		  modelPrototypeBayes->write(&mIof);
+		  delete modelPrototypeBayes;
+      }
+      else {
+    	  modelPrototype = new NgramModel(name, contextVocFileName,
+    	      	            predictVocFileName, mapIUnk, mapOUnk, BOS, blockSize, n,
+    	      	            dimensionSize, nonLinearType, hiddenLayerSizeArray, codeWordFileName,
+    	      	            outputNetworkSizeFileName);
+		  mIof.takeWriteFile(outputModelFileName);
+		  modelPrototype->write(&mIof);
+		  delete modelPrototype;
+      }
       return 0;
     }
 

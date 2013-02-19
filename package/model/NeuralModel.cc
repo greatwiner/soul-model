@@ -280,7 +280,7 @@ NeuralModel::forwardOne(intTensor& context, intTensor& word)
   return probabilityOne;
 }
 floatTensor&
-NeuralModel::computeProbability(char* textFileName, string textType)
+NeuralModel::computeProbability(DataSet* dataset, char* textFileName, string textType)
 {
   cout << "Read data" << endl;
   ioFile validIof;
@@ -288,31 +288,31 @@ NeuralModel::computeProbability(char* textFileName, string textType)
     {
       validIof.format = TEXT;
       validIof.takeReadFile(textFileName);
-      dataSet->readTextNgram(&validIof);
+      dataset->readTextNgram(&validIof);
     }
   else if (textType == "n")
     {
       validIof.format = TEXT;
       validIof.takeReadFile(textFileName);
-      dataSet->readText(&validIof);
+      dataset->readText(&validIof);
     }
   else if (textType == "id")
     {
       validIof.format = BINARY;
       validIof.takeReadFile(textFileName);
-      dataSet->readCoBiNgram(&validIof);
+      dataset->readCoBiNgram(&validIof);
     }
-  if (dataSet->ngramNumber > BLOCK_NGRAM_NUMBER)
+  if (dataset->ngramNumber > BLOCK_NGRAM_NUMBER)
     {
       cerr << "ERROR: Not enough memory" << endl;
       exit(1);
     }
 
-  dataSet->createTensor();
-  cout << "Finish read " << dataSet->ngramNumber << " ngrams" << endl;
+  dataset->createTensor();
+  cout << "Finish read " << dataset->ngramNumber << " ngrams" << endl;
   cout << "Compute" << endl;
-  forwardProbability(dataSet->dataTensor, dataSet->probTensor);
-  return dataSet->probTensor;
+  forwardProbability(dataset->dataTensor, dataset->probTensor);
+  return dataset->probTensor;
 }
 
 floatTensor&
@@ -324,12 +324,12 @@ NeuralModel::computeProbability()
 }
 
 float
-NeuralModel::computePerplexity(char* textFileName, string textType)
+NeuralModel::computePerplexity(DataSet* dataset, char* textFileName, string textType)
 {
 
-  computeProbability(textFileName, textType);
-  dataSet->computePerplexity();
-  return dataSet->perplexity;
+  computeProbability(dataset, textFileName, textType);
+  dataset->computePerplexity();
+  return dataset->perplexity;
 
 }
 
@@ -343,7 +343,7 @@ NeuralModel::computePerplexity()
 
 int
 NeuralModel::sequenceTrain(char* prefixModel, int gz, char* prefixData,
-    int maxExampleNumber, char* validationFileName, string validType,
+    int maxExampleNumber, char* trainingFileName, char* validationFileName, string validType,
     string learningRateType, int minIteration, int maxIteration)
 {
   float learningRate;
@@ -405,7 +405,32 @@ NeuralModel::sequenceTrain(char* prefixModel, int gz, char* prefixData,
   // Compute perplexity of dev data, for early stopping
   if (computeDevPer)
     {
-      cout << "Compute validation perplexity:" << endl;
+	  	time(&start);
+		cout << "Compute training perplexity:" << endl;
+
+		// compute perplexity in charging all the training file
+		computePerplexity(this->trainingDataSet, trainingFileName, validType);
+
+		cout << "Compute validation perplexity:" << endl;
+
+		// compute perplexity in charging all the validation file
+		computePerplexity(this->dataSet, validationFileName, validType);
+		prePerplexity = this->dataSet->perplexity;
+		time(&end);
+
+		cout << "With epoch " << minIteration - 1 << ", perplexity of "
+		<< trainingFileName << " is " << trainingDataSet->perplexity
+		<< " ("
+		<< trainingDataSet->ngramNumber << " ngrams)" << endl;
+		cout << "With epoch " << minIteration - 1 << ", perplexity of "
+		<< validationFileName << " is " << dataSet->perplexity
+		<< " ("
+		<< dataSet->ngramNumber << " ngrams)" << endl;
+		cout << "Finish after " << difftime(end, start) << " seconds"
+	  			 << endl;
+
+
+      /*cout << "Compute validation perplexity:" << endl;
       time(&start);
       perplexity = computePerplexity(validationFileName, validType);
       time(&end);
@@ -414,7 +439,7 @@ NeuralModel::sequenceTrain(char* prefixModel, int gz, char* prefixData,
           << validationFileName << " is " << perplexity << " ("
           << dataSet->ngramNumber << " ngrams)" << endl;
       cout << "Finish after " << difftime(end, start) / 60 << " minutes"
-          << endl;
+          << endl;*/
     }
 
   // Now, train a model
@@ -487,7 +512,42 @@ NeuralModel::sequenceTrain(char* prefixModel, int gz, char* prefixData,
       int upDivide = 0;
       if (computeDevPer)
         {
-          cout << "Compute validation perplexity:" << endl;
+		    // calculate execution time
+			time_t start, end;
+			cout << "Compute training perplexity:" << endl;
+			time(&start);
+
+			// current perplexity on training set
+			prePerplexity = trainingDataSet->perplexity;
+			forwardProbability(trainingDataSet->dataTensor, trainingDataSet->probTensor);
+			trainingDataSet->computePerplexity();
+
+			cout << "Compute validation perplexity:" << endl;
+			forwardProbability(dataSet->dataTensor, dataSet->probTensor);
+			prePerplexity = perplexity;
+			perplexity = dataSet->computePerplexity();
+			time(&end);
+
+			cout << "With epoch " << iteration << ", perplexity of "
+				 << trainingFileName << " is " << trainingDataSet->perplexity << " ("
+				 << trainingDataSet->ngramNumber << " ngrams)" << endl;
+
+			cout << "With epoch " << iteration << ", perplexity of "
+			   << validationFileName << " is " << dataSet->perplexity << " ("
+			   << dataSet->ngramNumber << " ngrams)" << endl;
+
+			cout << "Finish after " << difftime(end, start) / 60 << " minutes"
+			   << endl;
+
+			// write training perplexity on file
+			//outputTrainingPerp << trainingDataSet->perplexity << endl;
+
+			// write validation perplexity on file
+			//outputPerp << dataSet->perplexity << endl;
+
+
+
+          /*cout << "Compute validation perplexity:" << endl;
           time_t start, end;
           time(&start);
           prePerplexity = perplexity;
@@ -498,7 +558,7 @@ NeuralModel::sequenceTrain(char* prefixModel, int gz, char* prefixData,
               << validationFileName << " is " << perplexity << " ("
               << dataSet->ngramNumber << " ngrams)" << endl;
           cout << "Finish after " << difftime(end, start) / 60 << " minutes"
-              << endl;
+              << endl;*/
           if (isnan(perplexity))
             {
               cout << "Perplexity is NaN" << endl;

@@ -220,7 +220,6 @@ NgramModel_Bayes::forwardBackwardAllData(char* dataFileString, int maxExampleNum
 void
 NgramModel_Bayes::trainOne(intTensor& context, intTensor& word, float learningRate,
 		int subBlockSize) {
-
   // decode word to localCodeWord for SOUL structure
   decodeWord(word, subBlockSize);
 
@@ -251,10 +250,10 @@ NgramModel_Bayes::forwardBackwardOne(intTensor& context, intTensor& word, int su
 	localWord.select(localCodeWord, 1, 1);
 
 	// so forward using the principal output network
-	outputNetwork[0]->forward(contextFeature);
+	static_cast<LinearSoftmax_Bayes*>(outputNetwork[0])->forward(contextFeature);
 
 	// the localWord can be considered as output of the principal output network
-	gradInput = outputNetwork[0]->backward(localWord);
+	gradInput = static_cast<LinearSoftmax_Bayes*>(outputNetwork[0])->backward(localWord);
 
 	// gradient on the output of the base network
 	gradContextFeature.axpy(gradInput, 1);
@@ -275,8 +274,8 @@ NgramModel_Bayes::forwardBackwardOne(intTensor& context, intTensor& word, int su
 			idLocalWord = oneLocalCodeWord(i + 1); // 3
 			idParent = oneLocalCodeWord(i); // 2
 			// for each outputNetwork in SOUL, we do a forward step and a backward step
-			outputNetwork[idParent]->forward(selectContextFeature);
-			gradInput = outputNetwork[idParent]->backward(idLocalWord);
+			static_cast<LinearSoftmax_Bayes*>(outputNetwork[idParent])->forward(selectContextFeature);
+			gradInput = static_cast<LinearSoftmax_Bayes*>(outputNetwork[idParent])->backward(idLocalWord);
 			selectGradContextFeature.axpy(gradInput, 1);
 		}
 	}
@@ -450,7 +449,7 @@ NgramModel_Bayes::train(char* dataFileString, int maxExampleNumber, int iteratio
 	float prevH = calculeH();
 	// for test
 	cout << "Prev H: " << prevH << endl;
-	int Tau = 2;
+	int Tau = 10;
 	for (int subIter = 1; subIter <= Tau; subIter++) {
 		// for test
 		if (subIter % 10 == 0) {

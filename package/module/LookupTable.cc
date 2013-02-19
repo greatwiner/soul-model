@@ -99,6 +99,14 @@ LookupTable::backward(floatTensor& gradOutput)
 void
 LookupTable::updateParameters(float learningRate)
 {
+	// for test
+	floatTensor prevWeight;
+	prevWeight.resize(weight);
+	prevWeight.copy(weight);
+
+	// for test
+	cout << "LookupTable::updateParameters gradOutput: " << gradWeight.sumSquared() << endl;
+
   int x0, x1;
   for (int i = 0; i < input.size[1]; i++)
     {
@@ -118,6 +126,12 @@ LookupTable::updateParameters(float learningRate)
           x1 += dimensionSize;
         }
     }
+
+  /*// for test
+  cout << "LookupTable::updateParameters difference in lkt" << endl;
+  prevWeight.axpy(weight, -1);
+  prevWeight.scal(-1);
+  prevWeight.write();*/
 }
 void
 LookupTable::read(ioFile* iof)

@@ -39,7 +39,7 @@ main(int argc, char *argv[])
       READMODEL(model, blockSize, modelFileName);
 
       time(&start);
-      float perplexity = model->computePerplexity(textFileName, textType);
+      float perplexity = model->computePerplexity(model->dataSet, textFileName, textType);
       int countNgram;
       countNgram = model->dataSet->ngramNumber;
       time(&end);

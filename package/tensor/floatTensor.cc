@@ -649,6 +649,7 @@ floatTensor::initializeNormalOneElement() {
 	//for test
 	//cout << sqrt(-2*u)*cos(2*M_PI*U2) << " ";
 	return sqrt(-2*u)*cos(2*M_PI*U2);
+	//return 0;
 }
 
 float

@@ -64,6 +64,9 @@ LookupTable_Bayes::init1class()
 floatTensor&
 LookupTable_Bayes::backward(floatTensor& gradOutput)
 {
+	// for test
+	//cout << "LookupTable_Bayes::backward gradOutput: " << gradOutput.sumSquared() << endl;
+
   /*gradWeight = gradOutput;
   // for test
   cout << "backward of Lookup: " << endl;
@@ -90,11 +93,16 @@ LookupTable_Bayes::backward(floatTensor& gradOutput)
 		  // a column of weight corresponding to the selectGradWeight being treated
 		  selectWeight.select(weight, 1, input(j, i));
 		  selectGradWeight.axpy(selectWeight, weightDecay);
+
 		  x0 += dimensionSize;
 		  x1 += dimensionSize;
 	  }
   }
-  return gradWeight; //Return whatever you want :S
+  /*// for test
+  cout << "LookupTable_Bayes::backward difference in lkt:" << endl;
+  gradWeight.scal(-0.00001);
+  gradWeight.write();*/
+  return gradWeight;
 }
 
 void

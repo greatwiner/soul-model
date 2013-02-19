@@ -185,6 +185,8 @@ NgramModel::allocation()
       outputNetwork[0]->weight.tieData(baseNetwork->lkt->weight);
     }
   // Create NgramDataSet to manipulate data
+  this->trainingDataSet = new NgramDataSet(ngramType, n, BOS, inputVoc, outputVoc, mapIUnk,
+	      mapOUnk, BLOCK_NGRAM_NUMBER);
   dataSet = new NgramDataSet(ngramType, n, BOS, inputVoc, outputVoc, mapIUnk,
       mapOUnk, BLOCK_NGRAM_NUMBER);
   delete otl;

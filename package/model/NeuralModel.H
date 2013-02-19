@@ -42,6 +42,7 @@ public:
   float incrUnk;
   // Use data set to manipulate data, each type of model has its own
   // type of dataSet
+  DataSet* trainingDataSet;
   DataSet* dataSet;
 
   // For SOUL
@@ -148,11 +149,11 @@ public:
   // Read all n-grams in dataTensor of DataSet, compute and write in
   // probTensor of DataSet
   floatTensor&
-  computeProbability(char* textFileName, string textType);
+  computeProbability(DataSet* dataset, char* textFileName, string textType);
 
   // Compute perplexity, similar to computeProbability but about perplexity
   float
-  computePerplexity(char* textFileName, string textType);
+  computePerplexity(DataSet* dataset, char* textFileName, string textType);
 
   // Compute probabilities, suppose that n-grams are already read in DataSet
   floatTensor&
@@ -201,7 +202,7 @@ public:
   // if prefixModel = 'xxx': Don't write models to file
   int
   sequenceTrain(char* prefixModel, int gz, char* prefixData,
-      int maxExampleNumber, char* validationFileName, string validType,
+      int maxExampleNumber, char* trainingFileName, char* validationFileName, string validType,
       string learningRateType, int minIteration, int maxIteration);
 
   // Read, write with file

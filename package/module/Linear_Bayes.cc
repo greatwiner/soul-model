@@ -57,10 +57,7 @@ Linear_Bayes::reset()
 floatTensor&
 Linear_Bayes::backward(floatTensor& gradOutput)
 {
-  this->gradOutput = gradOutput;
-
-  // calculate gradInput
-  gradInput.gemm(weight, 'N', gradOutput, 'N', 1, 0);
+  Linear::backward(gradOutput);
 
   // accumulate gradients
   gradWeight.gemm(input, 'N', gradOutput, 'T', 1, 1);

@@ -62,10 +62,10 @@ LinearSoftmax_Bayes::backward(floatTensor& word)
   exit(1);
 }
 
-floatTensor&
+/*floatTensor&
 LinearSoftmax_Bayes::backward(intTensor& word)
 {
-  /*
+
    //gradOutput.copy(output);
    int i;
    this->input = input;
@@ -89,7 +89,7 @@ LinearSoftmax_Bayes::backward(intTensor& word)
    }
    gradInput.gemm(weight, 'N', gradOutput, 'N', 1, 0);
    return gradInput;
-   */
+
   // id < -1 => negative example with word
   // = SIGN_NOT_WORD - 1 - id (= -2 - id if SIGN_NOT_WORD = -1)
   // -2 => 0
@@ -142,6 +142,16 @@ LinearSoftmax_Bayes::backward(intTensor& word)
   gradWeight.axpy(weight, weightDecay);
   gradBias.gemv(gradOutput, 'N', V1col, 1, 1);
   return gradInput;
+}*/
+
+floatTensor&
+LinearSoftmax_Bayes::backward(intTensor& word) {
+    LinearSoftmax::backward(word);
+    // accumulate gradient
+	gradWeight.gemm(input, 'N', gradOutput, 'T', 1, 1);
+	gradWeight.axpy(weight, weightDecay);
+	gradBias.gemv(gradOutput, 'N', V1col, 1, 1);
+	return gradInput;
 }
 
 void

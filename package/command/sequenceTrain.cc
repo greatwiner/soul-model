@@ -1,7 +1,7 @@
 #include "mainModel.H"
 
 int
-sequenceTrain(char* prefixModel, char* prefixData, int maxExampleNumber,
+sequenceTrain(char* prefixModel, char* prefixData, int maxExampleNumber, char* trainingFileName,
     char* validationFileName, string validType, string learningRateType,
     int minIteration, int maxIteration)
 {
@@ -52,7 +52,7 @@ sequenceTrain(char* prefixModel, char* prefixData, int maxExampleNumber,
   NeuralModel* model;
   READMODEL(model, 0, inputModelFileName);
 
-  model->sequenceTrain(prefixModel, gz, prefixData, maxExampleNumber,
+  model->sequenceTrain(prefixModel, gz, prefixData, maxExampleNumber, trainingFileName,
       validationFileName, validType, learningRateType, iteration + 1,
       maxIteration);
   delete model;
@@ -62,10 +62,10 @@ sequenceTrain(char* prefixModel, char* prefixData, int maxExampleNumber,
 int
 main(int argc, char *argv[])
 {
-  if (argc != 9)
+  if (argc != 10)
     {
       cout
-          << "prefixModel prefixData maxExampleNumber validationFileName validType learningRateType minIteration maxIteration"
+          << "prefixModel prefixData maxExampleNumber trainingFileName, validationFileName validType learningRateType minIteration maxIteration"
           << endl;
       cout << "validType: n(normal-text), l(ngram list), id (binary id ngram)"
           << endl;
@@ -74,8 +74,9 @@ main(int argc, char *argv[])
   char* prefixModel = argv[1];
   char* prefixData = argv[2];
   int maxExampleNumber = atoi(argv[3]);
-  char* validationFileName = argv[4];
-  string validType = argv[5];
+  char* trainingFileName = argv[4];
+  char* validationFileName = argv[5];
+  string validType = argv[6];
   if (validType != "n" && validType != "l" && validType != "id")
 
     {
@@ -83,17 +84,17 @@ main(int argc, char *argv[])
       return 1;
     }
 
-  string learningRateType = argv[6];
+  string learningRateType = argv[7];
   if (learningRateType != LEARNINGRATE_NORMAL && learningRateType
       != LEARNINGRATE_DOWN)
     {
       cerr << "Which learningRateType do you want?" << endl;
       return 1;
     }
-  int minIteration = atoi(argv[7]);
-  int maxIteration = atoi(argv[8]);
+  int minIteration = atoi(argv[8]);
+  int maxIteration = atoi(argv[9]);
   srand(time(NULL));
-  sequenceTrain(prefixModel, prefixData, maxExampleNumber, validationFileName,
+  sequenceTrain(prefixModel, prefixData, maxExampleNumber, trainingFileName, validationFileName,
       validType, learningRateType, minIteration, maxIteration);
   return 0;
 }

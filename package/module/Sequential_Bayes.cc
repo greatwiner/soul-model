@@ -8,7 +8,7 @@ Sequential_Bayes::~Sequential_Bayes() {
 
 }
 
-floatTensor&
+/*floatTensor&
 Sequential_Bayes::backward(floatTensor& gradOutput)
 {
   // gradOutput
@@ -28,6 +28,11 @@ Sequential_Bayes::backward(floatTensor& gradOutput)
   currentGradOutput = currentModule->backward(currentGradOutput);
   currentGradOutput = lkt->backward(currentGradOutput);
   return currentGradOutput;// = gradWeight
+}*/
+
+floatTensor&
+Sequential_Bayes::backward(floatTensor& gradOutput) {
+	return Sequential::backward(gradOutput);
 }
 
 void

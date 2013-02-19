@@ -3,7 +3,7 @@ include $(dlvl)/Makefile.in
 help:
 	@ echo "Structure OUtput Layer Language Model Toolkit"
 
-all: makedir config ioFile tensor text module model command script test forwardTrainTest
+all: makedir config ioFile tensor text module model command script test
 
 makedir:
 	mkdir -p $(DIR_INSTALL)

@@ -25,7 +25,7 @@ public:
   reset();
 
   floatTensor&
-  backward(floatTensor& gradOutput);
+  backward(floatTensor& gradOutput, int last);
 
   int
   numberOfWeights();

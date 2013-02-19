@@ -31,8 +31,26 @@ Sequential_Bayes::backward(floatTensor& gradOutput)
 }*/
 
 floatTensor&
-Sequential_Bayes::backward(floatTensor& gradOutput) {
-	return Sequential::backward(gradOutput);
+Sequential_Bayes::backward(floatTensor& gradOutput, int last) {
+	currentGradOutput = gradOutput;
+
+	Module* currentModule = modules[size - 1];
+	Module* previousModule;
+	int i;
+	for (i = size - 2; i > -1; i--)
+	{
+	  previousModule = modules[i];
+	  if (Linear_Bayes* d1 = dynamic_cast<Linear_Bayes*>(currentModule)) {
+		  currentGradOutput = d1->backward(currentGradOutput, last);
+	  }
+	  currentModule = previousModule;
+	}
+	if (Linear_Bayes* d2 = dynamic_cast<Linear_Bayes*>(currentModule)) {
+		currentGradOutput = d2->backward(currentGradOutput, last);
+	}
+	// Also backward with Lookup Table
+	currentGradOutput = static_cast<LookupTable_Bayes*>(lkt)->backward(currentGradOutput, last);
+	return currentGradOutput;
 }
 
 void

@@ -145,11 +145,13 @@ LinearSoftmax_Bayes::backward(intTensor& word)
 }*/
 
 floatTensor&
-LinearSoftmax_Bayes::backward(intTensor& word) {
+LinearSoftmax_Bayes::backward(intTensor& word, int last) {
     LinearSoftmax::backward(word);
     // accumulate gradient
 	gradWeight.gemm(input, 'N', gradOutput, 'T', 1, 1);
-	gradWeight.axpy(weight, weightDecay);
+	if (last == 1) {
+		gradWeight.axpy(weight, weightDecay);
+	}
 	gradBias.gemv(gradOutput, 'N', V1col, 1, 1);
 	return gradInput;
 }
@@ -168,6 +170,9 @@ LinearSoftmax_Bayes::updateParameters(float learningRate)
 
 void
 LinearSoftmax_Bayes::updateRandomness(float learningRate) {
+	// for test
+	cout << "LinearSoftmax_Bayes::updateRandomness gradWeight: " << gradWeight.sumSquared()
+			+ gradBias.sumSquared() << endl;
 	pWeight.axpy(gradWeight, -sqrt(0.5*learningRate));
 	pBias.axpy(gradBias, -sqrt(0.5*learningRate));
 }
@@ -190,7 +195,10 @@ LinearSoftmax_Bayes::initializeP() {
 
 float
 LinearSoftmax_Bayes::calculeH() {
-	return 0.5*(this->pWeight.sumSquared() + this->pBias.sumSquared()) + 0.5*this->weightDecay*weight.sumSquared();
+	float h = 0.5*(this->pWeight.sumSquared() + this->pBias.sumSquared()) + 0.5*this->weightDecay*weight.sumSquared();
+	// for test
+	cout << "LinearSoftmax_Bayes::calculeH h: " << h << endl;
+	return h;
 }
 
 void

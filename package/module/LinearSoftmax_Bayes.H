@@ -27,7 +27,7 @@ public:
   floatTensor&
   backward(floatTensor& word);
   floatTensor&
-  backward(intTensor& word);
+  backward(intTensor& word, int last);
   void
   updateParameters(float learningRate);
 

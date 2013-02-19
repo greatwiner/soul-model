@@ -1,4 +1,7 @@
 #include "mainTensor.H"
+#include <stdio.h>
+#define _USE_MATH_DEFINES
+#include <math.h>
 
 #if (PROC == INTEL)
 
@@ -632,24 +635,11 @@ floatTensor::log(floatTensor& src)
 
 float
 floatTensor::initializeNormalOneElement() {
-	// uniformly distributed float numbers
+	/*// uniformly distributed float numbers
 	float U1=((float)rand()/(float)RAND_MAX);
 	float U2=((float)rand()/(float)RAND_MAX);
-	floatTensor U;
-	U.resize(2,1);
-	U(0,0) = U1;
-	U(1,0) = U2;
-	floatTensor lU;
-	lU.resize(2,1);
-	lU.log(U);
-	float u = lU(0);
-	// for test
-	//cout << "ngay dau tien" << endl;
-	// Box–Muller transform
-	//for test
-	//cout << sqrt(-2*u)*cos(2*M_PI*U2) << " ";
-	return sqrt(-2*u)*cos(2*M_PI*U2);
-	//return 0;
+	return sqrt(-2*::log(U1))*cos(2*M_PI*U2);*/
+	return 0;
 }
 
 float

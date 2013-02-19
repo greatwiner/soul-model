@@ -19,7 +19,7 @@ public:
   void
   changeBlockSize(int blockSize);
   floatTensor&
-  backward(floatTensor& gradOutput);
+  backward(floatTensor& gradOutput, int last);
   void
   updateParameters(float learningRate);
 

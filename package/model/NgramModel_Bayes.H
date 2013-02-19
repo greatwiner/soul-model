@@ -47,10 +47,10 @@ public:
   initializeP();
 
   void
-  trainOne(intTensor& context, intTensor& word, float learningRate, int subBlockSize);
+  trainOne(intTensor& context, intTensor& word, float learningRate, int subBlockSize, int last);
 
   void
-  forwardBackwardOne(intTensor& context, intTensor& word, int subBlockSize);
+  forwardBackwardOne(intTensor& context, intTensor& word, int subBlockSize, int last);
 
   float
   calculeH();

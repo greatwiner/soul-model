@@ -55,13 +55,17 @@ Linear_Bayes::reset()
 }
 
 floatTensor&
-Linear_Bayes::backward(floatTensor& gradOutput)
+Linear_Bayes::backward(floatTensor& gradOutput, int last)
 {
   Linear::backward(gradOutput);
 
   // accumulate gradients
   gradWeight.gemm(input, 'N', gradOutput, 'T', 1, 1);
-  gradWeight.axpy(weight, weightDecay);
+  if (last == 1) {
+	  gradWeight.axpy(weight, weightDecay);
+	  // for test
+	  cout << "Linear_Bayes::backward input: " << input.sumSquared() << endl;
+  }
   gradBias.gemv(gradOutput, 'N', V1col, 1, 1);
   return gradInput;
 }
@@ -79,6 +83,9 @@ Linear_Bayes::updateParameters(float learningRate)
 
 void
 Linear_Bayes::updateRandomness(float learningRate) {
+	// for test
+	cout << "Linear_Bayes::updateRandomness gradWeight: " << gradWeight.sumSquared()
+			+ gradBias.sumSquared() << endl;
 	pWeight.axpy(gradWeight, -sqrt(0.5*learningRate));
 	pBias.axpy(gradBias, -sqrt(0.5*learningRate));
 }
@@ -101,7 +108,10 @@ Linear_Bayes::initializeP() {
 
 float
 Linear_Bayes::calculeH() {
-	return 0.5*(this->pWeight.sumSquared() + this->pBias.sumSquared()) + 0.5*this->weightDecay*weight.sumSquared();
+	float h = 0.5*(this->pWeight.sumSquared() + this->pBias.sumSquared()) + 0.5*this->weightDecay*weight.sumSquared();
+	// for test
+	cout << "Linear_Bayes::calculeH h: " << h << endl;
+	return h;
 }
 
 void

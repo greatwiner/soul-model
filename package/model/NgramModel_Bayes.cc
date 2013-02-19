@@ -52,16 +52,24 @@ NgramModel_Bayes::firstTime()
 
 void
 NgramModel_Bayes::resetGradients() {
+	// for test
+	cout << "NgramModel_Bayes::resetGradients reset" << endl;
 	this->baseNetwork->lkt->gradWeight=0;
 	for (int i = 0; i < this->baseNetwork->size; i ++) {
 		if (Linear_Bayes* d1 = dynamic_cast<Linear_Bayes*>(this->baseNetwork->modules[i])) {
 			d1->gradWeight=0;
 			d1->gradBias=0;
+			// for test
+			cout << "NgramModel_Bayes::resetGradients Linear_Bayes: " << d1->gradWeight.sumSquared()
+					+ d1->gradBias.sumSquared() << endl;
 		}
 	}
 	for (int i = 0; i < this->outputNetworkNumber; i ++) {
 		static_cast<LinearSoftmax_Bayes*>(this->outputNetwork[i])->gradWeight=0;
 		static_cast<LinearSoftmax_Bayes*>(this->outputNetwork[i])->gradBias=0;
+		cout << "NgramModel_Bayes::resetGradients LinearSoftmax_Bayes: " <<
+				static_cast<LinearSoftmax_Bayes*>(this->outputNetwork[i])->gradWeight.sumSquared()
+			+ static_cast<LinearSoftmax_Bayes*>(this->outputNetwork[i])->gradBias.sumSquared() << endl;
 	}
 }
 
@@ -153,7 +161,10 @@ NgramModel_Bayes::forwardBackwardAllData(char* dataFileString, int maxExampleNum
 
 		// trainOne = forward + backward + calculate gradients for a block. This function also
 		// update all parameters in back-propagation
-		trainOne(context, word, learningRate, blockSize);
+		// indicates if this is the last block
+		int last = 0;
+		if (remainingNumber == 0 && i == blockNumber - 1) last = 1;
+		trainOne(context, word, learningRate, blockSize, last);
 		/*if (acceptForOne == 1 && *accept == 0) {
 			*accept = 1;
 		}*/
@@ -198,7 +209,7 @@ NgramModel_Bayes::forwardBackwardAllData(char* dataFileString, int maxExampleNum
 	              currentLearningRate = learningRate;
 	            }*/
 	          // trainOne = forward + backward + calculate gradients
-			trainOne(context, word, learningRate, remainingNumber);
+			trainOne(context, word, learningRate, remainingNumber, 1);
 			/*if (acceptForOne == 1 && *accept == 0) {
 				*accept = 1;
 			}*/
@@ -219,16 +230,16 @@ NgramModel_Bayes::forwardBackwardAllData(char* dataFileString, int maxExampleNum
 
 void
 NgramModel_Bayes::trainOne(intTensor& context, intTensor& word, float learningRate,
-		int subBlockSize) {
+		int subBlockSize, int last) {
   // decode word to localCodeWord for SOUL structure
   decodeWord(word, subBlockSize);
 
   // forward and backward and calculate gradient
-  forwardBackwardOne(context, word, subBlockSize);
+  forwardBackwardOne(context, word, subBlockSize, last);
 }
 
 void
-NgramModel_Bayes::forwardBackwardOne(intTensor& context, intTensor& word, int subBlockSize) {
+NgramModel_Bayes::forwardBackwardOne(intTensor& context, intTensor& word, int subBlockSize, int last) {
 
 	baseNetwork->forward(context);
 
@@ -253,7 +264,7 @@ NgramModel_Bayes::forwardBackwardOne(intTensor& context, intTensor& word, int su
 	static_cast<LinearSoftmax_Bayes*>(outputNetwork[0])->forward(contextFeature);
 
 	// the localWord can be considered as output of the principal output network
-	gradInput = static_cast<LinearSoftmax_Bayes*>(outputNetwork[0])->backward(localWord);
+	gradInput = static_cast<LinearSoftmax_Bayes*>(outputNetwork[0])->backward(localWord, last);
 
 	// gradient on the output of the base network
 	gradContextFeature.axpy(gradInput, 1);
@@ -275,11 +286,11 @@ NgramModel_Bayes::forwardBackwardOne(intTensor& context, intTensor& word, int su
 			idParent = oneLocalCodeWord(i); // 2
 			// for each outputNetwork in SOUL, we do a forward step and a backward step
 			static_cast<LinearSoftmax_Bayes*>(outputNetwork[idParent])->forward(selectContextFeature);
-			gradInput = static_cast<LinearSoftmax_Bayes*>(outputNetwork[idParent])->backward(idLocalWord);
+			gradInput = static_cast<LinearSoftmax_Bayes*>(outputNetwork[idParent])->backward(idLocalWord, last);
 			selectGradContextFeature.axpy(gradInput, 1);
 		}
 	}
-	baseNetwork->backward(gradContextFeature);
+	static_cast<Sequential_Bayes*>(baseNetwork)->backward(gradContextFeature, last);
 }
 
 void
@@ -449,7 +460,7 @@ NgramModel_Bayes::train(char* dataFileString, int maxExampleNumber, int iteratio
 	float prevH = calculeH();
 	// for test
 	cout << "Prev H: " << prevH << endl;
-	int Tau = 10;
+	int Tau = 2;
 	for (int subIter = 1; subIter <= Tau; subIter++) {
 		// for test
 		if (subIter % 10 == 0) {

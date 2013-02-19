@@ -12,7 +12,7 @@ public:
 	Sequential_Bayes(int maxSize);
 	~Sequential_Bayes();
   floatTensor&
-  backward(floatTensor& gradOutput);
+  backward(floatTensor& gradOutput, int last);
   void
   read(ioFile *iof);
   void

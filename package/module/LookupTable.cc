@@ -91,6 +91,8 @@ LookupTable::forward(intTensor& input)
 floatTensor&
 LookupTable::backward(floatTensor& gradOutput)
 {
+	// for test
+	cout << "LookupTable::backward" << endl;
   gradWeight = gradOutput;
   // Don't use return variable, so whatever you want :S
   return gradWeight;
@@ -100,12 +102,10 @@ void
 LookupTable::updateParameters(float learningRate)
 {
 	// for test
-	floatTensor prevWeight;
-	prevWeight.resize(weight);
-	prevWeight.copy(weight);
+	cout << "LookupTable::updateParameters" << endl;
 
 	// for test
-	cout << "LookupTable::updateParameters gradOutput: " << gradWeight.sumSquared() << endl;
+	//cout << "LookupTable::updateParameters gradOutput: " << gradWeight.sumSquared() << endl;
 
   int x0, x1;
   for (int i = 0; i < input.size[1]; i++)

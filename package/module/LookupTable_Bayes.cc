@@ -65,7 +65,7 @@ floatTensor&
 LookupTable_Bayes::backward(floatTensor& gradOutput, int last)
 {
 	// for test
-	//cout << "LookupTable_Bayes::backward gradOutput: " << gradOutput.sumSquared() << endl;
+	//cout << "LookupTable_Bayes::backward" << endl;
 
   /*gradWeight = gradOutput;
   // for test
@@ -90,11 +90,11 @@ LookupTable_Bayes::backward(floatTensor& gradOutput, int last)
 		  selectGradOutput.sub(gradOutput, x0, x1, i, i);
 		  selectGradWeight.select(gradWeight, 1, input(j, i));
 		  selectGradWeight.axpy(selectGradOutput, 1);
-		  if (last == 1) {
+		  //if (last == 1) {
 			  // a column of weight corresponding to the selectGradWeight being treated
 			  selectWeight.select(weight, 1, input(j, i));
 			  selectGradWeight.axpy(selectWeight, weightDecay);
-		  }
+		  //}
 
 		  x0 += dimensionSize;
 		  x1 += dimensionSize;
@@ -110,6 +110,8 @@ LookupTable_Bayes::backward(floatTensor& gradOutput, int last)
 void
 LookupTable_Bayes::updateParameters(float learningRate)
 {
+	// for test
+	cout << "LookupTable_Bayes::updateParameters" << endl;
 	weight.axpy(pWeight, sqrt(2*learningRate));
 }
 

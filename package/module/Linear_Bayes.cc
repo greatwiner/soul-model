@@ -57,6 +57,8 @@ Linear_Bayes::reset()
 floatTensor&
 Linear_Bayes::backward(floatTensor& gradOutput, int last)
 {
+	// for test
+	//cout << "Linear_Bayes::backward" << endl;
   Linear::backward(gradOutput);
 
   // accumulate gradients
@@ -76,6 +78,8 @@ Linear_Bayes::updateParameters(float learningRate)
   /*weight.gemm(input, 'N', gradOutput, 'T', -learningRate,
       1 - learningRate * weightDecay);
   bias.gemv(gradOutput, 'N', V1col, -learningRate, 1);*/
+	// for test
+	cout << "Linear_Bayes::updateParameters" << endl;
 	weight.axpy(pWeight, sqrt(2*learningRate));
 	bias.axpy(pBias, sqrt(2*learningRate));
 

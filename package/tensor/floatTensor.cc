@@ -635,11 +635,10 @@ floatTensor::log(floatTensor& src)
 
 float
 floatTensor::initializeNormalOneElement() {
-	/*// uniformly distributed float numbers
+	// uniformly distributed float numbers
 	float U1=((float)rand()/(float)RAND_MAX);
 	float U2=((float)rand()/(float)RAND_MAX);
-	return sqrt(-2*::log(U1))*cos(2*M_PI*U2);*/
-	return 0;
+	return sqrt(-2*::log(U1))*cos(2*M_PI*U2);
 }
 
 float

@@ -63,8 +63,6 @@ Linear::forward(floatTensor& input)
 floatTensor&
 Linear::backward(floatTensor& gradOutput)
 {
-	// for test
-	//cout << "Linear::backward" << endl;
   // Keep gradOutput for later update
   this->gradOutput = gradOutput;
 
@@ -76,8 +74,6 @@ Linear::backward(floatTensor& gradOutput)
 void
 Linear::updateParameters(float learningRate)
 {
-	// for test
-	//cout << "Linear::updateParameters" << endl;
   // weight = - learningRate x input x gradOutput^T
   //        + weight - learningRate * weightDecay * weight
   weight.gemm(input, 'N', gradOutput, 'T', -learningRate,

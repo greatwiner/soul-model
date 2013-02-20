@@ -532,6 +532,7 @@ NgramModel::forwardProbability(intTensor& ngramTensor, floatTensor& probTensor)
             }
           rBlockSize++;
         }
+/*
 #if PRINT_DEBUG
       if (ngramId > iPercent)
         {
@@ -540,6 +541,7 @@ NgramModel::forwardProbability(intTensor& ngramTensor, floatTensor& probTensor)
           cout << (float) ngramId / ngramNumber << " ... " << flush;
         }
 #endif
+*/
     }
   while (ngramId < ngramNumber);
 #if PRINT_DEBUG
@@ -555,8 +557,10 @@ NgramModel::read(ioFile* iof, int allocation, int blockSize)
   iof->readString(name);
   iof->readString(readFormat);
   iof->readInt(ngramType);
-  inputVoc = new SoulVocab();
-  outputVoc = new SoulVocab();
+  if (allocation == 1) {
+	  inputVoc = new SoulVocab();
+	  outputVoc = new SoulVocab();
+  }
   iof->readInt(inputVoc->wordNumber);
   iof->readInt(outputVoc->wordNumber);
   iof->readInt(mapIUnk);
@@ -576,8 +580,10 @@ NgramModel::read(ioFile* iof, int allocation, int blockSize)
   iof->readString(nonLinearType);
   iof->readInt(maxCodeWordLength);
   iof->readInt(outputNetworkNumber);
-  codeWord.resize(outputVoc->wordNumber, maxCodeWordLength);
-  outputNetworkSize.resize(outputNetworkNumber, 1);
+  if (allocation == 1) {
+	  codeWord.resize(outputVoc->wordNumber, maxCodeWordLength);
+	  outputNetworkSize.resize(outputNetworkNumber, 1);
+  }
   codeWord.read(iof);
   outputNetworkSize.read(iof);
   hiddenLayerSizeArray.resize(hiddenNumber, 1);
@@ -585,6 +591,8 @@ NgramModel::read(ioFile* iof, int allocation, int blockSize)
   hiddenLayerSize = hiddenLayerSizeArray(hiddenLayerSizeArray.length - 1);
   if (allocation)
     {
+	  // for test
+	  cout << "NgramModel::read allocation" << endl;
       this->allocation();
     }
   baseNetwork->read(iof);
@@ -596,8 +604,10 @@ NgramModel::read(ioFile* iof, int allocation, int blockSize)
           outputNetwork[i]->read(iof);
         }
     }
-  inputVoc->read(iof);
-  outputVoc->read(iof);
+  if (allocation == 1) {
+	  inputVoc->read(iof);
+	  outputVoc->read(iof);
+  }
 }
 
 void

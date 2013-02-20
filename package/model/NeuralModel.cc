@@ -442,6 +442,27 @@ NeuralModel::sequenceTrain(char* prefixModel, int gz, char* prefixData,
           << endl;*/
     }
 
+    // the name of the file containing perplexities on validation set
+  	char outputPerplexity[260];
+  	strcpy(outputPerplexity, prefixModel);
+  	strcat(outputPerplexity, "out.per");
+
+  	// the file containing perplexities on validation set
+  	ofstream outputPerp;
+  	outputPerp.open(outputPerplexity, ios_base::app);
+
+  	// the name of the file containing perplexities on training set
+  	char outputTrainingPerplexity[260];
+  	strcpy(outputTrainingPerplexity, prefixModel);
+  	strcat(outputTrainingPerplexity, "out.trainPer");
+
+  	// the file containing perplexities on training set
+  	ofstream outputTrainingPerp;
+  	outputTrainingPerp.open(outputTrainingPerplexity, ios_base::app);
+
+  	// execution time
+  	float timeExe = 0;
+
   // Now, train a model
   for (iteration = minIteration; iteration < maxIteration + 1; iteration++)
     {
@@ -502,6 +523,8 @@ NeuralModel::sequenceTrain(char* prefixModel, int gz, char* prefixData,
       time(&end);
       cout << "Finish after " << difftime(end, start) / 60 << " minutes"
           << endl;
+      // accumulate
+      timeExe += difftime(end, start);
 
       if (strcmp(prefixModel, "xxx"))
         {
@@ -540,25 +563,11 @@ NeuralModel::sequenceTrain(char* prefixModel, int gz, char* prefixData,
 			   << endl;
 
 			// write training perplexity on file
-			//outputTrainingPerp << trainingDataSet->perplexity << endl;
+			outputTrainingPerp << iteration << " " << trainingDataSet->perplexity << endl;
 
 			// write validation perplexity on file
-			//outputPerp << dataSet->perplexity << endl;
+			outputPerp << iteration << " " << dataSet->perplexity << endl;
 
-
-
-          /*cout << "Compute validation perplexity:" << endl;
-          time_t start, end;
-          time(&start);
-          prePerplexity = perplexity;
-          perplexity = computePerplexity();
-          time(&end);
-
-          cout << "With epoch " << iteration << ", perplexity of "
-              << validationFileName << " is " << perplexity << " ("
-              << dataSet->ngramNumber << " ngrams)" << endl;
-          cout << "Finish after " << difftime(end, start) / 60 << " minutes"
-              << endl;*/
           if (isnan(perplexity))
             {
               cout << "Perplexity is NaN" << endl;
@@ -604,7 +613,7 @@ NeuralModel::sequenceTrain(char* prefixModel, int gz, char* prefixData,
           parasIof.freeWriteFile();
         }
 
-      if (divide >= MAX_DIVIDE)
+      if (divide >= MAX_DIVIDE && name != OVNB)
         {
           stop = 1;
         }
@@ -613,6 +622,11 @@ NeuralModel::sequenceTrain(char* prefixModel, int gz, char* prefixData,
           break;
         }
     }
+
+  	outputPerp.close();
+
+  	outputTrainingPerp.close();
+
   if (!strcmp(prefixModel, "xxx") && !isnan(perplexity) && (minIteration
       != maxIteration))
     {

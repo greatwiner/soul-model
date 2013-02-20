@@ -57,19 +57,15 @@ Linear_Bayes::reset()
 floatTensor&
 Linear_Bayes::backward(floatTensor& gradOutput, int last)
 {
-	// for test
-	//cout << "Linear_Bayes::backward" << endl;
-  Linear::backward(gradOutput);
+	Linear::backward(gradOutput);
 
-  // accumulate gradients
-  gradWeight.gemm(input, 'N', gradOutput, 'T', 1, 1);
-  if (last == 1) {
-	  gradWeight.axpy(weight, weightDecay);
-	  // for test
-	  cout << "Linear_Bayes::backward input: " << input.sumSquared() << endl;
-  }
-  gradBias.gemv(gradOutput, 'N', V1col, 1, 1);
-  return gradInput;
+	// accumulate gradients
+	gradWeight.gemm(input, 'N', gradOutput, 'T', 1, 1);
+	if (last == 1) {
+		gradWeight.axpy(weight, weightDecay);
+	}
+	gradBias.gemv(gradOutput, 'N', V1col, 1, 1);
+	return gradInput;
 }
 
 void
@@ -78,8 +74,6 @@ Linear_Bayes::updateParameters(float learningRate)
   /*weight.gemm(input, 'N', gradOutput, 'T', -learningRate,
       1 - learningRate * weightDecay);
   bias.gemv(gradOutput, 'N', V1col, -learningRate, 1);*/
-	// for test
-	cout << "Linear_Bayes::updateParameters" << endl;
 	weight.axpy(pWeight, sqrt(2*learningRate));
 	bias.axpy(pBias, sqrt(2*learningRate));
 
@@ -87,9 +81,6 @@ Linear_Bayes::updateParameters(float learningRate)
 
 void
 Linear_Bayes::updateRandomness(float learningRate) {
-	// for test
-	cout << "Linear_Bayes::updateRandomness gradWeight: " << gradWeight.sumSquared()
-			+ gradBias.sumSquared() << endl;
 	pWeight.axpy(gradWeight, -sqrt(0.5*learningRate));
 	pBias.axpy(gradBias, -sqrt(0.5*learningRate));
 }

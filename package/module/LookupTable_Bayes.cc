@@ -110,15 +110,11 @@ LookupTable_Bayes::backward(floatTensor& gradOutput, int last)
 void
 LookupTable_Bayes::updateParameters(float learningRate)
 {
-	// for test
-	cout << "LookupTable_Bayes::updateParameters" << endl;
 	weight.axpy(pWeight, sqrt(2*learningRate));
 }
 
 void
 LookupTable_Bayes::updateRandomness(float learningRate) {
-	// for test
-	cout << "LookupTable_Bayes::updateRandomness gradWeight: " << gradWeight.sumSquared() << endl;
 	pWeight.axpy(gradWeight, -sqrt(0.5*learningRate));
 }
 

@@ -273,12 +273,14 @@ NgramDataSet::readText(ioFile* iof)
             }
         }
       readLineNumber++;
+/*
 #if PRINT_DEBUG
       if (readLineNumber % NLINEPRINT == 0)
         {
           cout << readLineNumber << " ... " << flush;
         }
 #endif
+*/
     }
 #if PRINT_DEBUG
   cout << endl;

@@ -62,88 +62,6 @@ LinearSoftmax_Bayes::backward(floatTensor& word)
   exit(1);
 }
 
-/*floatTensor&
-LinearSoftmax_Bayes::backward(intTensor& word)
-{
-
-   //gradOutput.copy(output);
-   int i;
-   this->input = input;
-   for (i = 0; i < blockSize; i++)
-   {
-   if (word(i) != SIGN_NOT_WORD)
-   {
-   selectGradOutput.select(gradOutput, 1, i);
-   selectOutput.select(output, 1, i);
-   selectGradOutput.copy(selectOutput);
-   selectGradOutput.scal(-1);
-   gradOutput(word(i), i) += 1;
-
-   //gradOutput(word(i), i) -= 1;
-   }
-   else
-   {
-   selectGradOutput.select(gradOutput, 1, i);
-   selectGradOutput = 0;
-   }
-   }
-   gradInput.gemm(weight, 'N', gradOutput, 'N', 1, 0);
-   return gradInput;
-
-  // id < -1 => negative example with word
-  // = SIGN_NOT_WORD - 1 - id (= -2 - id if SIGN_NOT_WORD = -1)
-  // -2 => 0
-  // -3 => 1
-  // -4 => 2
-  // SIGN_NOT_WORD must be <= -1
-
-	// counts until blocksize
-  int i;
-
-  // mirror = -2
-  int mirror = SIGN_NOT_WORD - 1;
-  this->input = input;
-  for (i = 0; i < blockSize; i++)
-    {
-      if (word(i) != SIGN_NOT_WORD)
-        {
-          if (word(i) >= 0)
-            {
-              selectGradOutput.select(gradOutput, 1, i);
-              selectOutput.select(output, 1, i);
-              selectGradOutput.copy(selectOutput);
-              gradOutput(word(i), i) -= 1;
-        	  //selectGradOutput.scal(output(word(i), i)*(1 - output(word(i), i)));
-        	  //for test
-        	  //cout << "he so: " << output(word(i), i)*(1 - output(word(i), i)) << endl;
-            }
-          else
-            {
-        	  // why this???
-        	  // for test
-        	  //cout << "bao dong:::" << endl;
-              selectGradOutput.select(gradOutput, 1, i);
-              selectOutput.select(output, 1, i);
-              selectGradOutput.copy(selectOutput);
-              selectGradOutput.scal(-1);
-              gradOutput(mirror - word(i), i) += 1;
-            }
-        }
-      else
-        {
-          selectGradOutput.select(gradOutput, 1, i);
-          selectGradOutput = 0;
-        }
-    }
-  //gradInput = weight*gradOutput
-  gradInput.gemm(weight, 'N', gradOutput, 'N', 1, 0);
-  // accumulate gradient
-  gradWeight.gemm(input, 'N', gradOutput, 'T', 1, 1);
-  gradWeight.axpy(weight, weightDecay);
-  gradBias.gemv(gradOutput, 'N', V1col, 1, 1);
-  return gradInput;
-}*/
-
 floatTensor&
 LinearSoftmax_Bayes::backward(intTensor& word, int last) {
     LinearSoftmax::backward(word);
@@ -170,9 +88,6 @@ LinearSoftmax_Bayes::updateParameters(float learningRate)
 
 void
 LinearSoftmax_Bayes::updateRandomness(float learningRate) {
-	// for test
-	cout << "LinearSoftmax_Bayes::updateRandomness gradWeight: " << gradWeight.sumSquared()
-			+ gradBias.sumSquared() << endl;
 	pWeight.axpy(gradWeight, -sqrt(0.5*learningRate));
 	pBias.axpy(gradBias, -sqrt(0.5*learningRate));
 }

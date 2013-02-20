@@ -52,24 +52,16 @@ NgramModel_Bayes::firstTime()
 
 void
 NgramModel_Bayes::resetGradients() {
-	// for test
-	cout << "NgramModel_Bayes::resetGradients reset" << endl;
 	this->baseNetwork->lkt->gradWeight=0;
 	for (int i = 0; i < this->baseNetwork->size; i ++) {
 		if (Linear_Bayes* d1 = dynamic_cast<Linear_Bayes*>(this->baseNetwork->modules[i])) {
 			d1->gradWeight=0;
 			d1->gradBias=0;
-			// for test
-			cout << "NgramModel_Bayes::resetGradients Linear_Bayes: " << d1->gradWeight.sumSquared()
-					+ d1->gradBias.sumSquared() << endl;
 		}
 	}
 	for (int i = 0; i < this->outputNetworkNumber; i ++) {
 		static_cast<LinearSoftmax_Bayes*>(this->outputNetwork[i])->gradWeight=0;
 		static_cast<LinearSoftmax_Bayes*>(this->outputNetwork[i])->gradBias=0;
-		cout << "NgramModel_Bayes::resetGradients LinearSoftmax_Bayes: " <<
-				static_cast<LinearSoftmax_Bayes*>(this->outputNetwork[i])->gradWeight.sumSquared()
-			+ static_cast<LinearSoftmax_Bayes*>(this->outputNetwork[i])->gradBias.sumSquared() << endl;
 	}
 }
 
@@ -460,7 +452,7 @@ NgramModel_Bayes::train(char* dataFileString, int maxExampleNumber, int iteratio
 	float prevH = calculeH();
 	// for test
 	cout << "Prev H: " << prevH << endl;
-	int Tau = 2;
+	int Tau = 10;
 	for (int subIter = 1; subIter <= Tau; subIter++) {
 		// for test
 		if (subIter % 10 == 0) {

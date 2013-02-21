@@ -406,10 +406,16 @@ NeuralModel::sequenceTrain(char* prefixModel, int gz, char* prefixData,
   if (computeDevPer)
     {
 	  	time(&start);
-		cout << "Compute training perplexity:" << endl;
+	  	if (strcmp(trainingFileName, "xxx") != 0) {
+	  		cout << "Compute training perplexity:" << endl;
 
-		// compute perplexity in charging all the training file
-		computePerplexity(this->trainingDataSet, trainingFileName, validType);
+	  		// compute perplexity in charging all the training file
+	  		computePerplexity(this->trainingDataSet, trainingFileName, validType);
+	  		cout << "With epoch " << minIteration - 1 << ", perplexity of "
+	  				<< trainingFileName << " is " << trainingDataSet->perplexity
+	  				<< " ("
+	  				<< trainingDataSet->ngramNumber << " ngrams)" << endl;
+	  	}
 
 		cout << "Compute validation perplexity:" << endl;
 
@@ -418,10 +424,6 @@ NeuralModel::sequenceTrain(char* prefixModel, int gz, char* prefixData,
 		prePerplexity = this->dataSet->perplexity;
 		time(&end);
 
-		cout << "With epoch " << minIteration - 1 << ", perplexity of "
-		<< trainingFileName << " is " << trainingDataSet->perplexity
-		<< " ("
-		<< trainingDataSet->ngramNumber << " ngrams)" << endl;
 		cout << "With epoch " << minIteration - 1 << ", perplexity of "
 		<< validationFileName << " is " << dataSet->perplexity
 		<< " ("
@@ -537,36 +539,35 @@ NeuralModel::sequenceTrain(char* prefixModel, int gz, char* prefixData,
         {
 		    // calculate execution time
 			time_t start, end;
-			cout << "Compute training perplexity:" << endl;
 			time(&start);
 
-			// current perplexity on training set
-			prePerplexity = trainingDataSet->perplexity;
-			forwardProbability(trainingDataSet->dataTensor, trainingDataSet->probTensor);
-			trainingDataSet->computePerplexity();
+			if (strcmp(trainingFileName, "xxx") != 0) {
+				cout << "Compute training perplexity:" << endl;
+
+				forwardProbability(trainingDataSet->dataTensor, trainingDataSet->probTensor);
+				trainingDataSet->computePerplexity();
+				cout << "With epoch " << iteration << ", perplexity of "
+								 << trainingFileName << " is " << trainingDataSet->perplexity << " ("
+								 << trainingDataSet->ngramNumber << " ngrams)" << endl;
+				// write training perplexity on file
+				outputTrainingPerp << iteration << " " << trainingDataSet->perplexity << endl;
+			}
 
 			cout << "Compute validation perplexity:" << endl;
 			forwardProbability(dataSet->dataTensor, dataSet->probTensor);
 			prePerplexity = perplexity;
 			perplexity = dataSet->computePerplexity();
-			time(&end);
-
-			cout << "With epoch " << iteration << ", perplexity of "
-				 << trainingFileName << " is " << trainingDataSet->perplexity << " ("
-				 << trainingDataSet->ngramNumber << " ngrams)" << endl;
 
 			cout << "With epoch " << iteration << ", perplexity of "
 			   << validationFileName << " is " << dataSet->perplexity << " ("
 			   << dataSet->ngramNumber << " ngrams)" << endl;
 
-			cout << "Finish after " << difftime(end, start) / 60 << " minutes"
-			   << endl;
-
-			// write training perplexity on file
-			outputTrainingPerp << iteration << " " << trainingDataSet->perplexity << endl;
-
 			// write validation perplexity on file
 			outputPerp << iteration << " " << dataSet->perplexity << endl;
+			time(&end);
+
+			cout << "Finish after " << difftime(end, start) / 60 << " minutes"
+				 << endl;
 
           if (isnan(perplexity))
             {

@@ -77,8 +77,8 @@ using namespace std;
 // r: recurrent, rank: ranking model (similar to Collobert's model)
 
 #define CN  "cn" // classical n-gram (of Bengio, Schwenk)
-#define OVN  "ovn" // one vector n-gram
-#define OVNB "ovnb" // one vector n-gram with Bayesian inference
+#define OVN  "ovnb" // one vector n-gram
+#define OVNB "ovn" // one vector n-gram with Bayesian inference
 // Two names below for translation models are kepth to work with old
 // models
 // dwt: discriminative word tuple => word translation model

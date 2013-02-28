@@ -10,6 +10,12 @@ public:
 	floatTensor prevGradWeight;
 	floatTensor pWeight;
 
+	// kinetic energy
+	float ki;
+
+	// weight decay term;
+	float wD;
+
   LookupTable_Bayes(int nIndex, int nDimension, int inputSize,
       int blockSize, int oneClass, outils* otl);
 
@@ -34,6 +40,12 @@ public:
 
   void
   initializeP();
+
+  float
+  getKinetic();
+
+  float
+  getWeightDecayTerm();
 
   float
   calculeH();

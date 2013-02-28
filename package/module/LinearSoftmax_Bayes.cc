@@ -109,11 +109,25 @@ LinearSoftmax_Bayes::initializeP() {
 }
 
 float
+LinearSoftmax_Bayes::getKinetic() {
+	ki = 0.5*(this->pWeight.sumSquared() + this->pBias.sumSquared());
+	return ki;
+}
+
+float
+LinearSoftmax_Bayes::getWeightDecayTerm() {
+	wD = 0.5*weight.sumSquared();
+	return wD;
+}
+
+float
 LinearSoftmax_Bayes::calculeH() {
-	float h = 0.5*(this->pWeight.sumSquared() + this->pBias.sumSquared()) + 0.5*this->weightDecay*weight.sumSquared();
+	ki = this->getKinetic();
+	wD = this->getWeightDecayTerm();
 	// for test
-	cout << "LinearSoftmax_Bayes::calculeH h: " << h << endl;
-	return h;
+	cout << "LinearSoftmax_Bayes::calculeH kinetic: " << ki << endl;
+	cout << "LinearSoftmax_Bayes::calculeH weight decay: " << wD << endl;
+	return ki + this->weightDecay*wD;
 }
 
 void

@@ -124,11 +124,25 @@ LookupTable_Bayes::initializeP() {
 }
 
 float
+LookupTable_Bayes::getKinetic() {
+	ki = 0.5*this->pWeight.sumSquared();
+	return ki;
+}
+
+float
+LookupTable_Bayes::getWeightDecayTerm() {
+	wD = 0.5*weight.sumSquared();
+	return wD;
+}
+
+float
 LookupTable_Bayes::calculeH() {
-	float h = 0.5*this->pWeight.sumSquared() + 0.5*weightDecay*weight.sumSquared();
+	ki = this->getKinetic();
+	wD = this->getWeightDecayTerm();
 	// for test
-	cout << "LookupTable_Bayes::calculeH h: " << h << endl;
-	return h;
+	cout << "LookupTable_Bayes::calculeH kinetic: " << ki << endl;
+	cout << "LookupTable_Bayes::calculeH weight decay: " << wD << endl;
+	return ki + this->weightDecay*wD;
 }
 
 void

@@ -14,6 +14,12 @@ public:
 	floatTensor pWeight;
 	floatTensor pBias;
 
+	// kinetic energy
+	float ki;
+
+	// weight decay term
+	float wD;
+
 	Linear_Bayes(int inputSize, int outputSize, int blockSize, outils* otl);
   void
   updateParameters(float learningRate);
@@ -35,6 +41,12 @@ public:
 
   void
   initializeP();
+
+  float
+  getKinetic();
+
+  float
+  getWeightDecayTerm();
 
   float
   calculeH();

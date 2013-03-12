@@ -5,6 +5,7 @@ all:
 	$(CC) $(FLAGS) resamplingData.cc -o resamplingData.exe $(CLIB_INCLUDE) -lmodel -lmodule -ltext -ltensor -lioFile $(LLIB)
 	$(CC) $(FLAGS) sequenceTrain.cc -o sequenceTrain.exe $(CLIB_INCLUDE) -lmodel -lmodule -ltext -ltensor -lioFile $(LLIB)
 	$(CC) $(FLAGS) prediction.cc -o prediction.exe $(CLIB_INCLUDE) -lmodel -lmodule -ltext -ltensor -lioFile $(LLIB)
+	$(CC) $(FLAGS) ovn2ovnb.cc -o ovn2ovnb.exe $(CLIB_INCLUDE) -lmodel -lmodule -ltext -ltensor -lioFile $(LLIB)
 	$(CC) $(FLAGS) text2Perplexity.cc -o text2Perplexity.exe $(CLIB_INCLUDE) -lmodel -lmodule -ltext -ltensor -lioFile $(LLIB)
 	$(CC) $(FLAGS) text2Prob.cc -o text2Prob.exe $(CLIB_INCLUDE) -lmodel -lmodule -ltext -ltensor -lioFile $(LLIB)
 	$(CC) $(FLAGS) infoModel.cc -o infoModel.exe $(CLIB_INCLUDE) -lmodel -lmodule -ltext -ltensor -lioFile $(LLIB)

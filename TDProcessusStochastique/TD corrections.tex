@@ -407,4 +407,37 @@ Pour quoi le temps ne dépend pas de l'état initial? C'est parce que c'est le p
 
 En appliquant les mêmes démarches pour $(Y_n)$, on obtient le même résultat.
 
+\section{Exercice 11:}
+
+La densité: $f(t) = \lambda \exp(-\lambda t)$ pour $t \geq 0$.
+
+L'espérance: $\dfrac{1}{\lambda}$.
+
+1. La probabilité d'avoir plus de $3$ pannes en $2$ heures?
+
+Soient $T_1, T_2, T_3$ les durées de vie des $3$ machines tombées en panne. Il faut qu'on calcule $p(T_1 + T_2 + T_3 \leq 2h)$. Attention que ces $3$ variables sont indépendantes. Leur somme $S_3$ suit la loi Gamma de paramètre $\lambda$ et $3$ dont la densité est: $g_{\lambda, n}(t) = \dfrac{\lambda (\lambda t)^{n-1}\exp(-\lambda t)}{(n-1)!}$ pour $t \geq 0$. ($n = 3$ dans notre cas).
+
+La fonction de répartition de la loi Gamma est:
+\begin{align}
+    F(t; n, \lambda) = \dfrac{\gamma(n, \lambda t)}{(n-1)!} \notag
+\end{align}
+où $\gamma(s, x) = \int\limits_{0}^x t^{s-1}e^{-t}dt$ est la fonction Gamma incomplète. La probabilité à calculer est:
+\begin{align}
+    p(T_1 + T_2 + T_3 \leq 2h) &= F(2h; 3, \lambda) = \dfrac{\gamma(3, 2h\lambda)}{2} \notag \\
+    &= \dfrac{1}{2}\int\limits_{0}^{2h\lambda}u^2\exp(-u)du \notag \\
+    &= (1 + 2h\lambda + 2h^2\lambda^2)\exp(-2h\lambda) \notag
+\end{align}
+
+Mais $\lambda = h^{-1}$ donc $p(T_1 + T_2 + T_3 \leq 2h) = 5\exp(-2) \approx 0,68$.
+
+2. On calcule $p(T_1 = t\vert T_1 + T_2 \geq 3h)$. Cette quantité est égale:
+\begin{align}
+    &\dfrac{p(T_1 = t, T_2 \geq 3h - t)}{p(T_1 + T_2 \geq 3h)} \notag \\
+    &= \dfrac{p(T_1 = t).p(T_2 \geq 3h - t)}{p(T_1 + T_2 \geq 3h)} \notag \\
+    &= \dfrac{\lambda \exp(-3h\lambda)}{p(T_1 + T_2 \geq 3h)} \notag
+\end{align}
+ne dépendant pas à $t$, donc c'est une distribution uniforme.
+
+3. C'est $(\sum\limits_{k = 1}^9 T_k \geq 12h) = 1 - F(12h; 9, \lambda)$.
+
 \end{document}

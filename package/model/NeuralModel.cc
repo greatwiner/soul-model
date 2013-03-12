@@ -462,6 +462,14 @@ NeuralModel::sequenceTrain(char* prefixModel, int gz, char* prefixData,
   	ofstream outputTrainingPerp;
   	outputTrainingPerp.open(outputTrainingPerplexity, ios_base::app);
 
+  	// name of the file containing execution time
+  	char outputTimeExeFileName[260];
+  	strcpy(outputTimeExeFileName, prefixModel);
+  	strcat(outputTimeExeFileName, "out.Time");
+
+  	ofstream outputTimeFile;
+  	outputTimeFile.open(outputTimeExeFileName, ios_base::app);
+
   	// execution time
   	float timeExe = 0;
 
@@ -555,7 +563,7 @@ NeuralModel::sequenceTrain(char* prefixModel, int gz, char* prefixData,
 
 			cout << "Compute validation perplexity:" << endl;
 			forwardProbability(dataSet->dataTensor, dataSet->probTensor);
-			prePerplexity = perplexity;
+			prePerplexity = dataSet->perplexity;
 			perplexity = dataSet->computePerplexity();
 
 			cout << "With epoch " << iteration << ", perplexity of "
@@ -622,7 +630,9 @@ NeuralModel::sequenceTrain(char* prefixModel, int gz, char* prefixData,
         {
           break;
         }
+      outputTimeFile << iteration << " " << timeExe << endl;
     }
+    outputTimeFile.close();
 
   	outputPerp.close();
 

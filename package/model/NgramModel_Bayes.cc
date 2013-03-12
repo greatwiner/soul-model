@@ -455,7 +455,7 @@ NgramModel_Bayes::train(char* dataFileString, int maxExampleNumber, int iteratio
 	int Tau = 100;
 	for (int subIter = 1; subIter <= Tau; subIter++) {
 		// for test
-		if (subIter % 10 == 0) {
+		if (subIter % 1 == 0) {
 			cout << subIter << endl;
 		}
 		if (subIter > 1) {

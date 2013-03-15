@@ -1,0 +1,22 @@
+dlvl = ../../.
+include $(dlvl)/Makefile.in
+all:
+	$(CC) $(FLAGS) createPrototype.cc -o createPrototype.exe $(CLIB_INCLUDE) -lmodel -lmodule -ltext -ltensor -lioFile $(LLIB)
+	$(CC) $(FLAGS) resamplingData.cc -o resamplingData.exe $(CLIB_INCLUDE) -lmodel -lmodule -ltext -ltensor -lioFile $(LLIB)
+	$(CC) $(FLAGS) sequenceTrain.cc -o sequenceTrain.exe $(CLIB_INCLUDE) -lmodel -lmodule -ltext -ltensor -lioFile $(LLIB)
+	$(CC) $(FLAGS) prediction.cc -o prediction.exe $(CLIB_INCLUDE) -lmodel -lmodule -ltext -ltensor -lioFile $(LLIB)
+	$(CC) $(FLAGS) ovn2ovnb.cc -o ovn2ovnb.exe $(CLIB_INCLUDE) -lmodel -lmodule -ltext -ltensor -lioFile $(LLIB)
+	$(CC) $(FLAGS) text2Perplexity.cc -o text2Perplexity.exe $(CLIB_INCLUDE) -lmodel -lmodule -ltext -ltensor -lioFile $(LLIB)
+	$(CC) $(FLAGS) text2Prob.cc -o text2Prob.exe $(CLIB_INCLUDE) -lmodel -lmodule -ltext -ltensor -lioFile $(LLIB)
+	$(CC) $(FLAGS) infoModel.cc -o infoModel.exe $(CLIB_INCLUDE) -lmodel -lmodule -ltext -ltensor -lioFile $(LLIB)
+	$(CC) $(FLAGS) infoNgram.cc -o infoNgram.exe $(CLIB_INCLUDE) -lmodel -lmodule -ltext -ltensor -lioFile $(LLIB)
+	$(CC) $(FLAGS) text2Index.cc -o text2Index.exe $(CLIB_INCLUDE) -lmodel -lmodule -ltext -ltensor -lioFile $(LLIB)
+	$(CC) $(FLAGS) mapVoc.cc -o mapVoc.exe $(CLIB_INCLUDE) -lmodel -lmodule -ltext -ltensor -lioFile $(LLIB)
+	$(CC) $(FLAGS) takeBaseParameter.cc -o takeBaseParameter.exe $(CLIB_INCLUDE) -lmodel -lmodule -ltext -ltensor -lioFile $(LLIB)
+	$(CC) $(FLAGS) takeLookupTable.cc -o takeLookupTable.exe $(CLIB_INCLUDE) -lmodel -lmodule -ltext -ltensor -lioFile $(LLIB)
+	$(CC) $(FLAGS) takeParameter.cc -o takeParameter.exe $(CLIB_INCLUDE) -lmodel -lmodule -ltext -ltensor -lioFile $(LLIB)
+	$(CC) $(FLAGS) pushAllParameter.cc -o pushAllParameter.exe $(CLIB_INCLUDE) -lmodel -lmodule -ltext -ltensor -lioFile $(LLIB)
+	$(CC) $(FLAGS) growPredictionSpace.cc -o growPredictionSpace.exe $(CLIB_INCLUDE) -lmodel -lmodule -ltext -ltensor -lioFile $(LLIB)
+	$(CC) $(FLAGS) growOutPredictionSpace.cc -o growOutPredictionSpace.exe $(CLIB_INCLUDE) -lmodel -lmodule -ltext -ltensor -lioFile $(LLIB)
+	$(CC) $(FLAGS) resamplingIdData.cc -o resamplingIdData.exe $(CLIB_INCLUDE) -lmodel -lmodule -ltext -ltensor -lioFile $(LLIB)
+	cp *.exe $(CBIN_PATH)

@@ -1,0 +1,443 @@
+\documentclass[a4paper,twoside,12pt]{article}
+% Alternative Options:
+%	Paper Size: a4paper / a5paper / b5paper / letterpaper / legalpaper / executivepaper
+% Duplex: oneside / twoside
+% Base Font Size: 10pt / 11pt / 12pt
+
+%% Language %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\usepackage[utf8]{inputenc}
+\usepackage{ae}
+
+\usepackage{lmodern} %Type1-font for non-english texts and characters
+
+\usepackage[top=2.5cm, bottom=2cm, left=2cm, right=2cm]{geometry}
+\usepackage{icomma} % Permet l'utilisation de virgule comme séparateur décimal
+\usepackage{url} % Package pour ne pas avoir des problèmes avec des URL's
+% Utiliser \url{}
+
+%% Packages for Graphics & Figures %%%%%%%%%%%%%%%%%%%%%%%%%%
+%\usepackage[dvips]{graphicx}
+%\usepackage{color,psfrag}
+\usepackage{graphicx} %%For loading graphic files
+%\usepackage{subfig} %%Subfigures inside a figure
+%\usepackage{tikz} %%Generate vector graphics from within LaTeX
+%\usepackage{tikz-3dplot} %requires 3dplot.sty to be in same directory, or in your LaTeX installation
+%\usetikzlibrary{calc} %pour faire les calculs
+
+%\usepackage{epstopdf}
+
+\newcommand{\HRule}{\rule{\linewidth}{0.5mm}} %Dessine la ligne horizontale
+
+%% Please note:
+%% Images can be included using \includegraphics{filename}
+%% resp. using the dialog in the Insert menu.
+%% 
+%% The mode "LaTeX => PDF" allows the following formats:
+%%   .jpg  .png  .pdf  .mps
+%% 
+%% The modes "LaTeX => DVI", "LaTeX => PS" und "LaTeX => PS => PDF"
+%% allow the following formats:
+%%   .eps  .ps  .bmp  .pict  .pntg
+
+
+%% Math Packages %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\usepackage{amsmath,amsfonts,amstext,amscd,bezier,amsthm,amssymb}
+
+\newcommand{\vect}[1]{\boldsymbol{#1}}
+
+%\newenvironment{solu}{\noindent {\bf Solution.}\small }{\hfill $\square$ \normalsize \medskip}
+
+%\renewcommand\thesection{\arabic{section}}
+%\renewcommand*\thesection{Question \arabic{section}}
+
+\def\MYTITLE{TD processus stochastiques corrections}
+
+\title{\MYTITLE}
+\author{\textsc{Do} Quoc Khanh}
+\date{\today}
+
+\usepackage{fancyhdr}
+
+\fancyhead[L]{\slshape Quoc Khanh DO}%\slshape\thepage LE,RO
+\fancyhead[R]{\slshape TD corrections}%{\slshape \leftmark}
+%\fancyhead[LO]{ccc}%{\slshape \rightmark}
+%\fancyfoot[LO,LE]{}%\slshape Short Course on Asymptotics
+\fancyfoot[C]{\thepage}
+%\fancyfoot[RO,RE]{}%\slshape 7/15/2002
+
+\DeclareMathOperator*{\argmax}{arg\,max}
+\DeclareMathOperator{\Tr}{Tr}
+\DeclareMathOperator{\diag}{diag}
+\newcommand{\abs}[1]{{\lvert #1 \rvert}}
+\newcommand{\norm}[1]{{\lVert #1 \rVert}}
+
+\begin{document}
+\maketitle
+\pagestyle{fancy}
+
+\section{Exercice 1}
+Deux machines automatiques, indépendantes.
+Fiabilité $p$ pour une journée. Lorsqu'elle tomme en panne elle est réparée pendant la nuit et se retrouve donc en état de marche le lendemain. Mais une seule machine peut être réparée à la fois.
+
+$X_n$ le nombre de machines en panne au début de la n-ième journée.
+
+1. Graphe des transitions:
+
+$X_n \in \{0, 1, 2\}$.
+\begin{align}
+    p_{00} &= p^2 + 2p(1-p) = 2p - p^2 \notag \\
+    p_{01} &= (1-p)^2 \notag \\
+    p_{10} &= p \notag \\
+    p_{11} &= 1-p \notag
+\end{align}
+
+2. Matrice de transition:
+
+$ \left( 
+\begin{array}{cc}
+p(2-p) & (1-p)^2 \\
+p & 1-p \\
+\end{array} 
+\right)$
+
+Explications: pour calculer $p_{00} = p(X_{n+1}=0\vert X_n = 0)$, si au début du jour $n$, aucune machine est en panne, pour que ce soit le même pour le lendemain, il y a deux possibilités:
+
+-Soit il y a aucune machine tombant en panne au cours de la journée $n$, donc cela avec la probabilité $p^2$.
+
+-Soit il y a exactement une machine tombant en panne au cours de la journée $n$, et donc avec la probabilité: $p(1-p)$ (pour la machine $2$ tombant en panne) $+$ $(1-p)p$ (pour la machine $1$ tombant en panne) = $2p(1-p)$.
+
+Donc $p_{00} = p^2 + 2p(1-p) = 2p - p^2 = p(2-p)$.
+
+3. Supposons que les deux machines sont au départ en état de marche donc $X_0 = 0$. Les probabilités au départ sont donc $\pi(0) = (1, 0)$, on a:
+
+\begin{align}
+    \pi(1) &= \pi(0).P = (p(2-p), (1-p)^2)\notag \\
+    \pi(2) &= \pi(1).P = \pi(0).P^2 = (p(1+2p-3p^2+p^3), (1-p)^2(1+p-p^2)) \notag
+\end{align}
+
+\textbf{Distribution limite:} Supposons que $0 < p < 1$, d'après le théorème 2, il existe une distribution limite. On calcule cette distribution $\pi^{*}$.
+
+Cette distribution satisfont les équation de balance (poly page 12). On peut utiliser le graphe de transition en interprétant les probabilités $\pi^{*}_k$ comme des masses associées aux états $k \in S$, et les produits $\pi^{*}_kp_{kj}$ comme des flux de masse entre les états $k$ et $j$. Probabilités stationnaire si et seulement si le flux d'entrée est égal au flux de sortie, donc:
+\begin{align}
+    \pi^{*}_0.(1-p)^2 = \pi^{*}_1.p \notag
+\end{align}
+
+Parce que $\pi^{*}_0 + \pi^{*}_1 = 1$, on a:
+\begin{align}
+    \dfrac{\pi^{*}_0}{p} = \dfrac{\pi^{*}_1}{(1-p)^2} = \dfrac{1}{p+(1-p)^2} \notag \\
+    \Rightarrow \pi^{*} = \left(\dfrac{p}{p+(1-p)^2}, \dfrac{(1-p)^2}{p+(1-p)^2}\right)\notag
+\end{align}
+
+\section{Exercice 2:}
+Deux éléments indépendants comme à l'exercice 1, sauf que les éléments ne peut pas être réparés. Soit $X_n$ le nombre de machines en panne au début de la n-ième journée.
+
+1. Le graphe des transitions:
+
+$X_n \in \{0, 1, 2\}$ donc $2$ états en total.
+
+$p_{00} = p^2$, $p_{01} = 2p(1-p)$, $p_{02} = (1-p)^2$.
+
+$p_{10} = 0$, $p_{11} = p$, $p_{12} = 1-p$.
+
+$p_{20} = 0$, $p_{21} = 0$ et $p_{22} = 1$.
+
+La matrice des transitions:
+
+$\left(\begin{array}{ccc}
+    p^2 & 2p(1-p) & (1-p)^2 \\
+    0 & p & 1-p \\
+    0 & 0 & 1
+\end{array}
+\right)$
+
+2. La distribution stationnaire:
+
+Si $p=1$, alors les machines ne tombent jamais, c'est-à-dire que la chaine reste l'état initial. Tous les flux sont zéros, donc tous les état de probabilités sont stationnaires, mais attention il n'y a pas de distribution limite car la chaine est constante.
+
+Si $p<1$, la seule distribution stationnaire est $(0, 0, 1)$. C'est aussi la distribution limite.
+
+3. La chaine est absorbante?
+
+Il y a un état absorbant, mais la chaine est-elle absorbante? Oui si $p < 1$, parce qu'on peut passer de n'importe quel état à cet état absorbant.
+
+4. Prenons $p = 0,9$. Soit $n_i$ temps moyen jusqu'à l'absorption en partant de l'état $i$, $i = 0, 1, 2$. Évidemment $n_2 = 0$. D'après le théorème 7 (page 16), les $n_i$ satisfont les équations suivantes:
+\begin{align}
+    n_0 &= 1 + p_{00}n_0 + p_{01}n_1 \notag \\
+    &= 1 + p^2n_0 + 2p(1-p)n_1 \notag \\
+    n_1 &= 1 + p_{10}n_0 + p_{11}n_1 \notag \\
+    &= 1 + pn_1 \notag \\
+    \Rightarrow n_1 &= \dfrac{1}{1-p} \notag
+\end{align}
+
+et on obtient $(1-p^2)n_0 = 1+2p \Rightarrow n_0 = \dfrac{1+2p}{1-p^2}$.
+
+Avec $p=0,9$, on a $n_0 = 14,74$
+
+\section{Exercice 3:}
+On ne répare plus une machine tombée en panne que le lendemain.
+
+1. Le graphe des transitions:
+
+$X_n \in \{0, 1, 2\}$.
+
+$p_{00} = p^2$, $p_{01} = 2p(1-p)$, $p_{02} = (1-p)^2$.
+
+$p_{10} = p$, $p_{11} = 1-p$, $p_{12} = 0$.
+
+$p_{20} = 0$, $p_{21} = 1$, $p_{22} = 0$.
+
+2. La matrice des transitions:
+
+$\left(
+\begin{array}{ccc}
+    p^2 & 2p(1-p) & (1-p)^2 \\
+    p & 1-p & 0 \\
+    0 & 1 & 0
+\end{array}\right)$
+
+3. La distribution stationnaire:
+
+$(1-p^2)\pi_0 = p\pi_1$.
+
+$p\pi_1 = 2p(1-p)\pi_0 + \pi_2$.
+
+$\pi_2 = (1-p)^2\pi_0$.
+
+On a $\pi_0 = \dfrac{1}{(1-p)^2}\pi_2$ et $\pi_1 = \dfrac{1+p}{p(1-p)}\pi_2$. Or $\pi_0 + \pi_1 + \pi_2 = 1$, on a:
+
+$\pi = \dfrac{1}{p^3 - 3p^2 + 2p + 1}\left( p, 1-p^2, p(1-p)^2\right)$.
+
+Est-elle une distribution limite? Avec $p=0$, $(0, 1, 0)$ est une distribution limite. Avec $p = 1$, $(1, 0, 0)$ est une distribution limite. Si $0 < p < 1$, les signes des éléments de $P$ est:
+
+$\left(
+\begin{array}{ccc}
+    + & + & + \\
+    + & + & 0 \\
+    0 & + & 0
+\end{array}
+\right)$
+
+et donc de $P^2$:
+
+$\left(
+\begin{array}{ccc}
+    + & + & + \\
+    + & + & + \\
+    + & + & 0
+\end{array}
+\right)$
+
+et donc $P^3$ contient les éléments strictement positifs. Après le théorème 2, la chaine Markov possède une distribution limite. En plus, cette distribution limite doit satisfaire les équations stationnaires, donc c'est exactement $\pi$ qu'on a trouvée ci-dessus.
+
+\section{Exercice 4:}
+$P = \left(
+\begin{array}{cc}
+    1-a & a \\
+    b & 1-b
+\end{array}
+\right)$. $0 \leq a \leq 1$, $0 \leq b \leq 1$, $0 < a+b < 2$.
+
+1. $P^n = \dfrac{1}{a+b}\left(\begin{array}{cc}
+    b & a\\
+    b & a
+\end{array}\right) + \dfrac{(1-a-b)^2}{a+b}\left(\begin{array}{cc}
+    a & -a \\
+    -b & b
+\end{array}\right)$. Démonstration par récurrence.
+
+2. $\pi(n) = \pi(0).P^n$.
+
+3. Parce que $0 < a+b < 2$.
+
+La distribution limite est: $\dfrac{1}{a+b}.\pi(0).\left(\begin{array}{cc}
+    b & a\\
+    b & a
+\end{array}\right) = \dfrac{1}{a+b}(b, a)$.
+
+4. $\pi$ est aussi une distribution stationnaire. Est-elle unique?
+
+La chaine Markov admet une unique distribution stationnaire si et seulement si elle comprend une seule classe récurrente $\Leftrightarrow$ les deux états sont se communiquent $\Leftrightarrow$ $a > 0$ et $b > 0$.
+
+5. Les comportements déterministes.
+
+\section{Exercice 5:}
+$P^4$ satisfait le théorème 2, donc convergente.
+
+La distribution limite est aussi stationnaire. On obtient:
+
+$\left(\dfrac{4}{7}, \dfrac{2}{7}, \dfrac{1}{7}\right)$.
+
+\section{Exercice 6:}
+1. Déterminer les classes transitoires et récurrentes? D'abord il faut dessiner le graphe des transitions.
+
+Il y a $4$ états. Les états $3$ et $4$ se communiquent. Les états $3$ et $1$ ne se communiquent pas. Les états $1$ et $2$ ne se communiquent pas. Il y a donc $3$ classes: $\{3, 4\}$, $\{1\}$, et $\{2\}$. Une classe est dite \textsl{transitoire} s'il est possible d'en sortir. Sinon, elle est dite \textsl{récurrente}. Les classes $\{3, 4\}$ et $\{2\}$ sont récurrentes, alors que $\{1\}$ est transitoire.
+
+2. Existe-il une distribution stationnaire? Oui parce que pour une chaine de Markov finie, il existe toujours au moins une distribution stationnaire. Une distribution limite? Non. Parce que d'après le théorème $6$, si la chaine possédait une distribution limite $\pi$, alors $\pi$ serait l'unique distribution de la chaine. La chaine possédait une distribution stationnaire unique, d'après le théorème $5$, la chaine comprendrait une unique classe récurrente, mais il y a ici $2$ classes récurrentes, donc c'est faux.
+
+\section{Exercice 7:}
+
+\section{Exercice 8:}
+Ce processus peut être décrit par une chaine Markov de $5$ états: les $3$ états de fabrication, la sortie en bon état (l'état $4$), et la mise à l'écart (l'état $5$). Chaque article passe les $3$ états de fabrication, s'il est défectueux, il est jeté; s'il est en bon état, il passe à la prochaine étape ou quitte la machine en bon état s'il est déjà à la dernière étape de fabrication. S'il est partiellement défectueux, il reste à l'étape en courant encore une fois.
+
+On a: $p_{12} = p_{23} = p_{34} = r$.
+
+$p_{11} = p_{22} = p_{33} = q$.
+
+$p_{15} = p_{25} = p_{35} = p$.
+
+La durée moyenne jusqu'à ce qu'un article quitte la machine $\rightarrow$ temps moyen jusqu'à l'absorption en partant de l'état $1$, donc $n_1$. D'après le théorème $7$, $n_i, i=1,2,3$ satisfont les équations suivantes:
+\begin{align}
+    n_1 &= 1 + qn_1 + rn_2 \notag \\
+    n_2 &= 1 + qn_2 + rn_3 \notag \\
+    n_3 &= 1 + qn_3 \notag
+\end{align}
+
+En résolvant ces équations, on a:
+\begin{align}
+    n_3 &= \dfrac{1}{1-q} \notag \\
+    n_2 &= \dfrac{1-q+r}{(1-q)^2} \notag \\
+    n_1 &= \dfrac{(1-q)^2 + r(1-q+r)}{(1-q)^3}\notag
+\end{align}
+
+On calcule $n_1 = 3.7$.
+
+La probabilité qu'en quittant la machine, l'article soit en bon état? C'est $b_{14}$: la probabilité de l'absorption à l'état $4$ si on part de l'état $1$. D'après le théorème $8$, les $b_{14}, b_{24}$ et $b_{34}$ satisfont les équations suivantes:
+\begin{align}
+    b_{14} &= 0 + qb_{14} + rb_{24} \notag \\
+    b_{24} &= 0 + qb_{24} + rb_{34} \notag \\
+    b_{34} &= r + qb_{34} \notag
+\end{align}
+
+En résolvant ces équations, on obtient alors:
+\begin{align}
+    b_{34} &= \dfrac{r}{1-q}\notag \\
+    b_{24} &= \dfrac{r^2}{(1-q)^2}\notag \\
+    b_{14} &= \dfrac{r^3}{(1-q)^3} \notag
+\end{align}
+
+On calcule $b_{14} = 0.63$.
+
+\section{Exercice 9:}
+La matrice des transitions:
+\begin{align}
+    \left(\begin{array}{cccc}
+        0 & \dfrac{1}{3} & \dfrac{1}{3} & \dfrac{1}{3} \\
+        \dfrac{1}{3} & 0 & \dfrac{1}{3} & \dfrac{1}{3} \\
+        \dfrac{1}{3} & \dfrac{1}{3} & 0 & \dfrac{1}{3} \\
+        \dfrac{1}{3} & \dfrac{1}{3} & \dfrac{1}{3} & 0
+    \end{array}\right) \notag
+\end{align}
+
+Pour calculer le temps moyen pour atteindre l'état $4$ pour la première fois, en rend cet état absorbant, et puis calculer le temps moyen jusqu'à l'absorption. En rendant l'état $4$ absorbant, on obtient une nouvelle matrice des transitions:
+\begin{align}
+    \left(\begin{array}{cccc}
+        0 & \dfrac{1}{3} & \dfrac{1}{3} & \dfrac{1}{3} \\
+        \dfrac{1}{3} & 0 & \dfrac{1}{3} & \dfrac{1}{3} \\
+        \dfrac{1}{3} & \dfrac{1}{3} & 0 & \dfrac{1}{3} \\
+        0 & 0 & 0 & 1
+    \end{array}\right) \notag
+\end{align}
+
+D'après le théorème $7$, on obtient les équations suivantes pour $n_1$, $n_2$ et $n_3$:
+\begin{align}
+    n_1 &= 1+\dfrac{1}{3}n_2 + \dfrac{1}{3}n_3 \notag \\
+    n_2 &= 1+\dfrac{1}{3}n_1 + \dfrac{1}{3}n_3\notag \\
+    n_3 &= 1 + \dfrac{1}{3}n_1 + \dfrac{1}{3}n_2 \notag
+\end{align}
+
+Et on obtient $n_1 = n_2 = n_3 = 3$. Attention qu'il n'y a aucune différence entre les différents points de départ.
+
+Maintenant on transforme l'état $2$ en état absorbant. Pour calculer la probabilité d'atteindre $4$, on transforme aussi $4$ en état absorbant. Donc il y a deux états absorbants. On calcule les probabilités $b_{14}$ et $b_{34}$ de l'absorption en état $4$. D'après le théorème $8$, on a les équations suivantes:
+\begin{align}
+    b_{14} &= \dfrac{1}{3} + \dfrac{1}{3}b_{34}\notag \\
+    b_{34} &= \dfrac{1}{3} + \dfrac{1}{3}b_{14}\notag
+\end{align}
+
+On obtient $b_{14} = b_{34} = \dfrac{1}{2}$. Donc $p = \dfrac{1}{2}$.
+
+\section{Exercice 10:}
+$X_n$ le nombre de voitures se trouvant dans la station immédiatement après l'instant $n$.
+
+1. $(X_n)$ forme bien une chaine de Markov, parce que:
+
+$X_{n+1} = Y_{n+1}$, si $X_n = 0,1$.
+
+$X_{n+1} = \min(Y_{n+1}+1, 2)$ si $X_n = 2$.
+
+Attention: à tout moment, il y a au plus $3$ voitures dans la station.
+
+2.3. Matrice des transitions:
+\begin{align}
+    \left(\begin{array}{ccc}
+        0,4 & 0,4 & 0,2 \\
+        0,4 & 0,4 & 0,2 \\
+        0 & 0,4 & 0,6
+    \end{array}\right)\notag
+\end{align}
+
+4. Considérons le régime stationnaire. Les équations de balance:
+\begin{align}
+    0,6\pi_0 &= 0,4\pi_1 \notag \\
+    0,6\pi_1 &= 0,4\pi_0 + 0,4\pi_2 \notag \\
+    0,4\pi_2 &= 0,2\pi_1 + 0,2\pi_0 \notag
+\end{align}
+
+On obtient $\pi_1 = \dfrac{3}{2}\pi_0$, $\pi_2 = \dfrac{5}{4}\pi_0$. Et enfin $\pi_0 = \dfrac{4}{15}$, $\pi_1 = \dfrac{6}{15}$ et $\pi_2 = \dfrac{1}{3}$.
+
+La station est inoccupée pendant en moyenne $27\%$ du temps.
+
+5. Le moment où les deux places sont occupées pour la première fois, c'est la première fois que $Y_n = 2$. Parce que si $Y_n = 0$ ou $1$, il ne peut pas y avoir $2$ voitures dans les positions d'attente.
+
+Le première fois que $Y_n=2$ est aussi la première fois que $X_n = 2$ (voir les formules). Donc on doit chercher la durée moyenne jusqu'à ce que $X_n = 2$ pour la première fois. On rend l'état $2$ absorbant, et calculer le temps moyen jusqu'à l'absorption. D'après le théorème $7$, on a:
+\begin{align}
+    n_0 &= 1 + 0,4n_0 + 0,4n_1 \notag \\
+    n_1 &= 1 + 0,4n_0 + 0,4n_1 \notag
+\end{align}
+
+On obtient $n_0 = n_1 = 5$.
+
+Pour quoi le temps ne dépend pas de l'état initial? C'est parce que c'est le premier moment où $Y_n = 2$, cette variable aléatoire ne dépend pas de l'état de $X_n$. On peut le calculer directement. $(Y_n)$ est aussi une chaine de Markov avec la matrice des transitions:
+\begin{align}
+    \left(\begin{array}{ccc}
+        0,4 & 0,4 & 0,2 \\
+        0,4 & 0,4 & 0,2 \\
+        0,4 & 0,4 & 0,2
+    \end{array}\right)
+\end{align}
+
+En appliquant les mêmes démarches pour $(Y_n)$, on obtient le même résultat.
+
+\section{Exercice 11:}
+
+La densité: $f(t) = \lambda \exp(-\lambda t)$ pour $t \geq 0$.
+
+L'espérance: $\dfrac{1}{\lambda}$.
+
+1. La probabilité d'avoir plus de $3$ pannes en $2$ heures?
+
+Soient $T_1, T_2, T_3$ les durées de vie des $3$ machines tombées en panne. Il faut qu'on calcule $p(T_1 + T_2 + T_3 \leq 2h)$. Attention que ces $3$ variables sont indépendantes. Leur somme $S_3$ suit la loi Gamma de paramètre $\lambda$ et $3$ dont la densité est: $g_{\lambda, n}(t) = \dfrac{\lambda (\lambda t)^{n-1}\exp(-\lambda t)}{(n-1)!}$ pour $t \geq 0$. ($n = 3$ dans notre cas).
+
+La fonction de répartition de la loi Gamma est:
+\begin{align}
+    F(t; n, \lambda) = \dfrac{\gamma(n, \lambda t)}{(n-1)!} \notag
+\end{align}
+où $\gamma(s, x) = \int\limits_{0}^x t^{s-1}e^{-t}dt$ est la fonction Gamma incomplète. La probabilité à calculer est:
+\begin{align}
+    p(T_1 + T_2 + T_3 \leq 2h) &= F(2h; 3, \lambda) = \dfrac{\gamma(3, 2h\lambda)}{2} \notag \\
+    &= \dfrac{1}{2}\int\limits_{0}^{2h\lambda}u^2\exp(-u)du \notag \\
+    &= (1 + 2h\lambda + 2h^2\lambda^2)\exp(-2h\lambda) \notag
+\end{align}
+
+Mais $\lambda = h^{-1}$ donc $p(T_1 + T_2 + T_3 \leq 2h) = 5\exp(-2) \approx 0,68$.
+
+2. On calcule $p(T_1 = t\vert T_1 + T_2 \geq 3h)$. Cette quantité est égale:
+\begin{align}
+    &\dfrac{p(T_1 = t, T_2 \geq 3h - t)}{p(T_1 + T_2 \geq 3h)} \notag \\
+    &= \dfrac{p(T_1 = t).p(T_2 \geq 3h - t)}{p(T_1 + T_2 \geq 3h)} \notag \\
+    &= \dfrac{\lambda \exp(-3h\lambda)}{p(T_1 + T_2 \geq 3h)} \notag
+\end{align}
+ne dépendant pas à $t$, donc c'est une distribution uniforme.
+
+3. C'est $(\sum\limits_{k = 1}^9 T_k \geq 12h) = 1 - F(12h; 9, \lambda)$.
+
+\end{document}

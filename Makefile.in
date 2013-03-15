@@ -1,0 +1,59 @@
+# Where to install, will create /lib, /include, /bin /script
+#DIR_INSTALL = /people/allauzen/dev/cpp/soul/soul-model
+DIR_INSTALL = /people/dokhanh/share/local1
+
+# For BLAS, need to give /include and /lib
+# Change PROC to 0: MKL or 1: ACML or 2: CBLAS or 3: OPENBLAS
+
+PROC = 0
+
+# MKL or ACML, good performance
+# CBLAS: Reference library from netlib,  (very slow)
+# OPENBLAS (good performance)
+# For -DADD_, DNO_IEEE see documentation for each library and file package/floatTensor.{cc,H} 
+
+ifeq ($(PROC),0)
+	DIR_INCLUDE_BLAS = /people/lehaison/share/global/include
+	DIR_LIB_BLAS = /people/lehaison/share/global/lib	
+	LLIB = -lmkl -lvml -lpthread -m64 -lz	
+	FLAGS = -fPIC -O3 -DPROC=$(PROC)
+endif
+
+ifeq ($(PROC),1)
+	DIR_INCLUDE_BLAS = /people/lehaison/share/global/include
+	DIR_LIB_BLAS = /people/lehaison/share/global/lib		
+	LLIB = -lacml_mv -lacml_mp -fopenmp -lgfortran -m64 -lz
+	FLAGS = -fPIC -O3 -DPROC=$(PROC)
+endif		
+
+ifeq ($(PROC),2)
+	# BLAS, CBLAS need to be complied with -DADD_
+	DIR_INCLUDE_BLAS = /people/lehaison/share/rock/src/CBLAS/include 
+	DIR_LIB_BLAS = /people/lehaison/share/rock/src/CBLAS/lib   
+	LLIB  = -lcblas -lblas -lgfortran -m64 -lz
+	FLAGS = -fPIC -O3 -DADD_ -DPROC=$(PROC)
+endif
+
+
+ifeq ($(PROC),3)
+	DIR_INCLUDE_BLAS = /people/lehaison/share/rock/openblas/include 
+	DIR_LIB_BLAS = /people/lehaison/share/rock/openblas/lib          
+	LLIB  = -lopenblas -m64 -lz	
+	FLAGS = -fPIC -O3 -DPROC=$(PROC)
+endif
+
+
+CC = g++
+CFLAGS_OBJECT = $(FLAGS) -c -DNDEBUG
+
+CLIB_PATH = $(DIR_INSTALL)/lib
+CBIN_PATH = $(DIR_INSTALL)/bin
+CINCLUDE_PATH = $(DIR_INSTALL)/include
+CSCRIPT_PATH = $(DIR_INSTALL)/script
+
+CLIB_INCLUDE = -L$(CLIB_PATH) -I$(CINCLUDE_PATH) -L$(DIR_LIB_BLAS) -I$(DIR_INCLUDE_BLAS)
+# Archive programs and flags
+ARCH = ar
+ARCHFLAGS = r
+RANLIB = echo
+

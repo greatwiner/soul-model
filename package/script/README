@@ -1,0 +1,40 @@
+train_createPrototype.sh configFile order type(all, sl, out)
+Script to create prototype for each step 
+sl:  Step 1, shortlist model
+out: Step 3, out-of-shortlist model
+all: Step 4, whole vocabulary model
+
+train_resamplingData.sh configFile order type(all, sl, out)
+Script to resample data for each step 
+sl:  Step 1, shortlist model
+out: Step 3, out-of-shortlist model
+all: Step 4, whole vocabulary model
+
+train_sequenceTrain.sh configFile order type(all, sl, out)
+Script to train model for several epochs for each step 
+sl:  Step 1, shortlist model
+out: Step 3, out-of-shortlist model
+all: Step 4, whole vocabulary model
+
+code_pcaFeature.py featureFileName transpose dim outputFileName
+transpose: N or T (Normal or Transpose)
+script to do PCA on word spaces using MDP toolkit, transpose = 'T'
+
+code_clustering.py inputFeatureFileName voc shortlist groupNumber iterationNumber prefixOutput
+script to do K-means clustering on word spaces (after applying PCA)
+
+voc_createOutVoc.py vocFileName shortlistFileName outputVocFileName
+script to create vocabualary for Step 3 (shortlist words are added with 'prefix.')
+
+code_createOutCode.py codeWordFileName outputNetworkSizeFileName vocFileName mapShortlistFileName prefixOutput
+script to modify tree structure (codeWord and outputNetworkSize) to be used at Step 3 (delete shortlist words)
+
+out_ppl.py inputDir
+script to output perplexity in the training directory
+
+out_bestppl.py inputDir
+script to output epoch that has a best perplexity in the training directory
+
+plot_spaceWord.py spaceFileName vocFileName listFileName outputFileName
+script to draw word spaces
+

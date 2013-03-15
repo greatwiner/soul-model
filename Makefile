@@ -37,7 +37,7 @@ command:
 	(cd package/command;\
 	make all;)
 	
-clean:
+cleanInSource:
 	(cd package/ioFile;\
 	rm -f *.o;)
 	(cd package/tensor;\
@@ -47,16 +47,20 @@ clean:
 	(cd package/module;\
 	rm -f *.o;)
 	(cd package/model;\
-	rm -f *. o;)	
+	rm -f *.o;)	
 	(cd package/command;\
 	rm -f *.exe;)
 	(cd package/test;\
 	rm -f *.exe;)
+
+clean:
+	rm -f -r $(DIR_INSTALL)/*
+
 test:
 	(cd package/test;\
 	make all;)	
 forwardTrainTest:
-	$(CBIN_PATH)/forwardTrainTest.exe
+	$(CBIN_PATH)forwardTrainTest.exe
 script:
 	(cd package/script;\
 	make all;)

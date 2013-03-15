@@ -1,12 +1,20 @@
 dlvl = ../../.
 include $(dlvl)/Makefile.in
-alev = *.o
-all:
-	cp *.H $(CINCLUDE_PATH)
-	$(CC) $(CFLAGS_OBJECT) $(CLIB_INCLUDE) outils.cc
-	$(CC) $(CFLAGS_OBJECT) $(CLIB_INCLUDE) Tensor.cc	
-	$(CC) $(CFLAGS_OBJECT) $(CLIB_INCLUDE) floatTensor.cc
-	$(CC) $(CFLAGS_OBJECT) $(CLIB_INCLUDE) intTensor.cc	
-	$(ARCH) $(ARCHFLAGS)  $(CLIB_PATH)/libtensor.a $(alev)
+alev = $(CLIB_PATH)*.o
+all: $(CLIB_PATH)outils.o $(CLIB_PATH)Tensor.o $(CLIB_PATH)floatTensor.o $(CLIB_PATH)intTensor.o linker
 
+$(CLIB_PATH)outils.o: outils.cc
+		$(CC) $(CFLAGS_OBJECT) $(CLIB_INCLUDE) outils.cc -o $(CLIB_PATH)outils.o
+		
+$(CLIB_PATH)Tensor.o: Tensor.cc
+		$(CC) $(CFLAGS_OBJECT) $(CLIB_INCLUDE) Tensor.cc -o $(CLIB_PATH)Tensor.o
+		
+$(CLIB_PATH)floatTensor.o: floatTensor.cc
+		$(CC) $(CFLAGS_OBJECT) $(CLIB_INCLUDE) floatTensor.cc -o $(CLIB_PATH)floatTensor.o
+		
+$(CLIB_PATH)intTensor.o: intTensor.cc
+		$(CC) $(CFLAGS_OBJECT) $(CLIB_INCLUDE) intTensor.cc -o $(CLIB_PATH)intTensor.o
 
+linker:
+		cp *.H $(CINCLUDE_PATH)
+		$(ARCH) $(ARCHFLAGS)  $(CLIB_PATH)libtensor.a $(alev)

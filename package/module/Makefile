@@ -2,7 +2,11 @@ dlvl = ../../.
 include $(dlvl)/Makefile.in
 alev = $(CLIB_PATH)*.o
 
-all: $(CLIB_PATH)Module.o $(CLIB_PATH)Linear.o $(CLIB_PATH)Linear_Bayes.o $(CLIB_PATH)MaxLinear.o $(CLIB_PATH)BLinear.o $(CLIB_PATH)RLinear.o $(CLIB_PATH)RRLinear.o $(CLIB_PATH)LookupTable.o $(CLIB_PATH)LookupTable_Bayes.o $(CLIB_PATH)Tanh.o $(CLIB_PATH)Sigmoid.o $(CLIB_PATH)Sequential.o $(CLIB_PATH)Sequential_Bayes.o $(CLIB_PATH)LinearSoftmax.o $(CLIB_PATH)LinearSoftmax_Bayes.o $(CLIB_PATH)FunctionSequential.o linker
+all: $(CLIB_PATH)libmodule.a
+
+$(CLIB_PATH)libmodule.a: $(CLIB_PATH)Module.o $(CLIB_PATH)Linear.o $(CLIB_PATH)Linear_Bayes.o $(CLIB_PATH)MaxLinear.o $(CLIB_PATH)BLinear.o $(CLIB_PATH)RLinear.o $(CLIB_PATH)RRLinear.o $(CLIB_PATH)LookupTable.o $(CLIB_PATH)LookupTable_Bayes.o $(CLIB_PATH)Tanh.o $(CLIB_PATH)Sigmoid.o $(CLIB_PATH)Sequential.o $(CLIB_PATH)Sequential_Bayes.o $(CLIB_PATH)LinearSoftmax.o $(CLIB_PATH)LinearSoftmax_Bayes.o $(CLIB_PATH)FunctionSequential.o
+		cp *.H $(CINCLUDE_PATH)
+		$(ARCH) $(ARCHFLAGS)  $(CLIB_PATH)libmodule.a $(alev)
 	
 $(CLIB_PATH)Module.o: Module.cc
 		$(CC) $(CFLAGS_OBJECT) $(CLIB_INCLUDE) Module.cc -o $(CLIB_PATH)Module.o
@@ -51,7 +55,3 @@ $(CLIB_PATH)LinearSoftmax_Bayes.o: LinearSoftmax_Bayes.cc
 		
 $(CLIB_PATH)FunctionSequential.o: FunctionSequential.cc
 		$(CC) $(CFLAGS_OBJECT) $(CLIB_INCLUDE) FunctionSequential.cc -o $(CLIB_PATH)FunctionSequential.o
-		
-linker:
-		cp *.H $(CINCLUDE_PATH)
-		$(ARCH) $(ARCHFLAGS)  $(CLIB_PATH)libmodule.a $(alev)

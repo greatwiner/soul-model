@@ -452,7 +452,7 @@ NgramModel_Bayes::train(char* dataFileString, int maxExampleNumber, int iteratio
 	float prevH = calculeH();
 	// for test
 	cout << "Prev H: " << prevH << endl;
-	int Tau = 100;
+	int Tau = 2;
 	for (int subIter = 1; subIter <= Tau; subIter++) {
 		// for test
 		if (subIter % 1 == 0) {

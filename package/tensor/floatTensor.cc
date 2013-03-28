@@ -619,10 +619,10 @@ floatTensor::readStrip(ioFile* iof)
 }
 
 void
-floatTensor::initializeNormal() {
+floatTensor::initializeNormal(outils* otl) {
 	for (int i = 0; i < this->size[0]; i ++) {
 		for (int j = 0; j < this->size[1]; j ++) {
-			data[i*stride[0] + j*stride[1]] = initializeNormalOneElement();
+			data[i*stride[0] + j*stride[1]] = initializeNormalOneElement(otl);
 		}
 	}
 }
@@ -634,10 +634,10 @@ floatTensor::log(floatTensor& src)
 }
 
 float
-floatTensor::initializeNormalOneElement() {
+floatTensor::initializeNormalOneElement(outils* otl) {
 	// uniformly distributed float numbers
-	float U1=((float)rand()/(float)RAND_MAX);
-	float U2=((float)rand()/(float)RAND_MAX);
+	float U1=otl->genrand();
+	float U2=otl->genrand();
 	return sqrt(-2*::log(U1))*cos(2*M_PI*U2);
 }
 
@@ -649,4 +649,9 @@ floatTensor::sumSquared() {
 float
 floatTensor::averageSquare() {
 	return sumSquared()/(this->size[0]*this->size[1]);
+}
+
+float
+floatTensor::angleDist(floatTensor& anotherVector) {
+	return this->dot(anotherVector)/sqrt(this->sumSquared()*anotherVector.sumSquared());
 }

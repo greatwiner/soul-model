@@ -104,8 +104,8 @@ LinearSoftmax_Bayes::sumSquaredWeights() {
 
 void
 LinearSoftmax_Bayes::initializeP() {
-	this->pWeight.initializeNormal();
-	this->pBias.initializeNormal();
+	this->pWeight.initializeNormal(this->otl);
+	this->pBias.initializeNormal(this->otl);
 }
 
 float

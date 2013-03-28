@@ -97,8 +97,8 @@ Linear_Bayes::sumSquaredWeights() {
 
 void
 Linear_Bayes::initializeP() {
-	this->pWeight.initializeNormal();
-	this->pBias.initializeNormal();
+	this->pWeight.initializeNormal(this->otl);
+	this->pBias.initializeNormal(this->otl);
 }
 
 float

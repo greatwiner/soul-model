@@ -90,11 +90,11 @@ LookupTable_Bayes::backward(floatTensor& gradOutput, int last)
 		  selectGradOutput.sub(gradOutput, x0, x1, i, i);
 		  selectGradWeight.select(gradWeight, 1, input(j, i));
 		  selectGradWeight.axpy(selectGradOutput, 1);
-		  //if (last == 1) {
+		  if (last == 1) {
 			  // a column of weight corresponding to the selectGradWeight being treated
 			  selectWeight.select(weight, 1, input(j, i));
 			  selectGradWeight.axpy(selectWeight, weightDecay);
-		  //}
+		  }
 
 		  x0 += dimensionSize;
 		  x1 += dimensionSize;
@@ -120,7 +120,7 @@ LookupTable_Bayes::updateRandomness(float learningRate) {
 
 void
 LookupTable_Bayes::initializeP() {
-	this->pWeight.initializeNormal();
+	this->pWeight.initializeNormal(this->otl);
 }
 
 float

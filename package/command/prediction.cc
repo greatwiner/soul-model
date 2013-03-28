@@ -45,10 +45,18 @@ prediction(NeuralModel* model, int start, int end, char* prefixModelFiles, char*
 		}
 		probTensor.axpy(model->dataSet->probTensor, 1);
 		if (calDist == 1 && i != start) {
-			prevLookupTableRepre.axpy(model->baseNetwork->lkt->weight, -1);
-			cout << "Distance between iteration " << i << " and interation "<< i-step << " :" << endl;
-			distFile << i-step << " " << prevLookupTableRepre.averageSquare() << endl;
-			cout << prevLookupTableRepre.averageSquare() << endl;
+			floatTensor curLookupTableRepre;
+			curLookupTableRepre.copy(model->baseNetwork->lkt->weight);
+			floatTensor distLkt;
+			distLkt.copy(prevLookupTableRepre);
+			distLkt.axpy(curLookupTableRepre, -1);
+			float distAngle = prevLookupTableRepre.angleDist(curLookupTableRepre);
+			float distAbsAvg = distLkt.sumSquared()/(distLkt.size[0]*distLkt.size[1]);
+			cout << "Average absolute distance between iteration " << i << " and iteration" << i-step << " :" << endl;
+			cout << distAbsAvg << endl;
+			cout << "Angle distance between iteration " << i << " and interation "<< i-step << " :" << endl;
+			cout << distAngle << endl;
+			distFile << i-step << " " << distAbsAvg << " " << distAngle << endl;
 			strcat(fileName, ".dist");
 			ioFile fileDist;
 			fileDist.takeWriteFile(fileName);
@@ -56,8 +64,10 @@ prediction(NeuralModel* model, int start, int end, char* prefixModelFiles, char*
 			distTen.resize(prevLookupTableRepre.size[1], 1);
 			for (int ind = 0; ind < prevLookupTableRepre.size[1]; ind++) {
 				floatTensor selectPrevLookupTableRepre;
+				floatTensor selectCurLookupTableRepre;
 				selectPrevLookupTableRepre.select(prevLookupTableRepre, 1, ind);
-				distTen(ind, 0) = selectPrevLookupTableRepre.averageSquare();
+				selectCurLookupTableRepre.select(curLookupTableRepre, 1, ind);
+				distTen(ind, 0) = selectPrevLookupTableRepre.angleDist(selectCurLookupTableRepre);
 			}
 			distTen.write(&fileDist);
 		}
@@ -120,4 +130,19 @@ main(int argc, char *argv[]) {
 		ind += step;
 	}
 	outputPerpSyn.close();
+	/*outils* otl = new outils();
+	otl->sgenrand(time(NULL) + getpid());
+	floatTensor out;
+	out.resize(100, 100);
+	out.initializeNormal(otl);
+	out.write();
+	cout << out.sumSquared()/(out.size[0]*out.size[1]) << endl;
+	float sum = 0.0;
+	for (int i = 0; i < out.size[0]; i ++) {
+		for (int j = 0; j < out.size[1]; j ++) {
+			sum += out(i,j);
+		}
+	}
+	cout << sum/(out.size[0]*out.size[1]) << endl;*/
+	return 0;
 }

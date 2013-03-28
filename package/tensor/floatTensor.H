@@ -113,13 +113,13 @@ public:
   averageSquare();
 
   float
-  initializeNormalOneElement();
+  initializeNormalOneElement(outils* otl);
 
   void
   log(floatTensor& src);
 
   void
-  initializeNormal();
+  initializeNormal(outils* otl);
 
   // Read write function,
   // when haveMemory = 0, we don't write it, so when read it,
@@ -165,6 +165,10 @@ public:
   // Sample from uniform distribution
   void
   uniform(float a, float b, outils* otl);
+
+  // calculate angle distance
+  float
+  angleDist(floatTensor& anotherVector);
 
 };
 

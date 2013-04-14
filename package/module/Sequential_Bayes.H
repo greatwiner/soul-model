@@ -34,6 +34,6 @@ public:
   reUpdateParameters(int accept);
 
   void
-  updateRandomness(float learningRate);
+  updateRandomness(float learningRate, float RATE);
 };
 

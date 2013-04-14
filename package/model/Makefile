@@ -1,10 +1,12 @@
 dlvl = ../../.
 include $(dlvl)/Makefile.in
 alev = $(CLIB_PATH)*.o
-all: $(CLIB_PATH)libmodel.a
+all: copy $(CLIB_PATH)libmodel.a
+
+copy:
+		cp *.H $(CINCLUDE_PATH)
 
 $(CLIB_PATH)libmodel.a: $(CLIB_PATH)NeuralModel.o $(CLIB_PATH)NgramModel.o $(CLIB_PATH)NgramModel_Bayes.o $(CLIB_PATH)NgramRankModel.o $(CLIB_PATH)RecurrentModel.o $(CLIB_PATH)NgramWordTranslationModel.o $(CLIB_PATH)NgramPhraseTranslationModel.o $(CLIB_PATH)FunctionModel.o
-		cp *.H $(CINCLUDE_PATH)
 		$(ARCH) $(ARCHFLAGS)  $(CLIB_PATH)libmodel.a $(alev)
 	
 $(CLIB_PATH)NeuralModel.o: NeuralModel.cc

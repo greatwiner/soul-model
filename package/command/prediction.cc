@@ -9,10 +9,9 @@
 
 float
 prediction(NeuralModel* model, int start, int end, char* prefixModelFiles, char* dataFile, int n, int blockSize,
-		string validType, int ngramNumber, int step, int allocation, int calDist, char* distFileName) {
+		string validType, int step, int allocation, int calDist, char* distFileName) {
 	floatTensor probTensor;
-	probTensor.resize(ngramNumber, 1);
-	probTensor = 0;
+	int ngramNumber = 0;
 	// for test
 	//cout << "here i am" << endl;
 	//Model* model = new NgramModel();
@@ -32,7 +31,9 @@ prediction(NeuralModel* model, int start, int end, char* prefixModelFiles, char*
 		modelFile.takeReadFile(fileName);
 		floatTensor prevLookupTableRepre;
 		if (calDist == 1 && i != start) {
-			prevLookupTableRepre.copy(model->baseNetwork->lkt->weight);
+			//prevLookupTableRepre.copy(model->baseNetwork->lkt->weight);
+			prevLookupTableRepre.copy(model->outputNetwork[0]->weight);
+			//prevLookupTableRepre.copy(model->baseNetwork->modules[0]->weight);
 		}
 		if (allocation == 1 && i == start) {
 			model->read(&modelFile, 1, blockSize);
@@ -43,18 +44,30 @@ prediction(NeuralModel* model, int start, int end, char* prefixModelFiles, char*
 			model->read(&modelFile, 0, blockSize);
 			model->computeProbability();
 		}
+		if (i == start) {
+			ngramNumber = model->dataSet->ngramNumber;
+			probTensor.resize(ngramNumber, 1);
+			probTensor = 0;
+		}
 		probTensor.axpy(model->dataSet->probTensor, 1);
 		if (calDist == 1 && i != start) {
 			floatTensor curLookupTableRepre;
-			curLookupTableRepre.copy(model->baseNetwork->lkt->weight);
+			//curLookupTableRepre.copy(model->baseNetwork->lkt->weight);
+			curLookupTableRepre.copy(model->outputNetwork[0]->weight);
+			//curLookupTableRepre.copy(model->baseNetwork->modules[0]->weight);
 			floatTensor distLkt;
-			distLkt.copy(prevLookupTableRepre);
-			distLkt.axpy(curLookupTableRepre, -1);
+			distLkt.copy(curLookupTableRepre);
+			distLkt.axpy(prevLookupTableRepre, -1);
+			float distAngle2 = prevLookupTableRepre.angleDist(distLkt);
 			float distAngle = prevLookupTableRepre.angleDist(curLookupTableRepre);
 			float distAbsAvg = distLkt.sumSquared()/(distLkt.size[0]*distLkt.size[1]);
-			cout << "Average absolute distance between iteration " << i << " and iteration" << i-step << " :" << endl;
+			cout << "Squared average of current vector: ";
+			cout << curLookupTableRepre.averageSquare() << endl;
+			cout << "Angle distance between previous vector and the distance vector: ";
+			cout << distAngle2 << endl;
+			cout << "Average absolute distance between iteration " << i << " and iteration" << i-step << " : ";
 			cout << distAbsAvg << endl;
-			cout << "Angle distance between iteration " << i << " and interation "<< i-step << " :" << endl;
+			cout << "Angle distance between iteration " << i << " and interation "<< i-step << " : ";
 			cout << distAngle << endl;
 			distFile << i-step << " " << distAbsAvg << " " << distAngle << endl;
 			strcat(fileName, ".dist");
@@ -87,8 +100,8 @@ prediction(NeuralModel* model, int start, int end, char* prefixModelFiles, char*
 
 int
 main(int argc, char *argv[]) {
-	if (argc != 10) {
-		cout << "start end prefixModelFiles dataFile n blockSize validType ngramNumber step" << endl;
+	if (argc != 9) {
+		cout << "start end prefixModelFiles dataFile n blockSize validType step" << endl;
 		return 0;
 	}
 	int start = atoi(argv[1]);
@@ -98,8 +111,7 @@ main(int argc, char *argv[]) {
 	int n = atoi(argv[5]);
 	int blockSize = atoi(argv[6]);
 	string validType = argv[7];
-	int ngramNumber = atoi(argv[8]);
-	int step = atoi(argv[9]);
+	int step = atoi(argv[8]);
 	char outputPerSyn[260];
 	strcpy(outputPerSyn, prefixModelFiles);
 	strcat(outputPerSyn, "outper.Syn");
@@ -112,7 +124,7 @@ main(int argc, char *argv[]) {
 	strcat(outputDistFileName, "out.squareDist");
 	//ofstream outputDistFile;
 	//outputDistFile.open(outputDistFileName);
-	while (ind <= end) {
+	/*while (ind <= end) {
 		// for test
 		cout << "ind: " << ind << endl;
 		int allo = 0;
@@ -123,12 +135,13 @@ main(int argc, char *argv[]) {
 		if (ind == start) {
 			calDist = 1;
 		}
-		float dist = 0.0;
-		float per = prediction(model, ind, end, prefixModelFiles, dataFile, n, blockSize, validType,
-				ngramNumber, step, allo, calDist, outputDistFileName);
+		float dist = 0.0;*/
+	    int allo = 1;
+	    int calDist = 1;
+		float per = prediction(model, ind, end, prefixModelFiles, dataFile, n, blockSize, validType, step, allo, calDist, outputDistFileName);
 		outputPerpSyn << ind << " " << per << endl;
-		ind += step;
-	}
+		//ind += step;
+	//}
 	outputPerpSyn.close();
 	/*outils* otl = new outils();
 	otl->sgenrand(time(NULL) + getpid());

@@ -114,8 +114,11 @@ LookupTable_Bayes::updateParameters(float learningRate)
 }
 
 void
-LookupTable_Bayes::updateRandomness(float learningRate) {
-	pWeight.axpy(gradWeight, -sqrt(0.5*learningRate));
+LookupTable_Bayes::updateRandomness(float learningRate, float RATE) {
+	floatTensor scaledGradWeight;
+	scaledGradWeight.copy(gradWeight);
+	scaledGradWeight.scal(1/RATE);
+	pWeight.axpy(scaledGradWeight, -sqrt(0.5*learningRate));
 }
 
 void

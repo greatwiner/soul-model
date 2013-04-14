@@ -326,7 +326,6 @@ NeuralModel::computeProbability()
 float
 NeuralModel::computePerplexity(DataSet* dataset, char* textFileName, string textType)
 {
-
   computeProbability(dataset, textFileName, textType);
   dataset->computePerplexity();
   return dataset->perplexity;

@@ -1,10 +1,12 @@
 dlvl = ../../.
 include $(dlvl)/Makefile.in
 alev = $(CLIB_PATH)*.o
-all: $(CLIB_PATH)libtensor.a
+all: copy $(CLIB_PATH)libtensor.a
+
+copy:
+		cp *.H $(CINCLUDE_PATH)
 
 $(CLIB_PATH)libtensor.a: $(CLIB_PATH)outils.o $(CLIB_PATH)Tensor.o $(CLIB_PATH)floatTensor.o $(CLIB_PATH)intTensor.o
-		cp *.H $(CINCLUDE_PATH)
 		$(ARCH) $(ARCHFLAGS)  $(CLIB_PATH)libtensor.a $(alev)
 
 $(CLIB_PATH)outils.o: outils.cc

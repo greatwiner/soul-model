@@ -54,7 +54,7 @@ cleanInSource:
 	rm -f *.exe;)
 
 clean:
-	rm -f -r $(DIR_INSTALL)/*
+	rm -r $(DIR_INSTALL)/*
 
 test:
 	(cd package/test;\

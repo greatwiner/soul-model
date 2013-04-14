@@ -21,8 +21,8 @@ public:
   int
   train(char* dataFileName, int maxExampleNumber, int iteration,
       string learningRateType, float learningRate, float learningRateDecay);
-  int
-  forwardProbability(intTensor& ngramTensor, floatTensor& probTensor);
+  /*int
+  forwardProbability(intTensor& ngramTensor, floatTensor& probTensor);*/
 
   void
   forwardBackwardAllData(char* dataFileString, int maxExampleNumber, int iteration, int* numberExamples,
@@ -38,7 +38,7 @@ public:
   reUpdateParameters(int accept);
 
   void
-  updateAllRandomness(float learningRate);
+  updateAllRandomness(float learningRate, float RATE);
 
   void
   resetGradients();
@@ -53,7 +53,7 @@ public:
   forwardBackwardOne(intTensor& context, intTensor& word, int subBlockSize, int last);
 
   float
-  calculeH();
+  calculeH(float RATE);
 
 };
 

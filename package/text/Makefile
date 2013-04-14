@@ -1,10 +1,12 @@
 dlvl = ../../.
 include $(dlvl)/Makefile.in
 alev = $(CLIB_PATH)*.o
-all: $(CLIB_PATH)libtext.a
+all: copy $(CLIB_PATH)libtext.a
+
+copy:
+		cp *.H $(CINCLUDE_PATH)
 
 $(CLIB_PATH)libtext.a: $(CLIB_PATH)Vocab.o $(CLIB_PATH)DataSet.o $(CLIB_PATH)NgramDataSet.o $(CLIB_PATH)NgramRankDataSet.o $(CLIB_PATH)RecurrentDataSet.o $(CLIB_PATH)NgramWordTranslationDataSet.o $(CLIB_PATH)NgramPhraseTranslationDataSet.o $(CLIB_PATH)FunctionDataSet.o
-		cp *.H $(CINCLUDE_PATH)
 		$(ARCH) $(ARCHFLAGS)  $(CLIB_PATH)libtext.a $(alev)
 	
 $(CLIB_PATH)Vocab.o: Vocab.cc

@@ -81,15 +81,27 @@ LinearSoftmax_Bayes::updateParameters(float learningRate)
   /*weight.gemm(input, 'N', gradOutput, 'T', -learningRate,
       1 - learningRate * weightDecay);*/
 	// for Hamiltonian algorithm
+	cout << "LinearSoftmax_Bayes::updateParameters gradWeight scale: " << 0.5*learningRate*gradWeight.averageSquare() << endl;
+	cout << "LinearSoftmax_Bayes::updateParameters gradWeight angle: " << weight.angleDist(gradWeight) << endl;
+	cout << "LinearSoftmax_Bayes::updateParameters pWeight scale: " << pWeight.averageSquare() << endl;
+	cout << "LinearSoftmax_Bayes::updateParameters pWeight angle: " << weight.angleDist(pWeight) << endl;
 	weight.axpy(pWeight, sqrt(2*learningRate));
 	//bias.gemv(gradOutput, 'N', V1col, -learningRate, 1);
 	bias.axpy(pBias, sqrt(2*learningRate));
 }
 
 void
-LinearSoftmax_Bayes::updateRandomness(float learningRate) {
-	pWeight.axpy(gradWeight, -sqrt(0.5*learningRate));
-	pBias.axpy(gradBias, -sqrt(0.5*learningRate));
+LinearSoftmax_Bayes::updateRandomness(float learningRate, float RATE) {
+	// for test
+	floatTensor scaledGradWeight;
+	floatTensor scaledGradBias;
+	scaledGradWeight.copy(gradWeight);
+	scaledGradBias.copy(gradBias);
+	scaledGradWeight.scal(1/RATE);
+	scaledGradBias.scal(1/RATE);
+	cout << "LinearSoftmax_Bayes::updateRandomness angle g and u: " << pWeight.angleDist(gradWeight) << endl;
+	pWeight.axpy(scaledGradWeight, -sqrt(0.5*learningRate));
+	pBias.axpy(scaledGradBias, -sqrt(0.5*learningRate));
 }
 
 int
@@ -106,6 +118,8 @@ void
 LinearSoftmax_Bayes::initializeP() {
 	this->pWeight.initializeNormal(this->otl);
 	this->pBias.initializeNormal(this->otl);
+	cout << "LinearSoftmax::initializeP pWeight scale: " << pWeight.sumSquared()/(pWeight.size[0]*pWeight.size[1]) << endl;
+	cout << "LinearSoftmax::initializeP pWeight angle: " << weight.angleDist(pWeight) << endl;
 }
 
 float

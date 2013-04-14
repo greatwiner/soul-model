@@ -60,14 +60,14 @@ Sequential_Bayes::backward(floatTensor& gradOutput, int last) {
 }
 
 void
-Sequential_Bayes::updateRandomness(float learningRate) {
+Sequential_Bayes::updateRandomness(float learningRate, float RATE) {
 	for (int i = 0; i < size; i ++) {
 		if (Linear_Bayes* d1 = dynamic_cast<Linear_Bayes*>(modules[i])) {
-			d1->updateRandomness(learningRate);
+			d1->updateRandomness(learningRate, RATE);
 		}
 	}
 	if (LookupTable_Bayes* d2 = static_cast<LookupTable_Bayes*>(lkt)) {
-		d2->updateRandomness(learningRate);
+		d2->updateRandomness(learningRate, RATE);
 	}
 }
 

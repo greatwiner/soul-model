@@ -19,5 +19,7 @@ all:
 	$(CC) $(FLAGS) growPredictionSpace.cc -o $(CBIN_PATH)growPredictionSpace.exe $(CLIB_INCLUDE) -lmodel -lmodule -ltext -ltensor -lioFile $(LLIB)
 	$(CC) $(FLAGS) growOutPredictionSpace.cc -o $(CBIN_PATH)growOutPredictionSpace.exe $(CLIB_INCLUDE) -lmodel -lmodule -ltext -ltensor -lioFile $(LLIB)
 	$(CC) $(FLAGS) resamplingIdData.cc -o $(CBIN_PATH)resamplingIdData.exe $(CLIB_INCLUDE) -lmodel -lmodule -ltext -ltensor -lioFile $(LLIB)
+	$(CC) $(FLAGS) distAngle.cc -o $(CBIN_PATH)distAngle.exe $(CLIB_INCLUDE) -lmodel -lmodule -ltext -ltensor -lioFile $(LLIB)
+	$(CC) $(FLAGS) absoluteDist.cc -o $(CBIN_PATH)absoluteDist.exe $(CLIB_INCLUDE) -lmodel -lmodule -ltext -ltensor -lioFile $(LLIB)
 	#$(CC) $(FLAGS) generateText.cc -o $(CBIN_PATH)generateText.exe $(CLIB_INCLUDE) -lmodel -lmodule -ltext -ltensor -lioFile $(LLIB)
 	#$(CC) $(FLAGS) generateText2.cc -o $(CBIN_PATH)generateText2.exe $(CLIB_INCLUDE) -lmodel -lmodule -ltext -ltensor -lioFile $(LLIB)

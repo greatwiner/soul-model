@@ -408,15 +408,15 @@ NgramModel_Bayes::updateAllParameters(float learningRate) {
 }
 
 void
-NgramModel_Bayes::updateAllRandomness(float learningRate) {
+NgramModel_Bayes::updateAllRandomness(float learningRate, float RATE) {
 	for (int i = 0; i < this->outputNetworkNumber; i ++) {
-		static_cast<LinearSoftmax_Bayes*>(this->outputNetwork[i])->updateRandomness(learningRate);
+		static_cast<LinearSoftmax_Bayes*>(this->outputNetwork[i])->updateRandomness(learningRate, RATE);
 	}
-	static_cast<Sequential_Bayes*>(this->baseNetwork)->updateRandomness(learningRate);
+	static_cast<Sequential_Bayes*>(this->baseNetwork)->updateRandomness(learningRate, RATE);
 }
 
 float
-NgramModel_Bayes::calculeH() {
+NgramModel_Bayes::calculeH(float RATE) {
 	// Hamiltonian term
 	// Modules'calculeH function calculates the part of Hamiltonian term inside the module: squared sum
 	// of p and weight decay term
@@ -428,12 +428,16 @@ NgramModel_Bayes::calculeH() {
 	cout << "Composition of Hamiltonian: " << endl;
 	cout << "p: " << h << endl;
 	cout << "Likelihood: " << this->trainLikel << endl;
-	return h + this->trainLikel;
+	return h + this->trainLikel/RATE;
 }
 
 int
 NgramModel_Bayes::train(char* dataFileString, int maxExampleNumber, int iteration,
     string learningRateType, float learningRate, float learningRateDecay) {
+	// define parameters for Hamiltonian algorithm
+	int Tau = 100;
+	float RATE = 0.1;
+
 	// indicates if the new values are accepted
 	int accept=0;
 
@@ -449,10 +453,10 @@ NgramModel_Bayes::train(char* dataFileString, int maxExampleNumber, int iteratio
 	// forward all the data file to calculate -training likelihood
 	forwardProbabilityAllData(dataFileString, maxExampleNumber, iteration);
 
-	float prevH = calculeH();
+	float prevH = calculeH(RATE);
 	// for test
 	cout << "Prev H: " << prevH << endl;
-	int Tau = 100;
+
 	for (int subIter = 1; subIter <= Tau; subIter++) {
 		// for test
 		if (subIter % 1 == 0) {
@@ -460,7 +464,7 @@ NgramModel_Bayes::train(char* dataFileString, int maxExampleNumber, int iteratio
 		}
 		if (subIter > 1) {
 			// p = p - epsilon*gnew/2
-			this->updateAllRandomness(learningRate);
+			this->updateAllRandomness(learningRate, RATE);
 			// wnew = wnew + epsilon*p
 			this->updateAllParameters(learningRate);
 		}
@@ -469,14 +473,14 @@ NgramModel_Bayes::train(char* dataFileString, int maxExampleNumber, int iteratio
 		forwardBackwardAllData(dataFileString, maxExampleNumber, iteration, &numberExamples, learningRate, &accept);
 		if (subIter > 1) {
 			// p = p - epsilon*gnew/2
-			this->updateAllRandomness(learningRate);
+			this->updateAllRandomness(learningRate, RATE);
 		}
 	}
 	// update Hamiltonian
 	// Mnew = findM(wnew)
 	prevTrainLikel = this->trainLikel;
 	forwardProbabilityAllData(dataFileString, maxExampleNumber, iteration);
-	float H = calculeH();
+	float H = calculeH(RATE);
 	// for test
 	cout << "H: " << H << endl;
 	float dH = H-prevH;
@@ -539,7 +543,7 @@ NgramModel_Bayes::reUpdateParameters(int accept) {
 	}
 }
 
-int
+/*int
 NgramModel_Bayes::forwardProbability(intTensor& ngramTensor, floatTensor& probTensor)
 {
   int localWord;
@@ -636,7 +640,7 @@ NgramModel_Bayes::forwardProbability(intTensor& ngramTensor, floatTensor& probTe
             }
           rBlockSize++;
         }
-/*
+
 #if PRINT_DEBUG
       if (ngramId > iPercent)
         {
@@ -645,11 +649,11 @@ NgramModel_Bayes::forwardProbability(intTensor& ngramTensor, floatTensor& probTe
           cout << (REAL) ngramId / ngramNumber << " ... " << flush;
         }
 #endif
-*/
+
     }
   while (ngramId < ngramNumber);
 #if PRINT_DEBUG
   cout << endl;
 #endif
   return 1;
-}
+}*/

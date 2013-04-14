@@ -2,10 +2,12 @@ dlvl = ../../.
 include $(dlvl)/Makefile.in
 alev = $(CLIB_PATH)*.o
 
-all: $(CLIB_PATH)libmodule.a
+all: copy $(CLIB_PATH)libmodule.a
+
+copy:
+		cp *.H $(CINCLUDE_PATH)
 
 $(CLIB_PATH)libmodule.a: $(CLIB_PATH)Module.o $(CLIB_PATH)Linear.o $(CLIB_PATH)Linear_Bayes.o $(CLIB_PATH)MaxLinear.o $(CLIB_PATH)BLinear.o $(CLIB_PATH)RLinear.o $(CLIB_PATH)RRLinear.o $(CLIB_PATH)LookupTable.o $(CLIB_PATH)LookupTable_Bayes.o $(CLIB_PATH)Tanh.o $(CLIB_PATH)Sigmoid.o $(CLIB_PATH)Sequential.o $(CLIB_PATH)Sequential_Bayes.o $(CLIB_PATH)LinearSoftmax.o $(CLIB_PATH)LinearSoftmax_Bayes.o $(CLIB_PATH)FunctionSequential.o
-		cp *.H $(CINCLUDE_PATH)
 		$(ARCH) $(ARCHFLAGS)  $(CLIB_PATH)libmodule.a $(alev)
 	
 $(CLIB_PATH)Module.o: Module.cc

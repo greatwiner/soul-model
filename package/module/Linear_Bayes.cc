@@ -80,9 +80,15 @@ Linear_Bayes::updateParameters(float learningRate)
 }
 
 void
-Linear_Bayes::updateRandomness(float learningRate) {
-	pWeight.axpy(gradWeight, -sqrt(0.5*learningRate));
-	pBias.axpy(gradBias, -sqrt(0.5*learningRate));
+Linear_Bayes::updateRandomness(float learningRate, float RATE) {
+	floatTensor scaledGradWeight;
+	floatTensor scaledGradBias;
+	scaledGradWeight.copy(gradWeight);
+	scaledGradWeight.scal(1/RATE);
+	scaledGradBias.copy(gradBias);
+	scaledGradBias.scal(1/RATE);
+	pWeight.axpy(scaledGradWeight, -sqrt(0.5*learningRate));
+	pBias.axpy(scaledGradBias, -sqrt(0.5*learningRate));
 }
 
 int

@@ -591,8 +591,6 @@ NgramModel::read(ioFile* iof, int allocation, int blockSize)
   hiddenLayerSize = hiddenLayerSizeArray(hiddenLayerSizeArray.length - 1);
   if (allocation)
     {
-	  // for test
-	  cout << "NgramModel::read allocation" << endl;
       this->allocation();
     }
   baseNetwork->read(iof);

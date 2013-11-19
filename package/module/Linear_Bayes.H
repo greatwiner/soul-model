@@ -5,12 +5,12 @@
 class Linear_Bayes : public Linear
 {
 public:
-	floatTensor prevWeight;
-	floatTensor gradWeight;
-	floatTensor prevGradWeight;
-	floatTensor prevBias;
-	floatTensor gradBias;
-	floatTensor prevGradBias;
+	//floatTensor prevWeight;
+	//floatTensor gradWeight;
+	//floatTensor prevGradWeight;
+	//floatTensor prevBias;
+	//floatTensor gradBias;
+	//floatTensor prevGradBias;
 	floatTensor pWeight;
 	floatTensor pBias;
 
@@ -22,7 +22,7 @@ public:
 
 	Linear_Bayes(int inputSize, int outputSize, int blockSize, outils* otl);
   void
-  updateParameters(float learningRate);
+  updateParameters(float learningRateForRd, float learningRateForParas, int last);
 
   void
   changeBlockSize(int blockSize);
@@ -52,9 +52,6 @@ public:
   calculeH();
 
   void
-  reUpdateParameters(int accept);
-
-  void
-  updateRandomness(float learningRate, float RATE);
+  updateRandomness(float learningRate);
 };
 

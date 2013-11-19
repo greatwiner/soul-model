@@ -3,20 +3,20 @@
 Linear_Bayes::Linear_Bayes(int inputSize, int outputSize, int blockSize, outils* otl)
 : Linear(inputSize, outputSize, blockSize, otl)
 {
-  this->prevWeight.resize(inputSize, outputSize);
-  this->gradWeight.resize(this->weight);
-  this->prevGradWeight.resize(this->weight);
-  this->prevBias.resize(bias);
-  this->gradBias.resize(bias);
-  this->prevGradBias.resize(bias);
+  //this->prevWeight.resize(inputSize, outputSize);
+  //this->gradWeight.resize(this->weight);
+  //this->prevGradWeight.resize(this->weight);
+  //this->prevBias.resize(bias);
+  //this->gradBias.resize(bias);
+  //this->prevGradBias.resize(bias);
   pWeight.resize(weight);
   pBias.resize(bias);
 
-  prevWeight.copy(weight);
-  gradWeight = 0;
-  prevGradWeight = 0;
-  gradBias = 0;
-  prevGradBias = 0;
+  //prevWeight.copy(weight);
+  //gradWeight = 0;
+  //prevGradWeight = 0;
+  //gradBias = 0;
+  //prevGradBias = 0;
 }
 
 void
@@ -29,13 +29,13 @@ Linear_Bayes::changeBlockSize(int blockSize)
 	V1col = 1;
 	gradInput.resize(inputSize, blockSize);
 	output.resize(outputSize, blockSize);
-	this->prevWeight.resize(inputSize, outputSize);
-	this->gradWeight.resize(this->weight);
-	this->prevGradWeight.resize(this->weight);
+	//this->prevWeight.resize(inputSize, outputSize);
+	//this->gradWeight.resize(this->weight);
+	//this->prevGradWeight.resize(this->weight);
 	bias.resize(outputSize, 1);
-	this->prevBias.resize(bias);
-	this->gradBias.resize(bias);
-	this->prevGradBias.resize(bias);
+	//this->prevBias.resize(bias);
+	//this->gradBias.resize(bias);
+	//this->prevGradBias.resize(bias);
 	gradInput.resize(inputSize, blockSize);
 	output.resize(outputSize, blockSize);
 	pWeight.resize(weight);
@@ -47,11 +47,6 @@ Linear_Bayes::reset()
 {
   weight.uniform(LINEAR_INIT0, LINEAR_INIT1, otl);
   bias.uniform(LINEAR_INIT0, LINEAR_INIT1, otl);
-  prevWeight.copy(weight);
-  gradWeight = 0;
-  prevGradWeight = 0;
-  gradBias = 0;
-  prevGradBias = 0;
 }
 
 floatTensor&
@@ -60,35 +55,50 @@ Linear_Bayes::backward(floatTensor& gradOutput, int last)
 	Linear::backward(gradOutput);
 
 	// accumulate gradients
-	gradWeight.gemm(input, 'N', gradOutput, 'T', 1, 1);
-	if (last == 1) {
-		gradWeight.axpy(weight, weightDecay);
-	}
-	gradBias.gemv(gradOutput, 'N', V1col, 1, 1);
+	//gradWeight.gemm(input, 'N', gradOutput, 'T', 1, 1);
+	//gradWeight.axpy(weight, weightDecay);
+	//gradBias.gemv(gradOutput, 'N', V1col, 1, 1);
 	return gradInput;
 }
 
 void
-Linear_Bayes::updateParameters(float learningRate)
+Linear_Bayes::updateParameters(float learningRateForRd, float learningRateForParas, int last)
 {
-  /*weight.gemm(input, 'N', gradOutput, 'T', -learningRate,
-      1 - learningRate * weightDecay);
-  bias.gemv(gradOutput, 'N', V1col, -learningRate, 1);*/
-	weight.axpy(pWeight, sqrt(2*learningRate));
-	bias.axpy(pBias, sqrt(2*learningRate));
-
+	if (last==1) {
+		//this->prevWeight.copy(weight);
+		weight.axpy(pWeight, sqrt(learningRateForParas));
+		bias.axpy(pBias, sqrt(learningRateForParas));
+	}
+	else {
+		weight.gemm(input, 'N', gradOutput, 'T', -sqrt(learningRateForRd*learningRateForParas),
+		      1 - sqrt(learningRateForRd*learningRateForParas) * weightDecay);
+		bias.gemv(gradOutput, 'N', V1col, -sqrt(learningRateForRd*learningRateForParas), 1);
+	}
+	/*if (weight.testNan() != 0) {
+		cout << "Linear_Bayes::updateParameters weight is nan, last=" << last << endl;
+		ioFile file1, file2, file3, file4;
+		file1.takeWriteFile("/vol/work/dokhanh/wmt13/esLM/0/10gram/pWeight");
+		file2.takeWriteFile("/vol/work/dokhanh/wmt13/esLM/0/10gram/pBias");
+		file3.takeWriteFile("/vol/work/dokhanh/wmt13/esLM/0/10gram/input");
+		file4.takeWriteFile("/vol/work/dokhanh/wmt13/esLM/0/10gram/gradOutput");
+		cout << "Linear_Bayes::updateParameters test " << input.testInf() << endl;
+		if (last==1) {
+			pWeight.write(&file1);
+			pBias.write(&file2);
+		}
+		else {
+			input.write(&file3);
+			gradOutput.write(&file4);
+		}
+		exit(0);
+	}*/
 }
 
 void
-Linear_Bayes::updateRandomness(float learningRate, float RATE) {
-	floatTensor scaledGradWeight;
-	floatTensor scaledGradBias;
-	scaledGradWeight.copy(gradWeight);
-	scaledGradWeight.scal(1/RATE);
-	scaledGradBias.copy(gradBias);
-	scaledGradBias.scal(1/RATE);
-	pWeight.axpy(scaledGradWeight, -sqrt(0.5*learningRate));
-	pBias.axpy(scaledGradBias, -sqrt(0.5*learningRate));
+Linear_Bayes::updateRandomness(float learningRateForRd) {
+	pWeight.gemm(input, 'N', gradOutput, 'T', -sqrt(learningRateForRd), 1);
+	pWeight.axpy(weight, -sqrt(learningRateForRd)*weightDecay);
+	pBias.gemv(gradOutput, 'N', V1col, -sqrt(learningRateForRd), 1);
 }
 
 int
@@ -126,28 +136,4 @@ Linear_Bayes::calculeH() {
 	cout << "Linear_Bayes::calculeH kinetic: " << ki << endl;
 	cout << "Linear_Bayes::calculeH weight decay: " << wD << endl;
 	return ki + this->weightDecay*wD;
-}
-
-void
-Linear_Bayes::reUpdateParameters(int accept) {
-	if (accept == 1) {
-		prevWeight.copy(weight);
-		prevBias.copy(bias);
-		prevGradWeight.copy(gradWeight);
-		prevGradBias.copy(gradBias);
-	}
-	else {
-		// for test
-		//cout << "vong 1" << endl;
-		weight.copy(prevWeight);
-		bias.copy(prevBias);
-		// for test
-
-		gradWeight.copy(prevGradWeight);
-		// for test
-		//cout << "vong 3" << endl;
-		gradBias.copy(prevGradBias);
-		// for test
-		//cout << "vong 4" << endl;
-	}
 }

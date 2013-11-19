@@ -3,9 +3,9 @@
 int
 main(int argc, char *argv[])
 {
-  if (argc != 5)
+  if (argc != 6)
     {
-      cout << "modelFileName blockSize textFileName outputFileName"
+      cout << "modelFileName blockSize incrUnk textFileName outputFileName"
           << endl;
       return 0;
     }
@@ -14,8 +14,9 @@ main(int argc, char *argv[])
       time_t start, end;
       char* modelFileName = argv[1];
       int blockSize = atoi(argv[2]);
-      char* textFileName = argv[3];
-      char* outputFileName = argv[4];
+      float incrUnk = pow(10, atof(argv[3]));
+      char* textFileName = argv[4];
+      char* outputFileName = argv[5];
       ioFile iofC;
       if (!iofC.check(modelFileName, 1))
         {
@@ -33,6 +34,7 @@ main(int argc, char *argv[])
 
       NeuralModel* model;
       READMODEL(model, blockSize, modelFileName);
+      model->incrUnk = incrUnk;
       time(&start);
 
       ioFile iof;

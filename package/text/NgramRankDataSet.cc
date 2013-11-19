@@ -130,6 +130,12 @@ NgramRankDataSet::addLine(string line)
           data[ngramNumber * (n + 3) + n] = ID_END_NGRAM;
           data[ngramNumber * (n + 3) + n + 1] = ngramNumber;
           data[ngramNumber * (n + 3) + n + 2] = 0;
+          // for test
+          /*cout << "data positive: " << endl;
+          for (j = 0; j < n+3; j ++) {
+        	  cout << data[ngramNumber * (n+3) + j] << " ";
+          }
+          cout << endl;*/
           ngramNumber++;
           //Add negative example, copy context and random uniform predicted word
           for (j = 0; j < n - 1; j++)
@@ -147,6 +153,12 @@ NgramRankDataSet::addLine(string line)
           data[ngramNumber * (n + 3) + n] = ID_END_NGRAM;
           data[ngramNumber * (n + 3) + n + 1] = ngramNumber;
           data[ngramNumber * (n + 3) + n + 2] = 0;
+          // for test
+          /*cout << "data negative: " << endl;
+          for (j = 0; j < n+3; j ++) {
+        	  cout << data[ngramNumber * (n+3) + j] << " ";
+          }
+          cout << endl;*/
           ngramNumber++;
         }
     }
@@ -266,6 +278,7 @@ NgramRankDataSet::resamplingText(ioFile* iof, int totalLineNumber,
 {
   int* resamplingLineId = new int[resamplingLineNumber];
   resamplingSentence(totalLineNumber, resamplingLineNumber, resamplingLineId);
+  // for test
 
   int i = 0;
   string line;
@@ -308,6 +321,8 @@ NgramRankDataSet::resamplingText(ioFile* iof, int totalLineNumber,
     {
       if (iof->getLine(line))
         {
+    	  // for test
+    	  //cout << "NgramRankDataSet::resamplingText line: " << line << endl;
           if (readLineNumber == resamplingLineId[currentId])
             {
 
@@ -417,6 +432,8 @@ NgramRankDataSet::readCoBiNgram(ioFile* iof)
   int readLineNumber = 0;
   int i;
   int N;
+  int ngramNumberInFile;
+  iof->readInt(ngramNumberInFile);
   iof->readInt(N);
   int readTextNgram[N];
   int offset = N - n;
@@ -440,6 +457,8 @@ NgramRankDataSet::readCoBiNgram(ioFile* iof)
       data[ngramNumber * (n + 3) + n] = ID_END_NGRAM;
       data[ngramNumber * (n + 3) + n + 1] = ngramNumber;
       data[ngramNumber * (n + 3) + n + 2] = 0;
+      // for test
+      //cout << "NgramRankDataSet::readCoBiNgram ngramNumber: " << ngramNumber << endl;
       ngramNumber++;
       readLineNumber++;
 #if PRINT_DEBUG
@@ -568,6 +587,8 @@ NgramRankDataSet::computePerplexity()
   for (int i = 0; i < probTensor.length; i++)
     {
       perplexity += probTensor(i);
+      // for test
+      //cout << "NgramRankDataSet::computePerplexity perplexity: " << perplexity << endl;
     }
   perplexity = perplexity / ngramNumber * 2;
   return perplexity;

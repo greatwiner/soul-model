@@ -49,11 +49,19 @@ floatTensor&
 Sequential::forward(intTensor& input)
 {
   int i;
+  // for test
+  //cout << "Sequential::forward here" << endl;
   currentOutput = lkt->forward(input);
+  // for test
+  //cout << "Sequential::forward here1" << endl;
   for (i = 0; i < size; i++)
     {
+	  // for test
+	  //cout << "Sequential::forward here2" << endl;
       currentOutput = modules[i]->forward(currentOutput);
     }
+  // for test
+  //cout << "Sequential::forward here3" << endl;
   return currentOutput;
 }
 
@@ -81,32 +89,50 @@ void
 Sequential::updateParameters(float learningRate)
 {
   int i;
-  for (i = 0; i < size; i++)
-    {
-      modules[i]->updateParameters(learningRate);
-    }
+  // for test
+  //cout << "Sequential::updateParameters here" << endl;
+  for (i = 0; i < size; i++) {
+	  modules[i]->updateParameters(learningRate);
+	  // for test
+	  //cout << "Sequential::updateParameters here 1" << endl;
+  }
   // Also update with Lookup Table
   lkt->updateParameters(learningRate);
+  // for test
+  //cout << "Sequential::updateParameters here 2" << endl;
 }
 
 void
 Sequential::read(ioFile* iof)
 {
   int i;
+  // for test
+  //cout << "Sequential::read here" << endl;
   lkt->read(iof);
-  for (i = 0; i < size; i++)
-    {
-      modules[i]->read(iof);
-    }
+  // for test
+  //cout << "Sequential::read here 1" << endl;
+  for (i = 0; i < size; i++) {
+	  modules[i]->read(iof);
+	  // for test
+	  //cout << "Sequential::read i: " << i << endl;
+  }
 }
 void
 Sequential::write(ioFile* iof)
 {
   int i;
   lkt->write(iof);
-  for (i = 0; i < size; i++)
-    {
-      modules[i]->write(iof);
-    }
+
+  for (i = 0; i < size; i++) {
+	  modules[i]->write(iof);
+  }
 }
 
+void
+Sequential::write(ioFile* iof, string name) {
+	lkt->write(iof);
+
+	for (int i = 0; i < size; i++) {
+		modules[i]->write(iof);
+	}
+}

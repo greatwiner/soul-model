@@ -37,7 +37,7 @@ public:
   read(ioFile* iof, int allocation, int blockSize);
 
   void
-  write(ioFile* iof);
+  write(ioFile* iof, int closeFile);
 
   void
   trainOne(intTensor& ngram, float learningRate, int subBlockSize);

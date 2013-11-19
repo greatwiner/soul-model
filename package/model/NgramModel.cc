@@ -40,12 +40,12 @@ NgramModel::allocation()
       hiddenStep = 2;
     }
 
-  if (name == OVNB) {
+  /*if (name == OVNB) {
   	  baseNetwork = new Sequential_Bayes(hiddenLayerSizeArray.length * hiddenStep);
-  }
-  else {
-  	  baseNetwork = new Sequential(hiddenLayerSizeArray.length * hiddenStep);
-  }
+  }*/
+  //else {
+  baseNetwork = new Sequential(hiddenLayerSizeArray.length * hiddenStep);
+  //}
 
   int i;
   // Lookup table with classical or one vector initialization
@@ -54,21 +54,32 @@ NgramModel::allocation()
       baseNetwork->lkt = new LookupTable(inputVoc->wordNumber, dimensionSize,
           n - 1, blockSize, 0, otl);
     }
-  else if (name == OVN || name == OVNB || name == ROVN || name == MAXOVN)
+  else if (name == OVN || name == OVNB || name == ROVN || name == MAXOVN || name == OVN_AG)
     {
-	    if (name == OVNB) {
+	    /*if (name == OVNB) {
 	    	baseNetwork->lkt = new LookupTable_Bayes(inputVoc->wordNumber, dimensionSize,
 	  				  n - 1, blockSize, 1, otl);
-	    }
-	    else {
-	    	baseNetwork->lkt = new LookupTable(inputVoc->wordNumber, dimensionSize,
+	    }*/
+	    //else {
+		if (name == OVN) {
+			baseNetwork->lkt = new LookupTable(inputVoc->wordNumber, dimensionSize,
 	  				  n - 1, blockSize, 1, otl);
-	    }
+		}
+		else {
+			baseNetwork->lkt = new LookupTable_AG(inputVoc->wordNumber, dimensionSize,
+					  n - 1, blockSize, 1, otl);
+		}
+	    //}
     }
   Module* module;
   // First module depends on the type of model
   if (name == ROVN)
     {
+	  // for test
+	  cout << "NgramModel::allocation create RLinear with:" << endl;
+	  cout << "NgramModel::allocation dimensionSize: " << dimensionSize << endl;
+	  cout << "NgramModel::allocation blockSize " << blockSize << endl;
+	  cout << "NgramModel::allocation n: " << n << endl;
       module = new RLinear(dimensionSize, blockSize, n, nonLinearType, 1, otl);
 
       if (dimensionSize != hiddenLayerSizeArray(0))
@@ -77,6 +88,7 @@ NgramModel::allocation()
               << "WARNING: first hidden layer size !=  projection dimension, use projection dimension"
               << endl;
         }
+      cout << "NgramModel::allocation add that module" << endl;
       baseNetwork->add(module);
     }
   else if (name == MAXOVN)
@@ -100,19 +112,25 @@ NgramModel::allocation()
         }
       hiddenLayerSizeArray(hiddenLayerSizeArray.length - 1) = dimensionSize;
     }
-  // CN, OVN, OVNB
+  // CN, OVN, OVNB, OVN_AG
   else
     {
-	    if (name == OVNB) {
+	    /*if (name == OVNB) {
 	    	module = new Linear_Bayes((n-1)*dimensionSize, hiddenLayerSizeArray(0),
 	      	          blockSize, otl);
 	    	baseNetwork->add(module);
-		}
-		else {
+		}*/
+		//else {
+		if (name == OVN) {
 			module = new Linear((n - 1) * dimensionSize, hiddenLayerSizeArray(0),
 	      			  blockSize, otl);
-			baseNetwork->add(module);
 		}
+		else { // OVN_AG
+			module = new Linear_AG((n - 1) * dimensionSize, hiddenLayerSizeArray(0),
+					  blockSize, otl);
+		}
+		baseNetwork->add(module);
+		//}
     }
   // Add non linear activation
   if (nonLinearType == TANH)
@@ -128,16 +146,22 @@ NgramModel::allocation()
   // Add several hidden layers with linear or non linear activation
   for (i = 1; i < hiddenLayerSizeArray.size[0]; i++)
     {
-	  if (name == OVNB) {
+	  /*if (name == OVNB) {
 		  module = new Linear_Bayes(hiddenLayerSizeArray(i - 1), hiddenLayerSizeArray(i),
 	  		          blockSize, otl);
 		  baseNetwork->add(module);
+	  }*/
+	  //else {
+	  if (name ==OVN) {
+		  module = new Linear(hiddenLayerSizeArray(i - 1), hiddenLayerSizeArray(i),
+				  	  blockSize, otl);
 	  }
 	  else {
-		  module = new Linear(hiddenLayerSizeArray(i - 1), hiddenLayerSizeArray(i),
-	  				  blockSize, otl);
-		  baseNetwork->add(module);
+		  module = new Linear_AG(hiddenLayerSizeArray(i - 1), hiddenLayerSizeArray(i),
+				  	  blockSize, otl);
 	  }
+	  baseNetwork->add(module);
+	  //}
       if (nonLinearType == TANH)
         {
           module = new Tanh(hiddenLayerSizeArray(i), blockSize); // non linear
@@ -152,7 +176,7 @@ NgramModel::allocation()
   probabilityOne.resize(blockSize, 1);
   int outputNetworkNumber = outputNetworkSize.size[0];
   // Create outputNetwork => softmax layers for tree
-  if (name == OVNB) {
+  /*if (name == OVNB) {
   	  outputNetwork = (LinearSoftmax**)(new LinearSoftmax_Bayes*[outputNetworkNumber]);
   	  LinearSoftmax_Bayes* sl = new LinearSoftmax_Bayes(hiddenLayerSize, outputNetworkSize(0),
   			  blockSize, otl);
@@ -162,18 +186,30 @@ NgramModel::allocation()
   		  sl = new LinearSoftmax_Bayes(hiddenLayerSize, outputNetworkSize(i), 1, otl);
   		  outputNetwork[i] = sl;
 	  }
-  }
-  else {
-  	  outputNetwork = new LinearSoftmax*[outputNetworkNumber];
-  	  LinearSoftmax* sl = new LinearSoftmax(hiddenLayerSize, outputNetworkSize(0),
+  }*/
+  //else {
+  	  outputNetwork = new Module*[outputNetworkNumber];
+  	  Module* sl;
+  	  if (name == OVN) {
+  		  sl = new LinearSoftmax(hiddenLayerSize, outputNetworkSize(0),
   		  blockSize, otl);
+  	  }
+	  else {
+  		  sl = new LinearSoftmax_AG(hiddenLayerSize, outputNetworkSize(0),
+		  blockSize, otl);
+  	  }
   	  outputNetwork[0] = sl;
   	  for (i = 1; i < outputNetworkNumber; i++)
   	  {
-  		  sl = new LinearSoftmax(hiddenLayerSize, outputNetworkSize(i), 1, otl);
+  		  if (name == OVN) {
+  			  sl = new LinearSoftmax(hiddenLayerSize, outputNetworkSize(i), 1, otl);
+  		  }
+  		  else {
+  			  sl = new LinearSoftmax_AG(hiddenLayerSize, outputNetworkSize(i), 1, otl);
+  		  }
   		  outputNetwork[i] = sl;
   	  }
-  }
+  //}
   doneForward.resize(outputNetworkNumber, 1);
   // contextFeature is the last hidden layer
   contextFeature = baseNetwork->output;
@@ -303,6 +339,8 @@ int
 NgramModel::train(char* dataFileString, int maxExampleNumber, int iteration,
     string learningRateType, float learningRate, float learningRateDecay)
 {
+	// for test
+	//cout << "NgramModel::train here" << endl;
   firstTime();
   ioFile dataIof;
   dataIof.takeReadFile(dataFileString);
@@ -323,6 +361,8 @@ NgramModel::train(char* dataFileString, int maxExampleNumber, int iteration,
       maxExampleNumber = ngramNumber;
     }
   float currentLearningRate;
+  // for test
+  //cout << "NgramModel::train here 1" << endl;
   // nstep is the number of seen examples
   int nstep;
   // nstep at the beginning: number of examples used in
@@ -360,6 +400,8 @@ NgramModel::train(char* dataFileString, int maxExampleNumber, int iteration,
   int remainingNumber = maxExampleNumber - blockSize * blockNumber;
   int i;
   cout << maxExampleNumber << " examples" << endl;
+  // for test
+  //cout << "NgramModel::train here 2" << endl;
   for (i = 0; i < blockNumber; i++)
     {
       // Read a block of n-grams as shown above, context and word already
@@ -370,15 +412,29 @@ NgramModel::train(char* dataFileString, int maxExampleNumber, int iteration,
           break;
         }
       currentExampleNumber += blockSize;
+      // for test
+      //cout << "NgramModel::train here 3" << endl;
       if (learningRateType == LEARNINGRATE_NORMAL)
         {
           currentLearningRate = learningRate / (1 + nstep * learningRateDecay);
         }
-      else if (learningRateType == LEARNINGRATE_DOWN)
-        {
+      else if (learningRateType == LEARNINGRATE_DOWN) {
           currentLearningRate = learningRate;
-        }
+      }
+      else if (learningRateType == LEARNINGRATE_ADJUST) {
+    	  currentLearningRate = learningRate;
+      }
+      if (name == OVN_AG) {
+    	  // for test
+    	  //cout << "NgramModel::train here 4" << endl;
+		  //currentLearningRate = learningRate*sqrt(dynamic_cast<LinearSoftmax_AG*>(this->outputNetwork[0])->cumulGradWeight);
+    	  currentLearningRate = learningRate;
+	  }
+      // for test
+      //cout << "NgramModel::train here 5" << endl;
       trainOne(context, word, currentLearningRate, blockSize);
+      // for test
+      //cout << "NgramModel::train here 6" << endl;
       nstep += blockSize;
 #if PRINT_DEBUG
       if (currentExampleNumber > iPercent)
@@ -412,6 +468,9 @@ NgramModel::train(char* dataFileString, int maxExampleNumber, int iteration,
             {
               currentLearningRate = learningRate;
             }
+          else if (learningRateType == LEARNINGRATE_ADJUST) {
+			  currentLearningRate = learningRate;
+          }
           trainOne(context, word, currentLearningRate, remainingNumber);
         }
     }
@@ -424,6 +483,8 @@ NgramModel::train(char* dataFileString, int maxExampleNumber, int iteration,
 int
 NgramModel::forwardProbability(intTensor& ngramTensor, floatTensor& probTensor)
 {
+	// for test
+	//cout << "NgramModel::forwardProbability here" << endl;
   int localWord;
   int idParent;
   int i;
@@ -435,6 +496,8 @@ NgramModel::forwardProbability(intTensor& ngramTensor, floatTensor& probTensor)
   intTensor selectContext;
   intTensor selectBContext;
   intTensor context;
+  // for test
+  //cout << "NgramModel::forwardProbability here1" << endl;
   // context points to the context part of ngramTensor
   context.sub(ngramTensor, 0, ngramNumber - 1, 0, n - 2);
   // contextFlag is the last column which represents the index of a first next n-gram
@@ -444,6 +507,8 @@ NgramModel::forwardProbability(intTensor& ngramTensor, floatTensor& probTensor)
   contextFlag.select(ngramTensor, 1, n + 2);
   // word points to the predicted words of ngramTensor
   intTensor word;
+  // for test
+  //cout << "NgramModel::forwardProbability here2" << endl;
   word.select(ngramTensor, 1, n - 1);
   // Index of ngram in text file, required to write to probTensor
   intTensor order;
@@ -458,11 +523,15 @@ NgramModel::forwardProbability(intTensor& ngramTensor, floatTensor& probTensor)
   bContext = 0;
   do
     {
+	  // for test
+	  //cout << "NgramModel::forwardProbability here3" << endl;
       ngramId2 = ngramId;
       rBlockSize = 0;
       // Read blockSize different contexts in ngramTensor
       while (rBlockSize < blockSize && ngramId < ngramNumber)
         {
+    	  // for test
+    	  //cout << "NgramModel::forwardProbability here4" << endl;
           selectBContext.select(bContext, 1, rBlockSize);
           selectContext.select(context, 0, ngramId);
           selectBContext.copy(selectContext);
@@ -471,20 +540,30 @@ NgramModel::forwardProbability(intTensor& ngramTensor, floatTensor& probTensor)
         }
       rBlockSize = 0;
       // firstTime does something only with recurrent models
+      // for test
+      //cout << "NgramModel::forwardProbability here5" << endl;
       firstTime(bContext);
       // Forward with baseNetwork and the main softmax layer
       // in bunch mode
+      // for test
+      //cout << "NgramModel::forwardProbability here6" << endl;
       baseNetwork->forward(bContext);
+      // for test
+      //cout << "NgramModel::forwardProbability here7" << endl;
       mainProb = outputNetwork[0]->forward(contextFeature);
 
       // For each context, for each predicted word, forward softmax layers
       // depending on their codes
+      // for test
+      //cout << "NgramModel::forwardProbability here8" << endl;
       while (rBlockSize < blockSize && ngramId2 < ngramNumber)
         {
           doneForward = 0;
           nextId = contextFlag(ngramId2);
           for (; ngramId2 < nextId; ngramId2++)
             {
+        	  // for test
+        	  //cout << "NgramModel::forwardProbability here9" << endl;
               if (order(ngramId2) != SIGN_NOT_WORD)
                 {
                   intTensor oneLocalCodeWord;
@@ -532,7 +611,6 @@ NgramModel::forwardProbability(intTensor& ngramTensor, floatTensor& probTensor)
             }
           rBlockSize++;
         }
-/*
 #if PRINT_DEBUG
       if (ngramId > iPercent)
         {
@@ -541,7 +619,6 @@ NgramModel::forwardProbability(intTensor& ngramTensor, floatTensor& probTensor)
           cout << (float) ngramId / ngramNumber << " ... " << flush;
         }
 #endif
-*/
     }
   while (ngramId < ngramNumber);
 #if PRINT_DEBUG
@@ -553,8 +630,12 @@ NgramModel::forwardProbability(intTensor& ngramTensor, floatTensor& probTensor)
 void
 NgramModel::read(ioFile* iof, int allocation, int blockSize)
 {
+	// for test
+	//cout << "NgramModel::read here" << endl;
   string readFormat;
   iof->readString(name);
+  // for test
+  //cout << "NgramModel::read name: " << name << endl;
   iof->readString(readFormat);
   iof->readInt(ngramType);
   if (allocation == 1) {
@@ -591,16 +672,21 @@ NgramModel::read(ioFile* iof, int allocation, int blockSize)
   hiddenLayerSize = hiddenLayerSizeArray(hiddenLayerSizeArray.length - 1);
   if (allocation)
     {
+	  // for test
+	  //cout << "NgramModel::read here" << endl;
       this->allocation();
+      // for test
+      //cout << "NgramModel::read here1" << endl;
     }
   baseNetwork->read(iof);
+  // for test
+  //cout << "NgramModel::read here2" << endl;
   int i;
   if (name != LBL)
     {
-      for (i = 0; i < outputNetworkSize.size[0]; i++)
-        {
-          outputNetwork[i]->read(iof);
-        }
+      for (i = 0; i < outputNetworkSize.size[0]; i++) {
+    	  outputNetwork[i]->read(iof);
+      }
     }
   if (allocation == 1) {
 	  inputVoc->read(iof);
@@ -609,8 +695,10 @@ NgramModel::read(ioFile* iof, int allocation, int blockSize)
 }
 
 void
-NgramModel::write(ioFile* iof)
+NgramModel::write(ioFile* iof, int closeFile)
 {
+	// for test
+	//cout << "NgramModel::write here8" << endl;
   iof->writeString(name);
   iof->writeString(iof->format);
   iof->writeInt(ngramType);
@@ -625,19 +713,26 @@ NgramModel::write(ioFile* iof)
   iof->writeString(nonLinearType);
   iof->writeInt(maxCodeWordLength);
   iof->writeInt(outputNetworkNumber);
+  // for test
+  //cout << "NgramModel::write here9" << endl;
   codeWord.write(iof);
   outputNetworkSize.write(iof);
   hiddenLayerSizeArray.write(iof);
+  // for test
+  //cout << "NgramModel::write here10" << endl;
   baseNetwork->write(iof);
+  // for test
+  //cout << "NgramModel::write here11" << endl;
   int i;
   if (name != LBL)
     {
-      for (i = 0; i < outputNetworkSize.size[0]; i++)
-        {
-          outputNetwork[i]->write(iof);
-        }
+      for (i = 0; i < outputNetworkSize.size[0]; i++) {
+    	  outputNetwork[i]->write(iof);
+      }
     }
   inputVoc->write(iof);
   outputVoc->write(iof);
-  iof->freeWriteFile();
+  if (closeFile == 1) {
+	  iof->freeWriteFile();
+  }
 }

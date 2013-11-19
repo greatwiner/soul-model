@@ -4,9 +4,9 @@ LookupTable_Bayes::LookupTable_Bayes(int indexNumber, int dimensionSize,
     int inputSize, int blockSize, int oneClass, outils* otl) : LookupTable(indexNumber,
     		dimensionSize, inputSize, blockSize, oneClass, otl)
 {
-  prevWeight.resize(dimensionSize, indexNumber);
-  gradWeight.resize(dimensionSize, indexNumber);
-  prevGradWeight.resize(dimensionSize, indexNumber);
+  //prevWeight.resize(dimensionSize, indexNumber);
+  //gradWeight.resize(dimensionSize, indexNumber);
+  //prevGradWeight.resize(dimensionSize, indexNumber);
   // for lookuptable, output is the representations of the words in input
   // for test
   //cout << "here i am 5" << endl;
@@ -45,85 +45,141 @@ LookupTable_Bayes::changeBlockSize(int blockSize)
 void
 LookupTable_Bayes::reset()
 {
-  weight.uniform(LKT_INIT0, LKT_INIT1, otl);
-  prevWeight.copy(weight);
-  gradWeight = 0;
-  prevGradWeight = 0;
+        weight.uniform(LKT_INIT0, LKT_INIT1, otl);
+        prevWeight.copy(weight);
+        gradWeight = 0;
+        prevGradWeight = 0;
 }
 
 // if oneClass == 1
 void
 LookupTable_Bayes::init1class()
 {
-	LookupTable::init1class();
-  prevWeight.copy(weight);
-  gradWeight = 0;
-  prevGradWeight = 0;
+
 }
 
 floatTensor&
 LookupTable_Bayes::backward(floatTensor& gradOutput, int last)
 {
-	// for test
-	//cout << "LookupTable_Bayes::backward" << endl;
-
-  /*gradWeight = gradOutput;
-  // for test
-  cout << "backward of Lookup: " << endl;
-  gradOutput.info();*/
-	// integer values to indicate the beginning and the end of a block
-  int x0, x1;
+  /*int x0, x1;
   for (int i = 0; i < input.size[1]; i++) {
-	  //input.size[1] = blockSize
-	  // we consider each element of dataset
-      // for test
-	  //cout << "i = " << i << endl;
+
 	  x0 = 0;
 	  x1 = dimensionSize - 1;
 	  for (int j = 0; j < input.size[0]; j++) {
-		  // for test
-		  //cout << "j = " << j << endl;
-		  //select the representation of the input word j
 
 		  // a portion of gradOutput
 		  floatTensor selectGradOutput;
 		  selectGradOutput.sub(gradOutput, x0, x1, i, i);
 		  selectGradWeight.select(gradWeight, 1, input(j, i));
 		  selectGradWeight.axpy(selectGradOutput, 1);
-		  if (last == 1) {
 			  // a column of weight corresponding to the selectGradWeight being treated
-			  selectWeight.select(weight, 1, input(j, i));
-			  selectGradWeight.axpy(selectWeight, weightDecay);
-		  }
+		  selectWeight.select(weight, 1, input(j, i));
+		  selectGradWeight.axpy(selectWeight, weightDecay);
+			  // for test
+			  //cout << "LookupTable_Bayes::backward weightDecay: " << weightDecay << endl;
 
 		  x0 += dimensionSize;
 		  x1 += dimensionSize;
 	  }
-  }
-  /*// for test
-  cout << "LookupTable_Bayes::backward difference in lkt:" << endl;
-  gradWeight.scal(-0.00001);
-  gradWeight.write();*/
+  }*/
+	gradWeight=gradOutput;
+	/*if (gradWeight.testNan() != 0) {
+		cout << "LookupTable_Bayes::backward gradWeight is nan" << endl;
+	}*/
+
   return gradWeight;
 }
 
 void
-LookupTable_Bayes::updateParameters(float learningRate)
+LookupTable_Bayes::updateParameters(float learningRateForRd, float learningRateForParas, int last)
 {
-	weight.axpy(pWeight, sqrt(2*learningRate));
+	//ioFile file;
+	//file.takeWriteFile("/vol/work/dokhanh/wmt13/esLM/0/10gram/matrice");
+	if (last==1) {
+		weight.axpy(pWeight, sqrt(learningRateForParas));
+	}
+	else {
+		/*if (gradWeight.testNan() != 0) {
+			cout << "LookupTable_Bayes::updateParameters gradWeight is nan" << endl;
+		}*/
+		int x0, x1;
+		for (int i = 0; i < input.size[1]; i++) {
+
+			x0 = 0;
+			x1 = dimensionSize - 1;
+			for (int j = 0; j < input.size[0]; j++) {
+
+				// a portion of gradOutput
+				floatTensor selectGradOutput;
+				selectGradOutput.sub(gradWeight, x0, x1, i, i);
+				/*if (selectGradOutput.testNan() != 0) {
+					cout << "LookupTable_Bayes::updateParameters selectGradOutput is nan" << endl;
+					if (gradWeight.testNan() != 0) {
+						cout << "LookupTable_Bayes::updateParameters because gradWeight is nan" << endl;
+					}
+					else {
+						cout << "LookupTable_Bayes::updateParameters neu ko nan thi " << endl;
+						//gradWeight.write();
+						//cout << "LookupTable_Bayes::updateParameters testnan: " << gradWeight.testNanShow() << endl;
+					}
+				}*/
+				selectWeight.select(weight, 1, input(j, i));
+				selectWeight.scal(1 - sqrt(learningRateForRd*learningRateForParas)*weightDecay);
+				selectWeight.axpy(selectGradOutput, -sqrt(learningRateForRd*learningRateForParas));
+
+				x0 += dimensionSize;
+				x1 += dimensionSize;
+			}
+		}
+	}
+	/*if (weight.testInf() != 0) {
+		cout << "LookupTable_Bayes::updateParameters weight is inf, last=" << last << endl;
+		//weight.copy(this->prevWeight);
+		ioFile file;
+		if (last==1) {
+			file.takeWriteFile("/vol/work/dokhanh/wmt13/esLM/0/10gram/pWeight");
+			pWeight.write(&file);
+			cout << "LookupTable_Bayes::updateParameters pWeight: " << pWeight(89, 114814) << endl;
+		}
+		else {
+			file.takeWriteFile("/vol/work/dokhanh/wmt13/esLM/0/10gram/gradWeight");
+			gradWeight.write(&file);
+		}
+		exit(0);
+	}*/
 }
 
 void
-LookupTable_Bayes::updateRandomness(float learningRate, float RATE) {
-	floatTensor scaledGradWeight;
-	scaledGradWeight.copy(gradWeight);
-	scaledGradWeight.scal(1/RATE);
-	pWeight.axpy(scaledGradWeight, -sqrt(0.5*learningRate));
+LookupTable_Bayes::updateRandomness(float learningRateForRd) {
+	int x0, x1;
+	for (int i = 0; i < input.size[1]; i++) {
+
+		x0 = 0;
+		x1 = dimensionSize - 1;
+		for (int j = 0; j < input.size[0]; j++) {
+
+			// a portion of gradOutput
+			floatTensor selectGradOutput;
+			floatTensor selectPWeight;
+			selectGradOutput.sub(gradWeight, x0, x1, i, i);
+			selectPWeight.select(pWeight, 1, input(j, i));
+			selectPWeight.axpy(selectGradOutput, -sqrt(learningRateForRd));
+			selectWeight.select(weight, 1, input(j, i));
+			selectPWeight.axpy(selectWeight, -sqrt(learningRateForRd)*weightDecay);
+
+			x0 += dimensionSize;
+			x1 += dimensionSize;
+		}
+	}
+	// for test
+	cout << "LookupTable_Bayes::updateRandomness finish update" << endl;
 }
 
 void
 LookupTable_Bayes::initializeP() {
 	this->pWeight.initializeNormal(this->otl);
+	cout << "LookupTable_Bayes::initializeP gaussian" << endl;
 }
 
 float

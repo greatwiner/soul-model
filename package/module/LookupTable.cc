@@ -10,9 +10,14 @@
 
 #include "mainModule.H"
 
+LookupTable::LookupTable() {
+
+}
+
 LookupTable::LookupTable(int indexNumber, int dimensionSize, int inputSize,
     int blockSize, int oneClass, outils* otl)
 {
+	name = "LookupTable";
   weight.resize(dimensionSize, indexNumber);
   output.resize(dimensionSize * inputSize, blockSize);
   this->otl = otl;
@@ -31,15 +36,10 @@ LookupTable::LookupTable(int indexNumber, int dimensionSize, int inputSize,
 
 LookupTable::~LookupTable()
 {
+	// for test
+	//cout << "LookupTable::~LookupTable here" << endl;
 }
 
-void
-LookupTable::changeBlockSize(int blockSize)
-{
-  this->blockSize = blockSize;
-  int size0 = output.size[0];
-  output.resize(size0, blockSize);
-}
 void
 LookupTable::reset()
 {
@@ -47,66 +47,8 @@ LookupTable::reset()
 }
 
 void
-LookupTable::init1class()
-{
-  floatTensor initRealTensor;
-  initRealTensor.resize(weight.size[0], 1);
-  initRealTensor.uniform(LKT_INIT0, LKT_INIT1, otl);
-  floatTensor initSelectWeight;
-  int i;
-  for (i = 0; i < weight.size[1]; i++)
-    {
-      initSelectWeight.select(weight, 1, i);
-      initSelectWeight.copy(initRealTensor);
-    }
-}
-floatTensor&
-LookupTable::forward(floatTensor& input)
-{
-  cout << "Wrong call, must call with input is intTensor" << endl;
-  return input;
-}
-
-floatTensor&
-LookupTable::forward(intTensor& input)
-{
-  this->input = input;
-  int x0, x1;
-  for (int i = 0; i < input.size[1]; i++) // with blockSize
-    {
-      x0 = 0;
-      x1 = dimensionSize - 1;
-      for (int j = 0; j < input.size[0]; j++) // with context word number
-        {
-          selectOutput.sub(output, x0, x1, i, i);
-          selectWeight.select(weight, 1, input(j, i));
-          selectOutput.copy(selectWeight);
-          x0 += dimensionSize;
-          x1 += dimensionSize;
-        }
-    }
-  return output;
-}
-
-floatTensor&
-LookupTable::backward(floatTensor& gradOutput)
-{
-	// for test
-	//cout << "LookupTable::backward" << endl;
-  gradWeight = gradOutput;
-  // Don't use return variable, so whatever you want :S
-  return gradWeight;
-}
-
-void
 LookupTable::updateParameters(float learningRate)
 {
-	// for test
-	//cout << "LookupTable::updateParameters" << endl;
-
-	// for test
-	//cout << "LookupTable::updateParameters gradOutput: " << gradWeight.sumSquared() << endl;
-
   int x0, x1;
   for (int i = 0; i < input.size[1]; i++)
     {
@@ -126,22 +68,34 @@ LookupTable::updateParameters(float learningRate)
           x1 += dimensionSize;
         }
     }
-
-  /*// for test
-  cout << "LookupTable::updateParameters difference in lkt" << endl;
-  prevWeight.axpy(weight, -1);
-  prevWeight.scal(-1);
-  prevWeight.write();*/
 }
+
 void
 LookupTable::read(ioFile* iof)
 {
+	// for test
+	//cout << "LookupTable::read here" << endl;
   iof->readString(name);
+  // for test
+  //cout << "LookupTable::read name: " << name << endl;
+  // for test
+  //cout << "LookupTable::read shareW: " << shareW << endl;
   weight.read(iof);
+  // for test
+  //cout << "LookupTable::read here 1" << endl;
 }
 void
 LookupTable::write(ioFile* iof)
 {
-  iof->writeString((char*) "LookupTable");
+  iof->writeString(name);
+  // for test
+  cout << "LookupTable::write name: " << name << endl;
   weight.write(iof);
+  if (name == "LookupTable_AG") {
+	  // for test
+	  cout << "LookupTable::write here" << endl;
+	  floatTensor cumulGradWeight(1, indexNumber);
+	  cumulGradWeight = INIT_VALUE_ADAG;
+	  cumulGradWeight.write(iof);
+  }
 }

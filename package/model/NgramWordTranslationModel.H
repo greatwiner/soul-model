@@ -41,7 +41,7 @@ public:
   void
   read(ioFile* iof, int allocation, int blockSize);
   void
-  write(ioFile* iof);
+  write(ioFile* iof, int closeFile);
 
 };
 

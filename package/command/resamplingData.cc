@@ -76,6 +76,8 @@ main(int argc, char *argv[])
             }
           if (resampling)
             {
+        	  // for test
+        	  cout << "resamplingData.cc here" << endl;
               resampling = dataSet->resamplingDataDes(dataDesFileName, type);
             }
           cout << "shuffle epoch: " << iter << " with " << dataSet->ngramNumber

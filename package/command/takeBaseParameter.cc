@@ -66,7 +66,7 @@ main(int argc, char *argv[])
         }
       ioFile oIof;
       oIof.takeWriteFile(outputModelFileName);
-      model->write(&oIof);
+      model->write(&oIof, 1);
 
       delete iof;
       delete model;

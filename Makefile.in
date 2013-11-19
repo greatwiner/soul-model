@@ -1,11 +1,12 @@
 # Where to install, will create /lib, /include, /bin /script
 #DIR_INSTALL = /people/allauzen/dev/cpp/soul/soul-model
-DIR_INSTALL = /people/dokhanh/share/local
+#DIR_INSTALL = /people/dokhanh/share/local/soul
+#DIR_INSTALL depends on machine on which we compile
 
 # For BLAS, need to give /include and /lib
 # Change PROC to 0: MKL or 1: ACML or 2: CBLAS or 3: OPENBLAS
 
-PROC = 0
+PROC = 1
 
 # MKL or ACML, good performance
 # CBLAS: Reference library from netlib,  (very slow)

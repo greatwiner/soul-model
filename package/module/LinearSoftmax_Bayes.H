@@ -9,12 +9,6 @@ class LinearSoftmax_Bayes : public LinearSoftmax
 {
 public:
 
-	floatTensor prevWeight;
-	floatTensor gradWeight;
-	floatTensor prevGradWeight;
-	floatTensor prevBias;
-	floatTensor gradBias;
-	floatTensor prevGradBias;
 	floatTensor pWeight;
 	floatTensor pBias;
 
@@ -35,7 +29,7 @@ public:
   floatTensor&
   backward(intTensor& word, int last);
   void
-  updateParameters(float learningRate);
+  updateParameters(float learningRateForRd, float learningRateForParas, int last);
 
   int
   numberOfWeights();
@@ -56,9 +50,6 @@ public:
   calculeH();
 
   void
-  reUpdateParameters(int accept);
-
-  void
-  updateRandomness(float learningRate, float RATE);
+  updateRandomness(float learningRate);
 };
 

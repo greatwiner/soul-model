@@ -8,23 +8,11 @@
  Output is the vector after concatenation (n - 1) x dimensionSize floats
  *******************************************************************/
 
-class LookupTable : public Module
+class LookupTable : public Embeddings
 {
 public:
-  floatTensor gradWeight;
-  intTensor input;
-  // tensor used to select some part of other tensors, act as a pointer
-  floatTensor selectOutput;
-  floatTensor selectWeight;
-  floatTensor selectGradWeight;
 
-  // projection dimension
-  int dimensionSize;
-
-  // number of indices ~ number of words in the vocabulary
-  int indexNumber;
-
-  outils* otl;
+  LookupTable();
   LookupTable(int nIndex, int nDimension, int inputSize, int blockSize,
       int oneClass, outils* otl);
 
@@ -32,21 +20,10 @@ public:
   void
   reset();
   void
-  changeBlockSize(int blockSize);
-  floatTensor&
-  forward(floatTensor& input);
-  floatTensor&
-  backward(floatTensor& gradOutput);
-  floatTensor&
-  forward(intTensor& input);
-  void
   updateParameters(float learningRate);
   void
   read(ioFile *iof);
   void
   write(ioFile * iof);
-  // Initialize with only one vector for all words
-  void
-  init1class();
 };
 

@@ -20,14 +20,19 @@
 					<folderInfo id="0.255776597." name="/" resourcePath="">
 						<toolChain id="org.eclipse.cdt.build.core.prefbase.toolchain.168862888" name="No ToolChain" resourceTypeBasedDiscovery="false" superClass="org.eclipse.cdt.build.core.prefbase.toolchain">
 							<targetPlatform id="org.eclipse.cdt.build.core.prefbase.toolchain.168862888.1046893836" name=""/>
-							<builder id="org.eclipse.cdt.build.core.settings.default.builder.368356849" keepEnvironmentInBuildfile="false" managedBuildOn="false" name="Gnu Make Builder" superClass="org.eclipse.cdt.build.core.settings.default.builder"/>
+							<builder enableAutoBuild="false" id="org.eclipse.cdt.build.core.settings.default.builder.368356849" keepEnvironmentInBuildfile="false" managedBuildOn="false" name="Gnu Make Builder" superClass="org.eclipse.cdt.build.core.settings.default.builder">
+								<outputEntries>
+									<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="outputPath" name=""/>
+								</outputEntries>
+							</builder>
 							<tool id="org.eclipse.cdt.build.core.settings.holder.libs.1930211554" name="holder for library settings" superClass="org.eclipse.cdt.build.core.settings.holder.libs"/>
 							<tool id="org.eclipse.cdt.build.core.settings.holder.1405935144" name="Assembly" superClass="org.eclipse.cdt.build.core.settings.holder">
 								<inputType id="org.eclipse.cdt.build.core.settings.holder.inType.1645777114" languageId="org.eclipse.cdt.core.assembly" languageName="Assembly" sourceContentType="org.eclipse.cdt.core.asmSource" superClass="org.eclipse.cdt.build.core.settings.holder.inType"/>
 							</tool>
 							<tool id="org.eclipse.cdt.build.core.settings.holder.1670398181" name="GNU C++" superClass="org.eclipse.cdt.build.core.settings.holder">
-								<option id="org.eclipse.cdt.build.core.settings.holder.incpaths.1088346089" superClass="org.eclipse.cdt.build.core.settings.holder.incpaths" valueType="includePath">
-									<listOptionValue builtIn="false" value="/usr/include/"/>
+								<option id="org.eclipse.cdt.build.core.settings.holder.incpaths.1088346089" name="Include Paths" superClass="org.eclipse.cdt.build.core.settings.holder.incpaths" valueType="includePath">
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/dokhanh@m109.limsi.fr_soul-model/package/command}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/dokhanh@m109.limsi.fr_soul-model/package/model}&quot;"/>
 								</option>
 								<inputType id="org.eclipse.cdt.build.core.settings.holder.inType.321694938" languageId="org.eclipse.cdt.core.g++" languageName="GNU C++" sourceContentType="org.eclipse.cdt.core.cxxSource,org.eclipse.cdt.core.cxxHeader" superClass="org.eclipse.cdt.build.core.settings.holder.inType"/>
 							</tool>
@@ -36,6 +41,9 @@
 							</tool>
 						</toolChain>
 					</folderInfo>
+					<fileInfo id="0.255776597.346116878" name="NeuralModel.cc" rcbsApplicability="disable" resourcePath="package/model/NeuralModel.cc" toolsToInvoke="org.eclipse.cdt.build.core.settings.holder.1670398181.1142667084">
+						<tool id="org.eclipse.cdt.build.core.settings.holder.1670398181.1142667084" name="GNU C++" superClass="org.eclipse.cdt.build.core.settings.holder.1670398181"/>
+					</fileInfo>
 				</configuration>
 			</storageModule>
 			<storageModule moduleId="org.eclipse.cdt.core.externalSettings"/>
@@ -51,5 +59,8 @@
 		</scannerConfigBuildInfo>
 	</storageModule>
 	<storageModule moduleId="org.eclipse.cdt.core.LanguageSettingsProviders"/>
-	<storageModule moduleId="refreshScope"/>
+	<storageModule moduleId="refreshScope" versionNumber="1">
+		<resource resourceType="PROJECT" workspacePath="/dokhanh@m109.limsi.fr_soul-model"/>
+	</storageModule>
+	<storageModule moduleId="org.eclipse.cdt.internal.ui.text.commentOwnerProjectMappings"/>
 </cproject>

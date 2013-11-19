@@ -3,8 +3,10 @@ include $(dlvl)/Makefile.in
 help:
 	@ echo "Structure OUtput Layer Language Model Toolkit"
 
-all: makedir config ioFile tensor text module model command script test
-#all: command
+all: env makedir config ioFile tensor text module model command script test
+
+env:
+	. /people/dokhanh/.bash_profile
 
 makedir:
 	mkdir -p $(DIR_INSTALL)

@@ -24,6 +24,7 @@ public:
   floatTensor selectOutput;
   floatTensor selectPreOutput;
   outils* otl;
+  LinearSoftmax();
   LinearSoftmax(int inputSize, int outputSize, int blockSize, outils* otl);
   ~LinearSoftmax();
   void
@@ -38,6 +39,8 @@ public:
   backward(intTensor& word);
   void
   updateParameters(float learningRate);
+  float
+  distance2(LinearSoftmax& anotherOutput);
   void
   read(ioFile *iof);
   void

@@ -15,7 +15,7 @@ main(int argc, char *argv[])
     }
 
   NeuralModel* model;
-  READMODEL(model, 0, modelFileName);
+  READMODEL(model, 1, modelFileName);
 
   cout << "Model: " << model->name << endl;
   cout << "ngramType: " << model->ngramType << endl;
@@ -27,15 +27,26 @@ main(int argc, char *argv[])
 
   cout << "LookupTable dimension: " << model->baseNetwork->lkt->dimensionSize
       << endl;
+  cout << "Parameter number of lookuptable: " << model->baseNetwork->lkt->weight.size[0]*model->baseNetwork->lkt->weight.size[1] << endl;
   cout << "hiddenLayerSize, " << model->hiddenLayerSizeArray.length
       << " layers: ";
   for (int i = 0; i < model->hiddenLayerSizeArray.length; i++)
     {
-      cout << model->hiddenLayerSizeArray(i) << " ";
+      cout << model->hiddenLayerSizeArray(i) << endl;
     }
   cout << endl;
-  /*
-   model->outputNetwork[0]->weight.info();
+
+  int d = 0;
+
+  for (int i = 0; i < model->outputNetworkNumber; i++) {
+	  cout << "outputNetwork " << i << endl;
+	  model->outputNetwork[i]->weight.info();
+	  model->outputNetwork[i]->bias.info();
+	  d+=model->outputNetwork[i]->weight.size[0]*model->outputNetwork[i]->weight.size[1]+model->outputNetwork[i]->bias.length;
+  }
+  cout << "Parameter number of all output networks: " << d << endl;
+
+   /*model->outputNetwork[0]->weight.info();
    model->outputNetwork[0]->bias.info();
    int id = model->inputVoc->index("NULL");
    int i;
@@ -56,8 +67,8 @@ main(int argc, char *argv[])
    {
    cout << model->baseNetwork->lkt->weight(i, id) << " ";
    }
-   cout << endl;
-   */
+   cout << endl;*/
+
   delete model;
 }
 

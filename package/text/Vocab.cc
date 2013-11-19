@@ -153,8 +153,12 @@ SoulVocab::SoulVocab(SoulVocab* inSoulVocab)
 void
 SoulVocab::read(ioFile* iof)
 {
+	// for test
+	//cout << "SoulVocab::read here" << endl;
   string localStr;
   iof->readString(localStr);
+  // for test
+  //cout << "SoulVocab::read localStr: " << localStr << endl;
   if (localStr != "voc")
     {
       cerr << "ERROR:voc header is not found" << endl;
@@ -171,25 +175,37 @@ SoulVocab::read(ioFile* iof)
 
   intTensor info;
   info.read(iof);
+  // for test
+  //cout << "SoulVocab::read info: " << endl;
+  //info.write();
   int iId = 0;
   int wordNo;
   VocNode* add;
   int j;
+  // for test
+  //cout << "SoulVocab::read runTable: " << endl;
   while (iId < info.size[0])
     {
       i = info(iId);
       iId++;
       wordNo = info(iId);
       iId++;
+      // for test
+      //cout << "SoulVocab::read i: " << i << " wordNo: " << wordNo << " ";
       for (j = iId; j < iId + wordNo; j++)
         {
           wordNumber++;
           add = new VocNode();
           runTable[i]->next = add;
           add->index = info(j);
+          // for test
+          //cout << add->index << " : ";
           iof->readString(add->word);
+          // for test
+          //cout << add->word << " -> ";
           runTable[i] = add;
         }
+      //cout << endl;
       iId = j;
     }
   // Read ~~~, for mmap
@@ -306,8 +322,14 @@ SoulVocab::index(string inWord)//Get index
 void
 SoulVocab::write(ioFile* iof)
 {
+	// for test
+	//cout << "SoulVocab::write here" << endl;
   iof->writeString("voc");
+  // for test
+  //cout << "SoulVocab::write here 1" << endl;
   iof->writeInt(tableSize);
+  // for test
+  //cout << "SoulVocab::write tableSize: " << tableSize << endl;
   VocNode* run;
   //Format info: [id_in_table number_of_words word1 word2]+, number_of_words <> 0
   intTensor info;
@@ -319,31 +341,49 @@ SoulVocab::write(ioFile* iof)
   int wordNo;
   for (i = 0; i < tableSize; i++)
     {
+	  // for test
+	  //cout << "SoulVocab::write i: " << i << endl;
       run = table[i];
       if (run->next != NULL)
         {
           realSize += 2;
           info(iId) = i;
+          // for test
+          //cout << "SoulVocab::write info(" << iId << ") = " << i << endl;
           iId++;
           preId = iId;
           iId++;
           wordNo = 0;
+          // for test
+          //cout << "SoulVocab::write here 1.1" << endl;
           while (run->next != NULL)
             {
+        	  // for test
+        	  //cout << "SoulVocab::write run->next: " << run->next << endl;
               run = run->next;
               info(iId) = run->index;
+              // for test
+              //cout << "SoulVocab::write info(" << iId << ") = " << run->index << endl;
               iId++;
               wordNo++;
             }
           info(preId) = wordNo;
+          // for test
+          //cout << "SoulVocab::write info(" << preId << ") = " << wordNo << endl;
         }
     }
+  // for test
+  //cout << "SoulVocab::write here 2" << endl;
   info.size[0] = realSize;
   info.length = realSize;
   info.write(iof);
+  // for test
+  //cout << "SoulVocab::write here 3" << endl;
   int addByte = wordNumber % sizeof(int);
   for (i = 0; i < tableSize; i++)
     {
+	  // for test
+	  //cout << "SoulVocab::write i: " << i << endl;
       run = table[i];
       while (run->next != NULL)
         {
@@ -353,10 +393,16 @@ SoulVocab::write(ioFile* iof)
         }
     }
   addByte = 2 * sizeof(int) - addByte % sizeof(int) - 1;
+  // for test
+  //cout << "SoulVocab::write here 4" << endl;
   string localStr = "";
   for (i = 0; i < addByte; i++)
     {
       localStr = localStr + "~";
     }
+  // for test
+  //cout << "SoulVocab::write here 5" << endl;
   iof->writeString(localStr);
+  // for test
+  //cout << "SoulVocab::write here 6" << endl;
 }

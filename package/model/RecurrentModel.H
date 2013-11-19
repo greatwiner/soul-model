@@ -35,11 +35,14 @@ public:
   int
   forwardProbability(intTensor& ngramTensor, floatTensor& probTensor);
 
+  float
+  distance2(RecurrentModel& anotherModel);
+
   //IO functions
   void
   read(ioFile* iof, int allocation, int blockSize);
   void
-  write(ioFile* iof);
+  write(ioFile* iof, int closeFile);
   int m;
 };
 

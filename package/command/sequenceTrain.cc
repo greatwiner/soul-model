@@ -31,6 +31,8 @@ sequenceTrain(char* prefixModel, char* prefixData, int maxExampleNumber, char* t
           break;
         }
     }
+  // for test
+  //cout << "sequenceTrain::main here 0.1" << endl;
   if (iteration == minIteration - 3)
     {
       cerr << "Can not find training model " << minIteration - 1 << endl;
@@ -41,7 +43,8 @@ sequenceTrain(char* prefixModel, char* prefixData, int maxExampleNumber, char* t
       cerr << "All is done" << endl;
       return 1;
     }
-
+  // for test
+  //cout << "sequenceTrain::main here 0.2" << endl;
   sprintf(convertStr, "%ld", iteration);
   strcpy(inputModelFileName, prefixModel);
   strcat(inputModelFileName, convertStr);
@@ -49,14 +52,45 @@ sequenceTrain(char* prefixModel, char* prefixData, int maxExampleNumber, char* t
     {
       strcat(inputModelFileName, ".gz");
     }
-  NeuralModel* model;
-  READMODEL(model, 0, inputModelFileName);
+  // for test
+  //cout << "sequenceTrain::main here 0.3" << endl;
+  ioFile file;
+  string name = file.recognition(inputModelFileName);
+  // for test
+  //cout << "sequenceTrain::main here 0.4" << endl;
+  if (name == JWTOVN) {
+	  MultiplesNeuralModel* model;
+	  // for test
+	  //cout << "sequenceTrain::main here 0.5" << endl;
+	  READMODEL_MULTIPLE(model, 0, inputModelFileName);
+	  // for test
+	  //cout << "sequenceTrain::main here 0.6" << endl;
+	  model->sequenceTrain(prefixModel, gz, prefixData, maxExampleNumber, trainingFileName,
+	        validationFileName, validType, learningRateType, iteration + 1,
+	        maxIteration);
+	  // for test
+	  //cout << "sequenceTrain::main here 0.7" << endl;
+	  delete model;
+	  // for test
+	  //cout << "sequenceTrain::main here 0.8" << endl;
+	  return 0;
+  }
+  else {
+	  NeuralModel* model;
+	  // for test
+	  //cout << "sequenceTrain::main here" << endl;
+	  READMODEL(model, 0, inputModelFileName);
+	  // for test
+	  //cout << "sequenceTrain::main here1" << endl;
 
-  model->sequenceTrain(prefixModel, gz, prefixData, maxExampleNumber, trainingFileName,
-      validationFileName, validType, learningRateType, iteration + 1,
-      maxIteration);
-  delete model;
-  return 0;
+	  model->sequenceTrain(prefixModel, gz, prefixData, maxExampleNumber, trainingFileName,
+			  validationFileName, validType, learningRateType, iteration + 1,
+			  maxIteration);
+	  //for test
+	  //cout << "sequenceTrain::main here2" << endl;
+	  delete model;
+	  return 0;
+  }
 }
 
 int
@@ -86,7 +120,7 @@ main(int argc, char *argv[])
 
   string learningRateType = argv[7];
   if (learningRateType != LEARNINGRATE_NORMAL && learningRateType
-      != LEARNINGRATE_DOWN)
+      != LEARNINGRATE_DOWN && learningRateType != LEARNINGRATE_ADJUST)
     {
       cerr << "Which learningRateType do you want?" << endl;
       return 1;

@@ -10,6 +10,7 @@
 #include "DataSet.H"
 #include "NgramDataSet.H"
 #include "NgramRankDataSet.H"
+#include "NgramNCEDataSet.H"
 #include "NgramPhraseTranslationDataSet.H"
 #include "NgramWordTranslationDataSet.H"
 #include "RecurrentDataSet.H"

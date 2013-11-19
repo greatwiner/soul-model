@@ -27,7 +27,7 @@ public:
   floatTensor&
   backward(floatTensor& gradOutput, int last);
   void
-  updateParameters(float learningRate);
+  updateParameters(float learningRateForRd, float learningRateForParas, int last);
 
   void
   init1class();
@@ -54,6 +54,6 @@ public:
   reUpdateParameters(int accept);
 
   void
-  updateRandomness(float learningRate, float RATE);
+  updateRandomness(float learningRate);
 };
 

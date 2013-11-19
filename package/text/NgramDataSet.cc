@@ -74,8 +74,14 @@ NgramDataSet::addLine(string line)
   while (streamLine >> word)
     {
       // Have word index for input and output vocabs
+	  // for test
+	  //cout << "NgramDataSet::addLine length: " << length << endl;
       inputIndex[length] = inputVoc->index(word);
+      // for test
+	  //cout << "NgramDataSet::addLine here" << length << endl;
       outputIndex[length] = outputVoc->index(word);
+      // for test
+	  //cout << "NgramDataSet::addLine here1" << length << endl;
       // If map?Unk = 1, considering unknown words as UNK
       if (mapIUnk && inputIndex[length] == ID_UNK)
         {
@@ -99,6 +105,7 @@ NgramDataSet::addLine(string line)
   if (length == BOS - 1)
     {
       cerr << "WARNING: Line " << line << " is too short" << endl;
+      cout << "NgramDataSet::addLine length: " << length << ", BOS: " << BOS << endl;
       return 0;
     }
   // Check if n-grams in the sentence satisfy
@@ -116,8 +123,14 @@ NgramDataSet::addLine(string line)
                   use = 0;
                   break;
                 }
+              // for test
+			  //cout << "NgramDataSet::addLine here2" << endl;
               data[ngramNumber * (n + 3) + j] = inputIndex[i + j];
+              // for test
+			  //cout << "NgramDataSet::addLine here3" << endl;
             }
+          // for test
+		  //cout << "NgramDataSet::addLine here4" << endl;
           if (outputIndex[i + n - 1] < 0)
             {
               use = 0;
@@ -126,6 +139,8 @@ NgramDataSet::addLine(string line)
             {
               data[ngramNumber * (n + 3) + n - 1] = outputIndex[i + n - 1];
             }
+          // for test
+		  //cout << "NgramDataSet::addLine here5" << endl;
         }
       // Case for models that predict the center word
       // at (n - 1 / 2) position
@@ -160,6 +175,8 @@ NgramDataSet::addLine(string line)
         }
       if (use)
         {
+    	  // for test
+		  //cout << "NgramDataSet::addLine here6" << endl;
           data[ngramNumber * (n + 3) + n] = ID_END_NGRAM;
           // Normally, keep the order of this n-gram in file
           data[ngramNumber * (n + 3) + n + 1] = ngramNumber;
@@ -219,10 +236,14 @@ NgramDataSet::readText(ioFile* iof)
   string tailline;
   headline = "";
   tailline = "";
+  // for test
+  cout << "NgramDataSet::readText type: " << type << endl;
   // Add <s>, </s> depending on model type
   // Normal
   if (type == 0)
     {
+	  // for test
+	  //cout << "NgramDataSet::readText here" << endl;
       for (i = 0; i < BOS; i++)
         {
           headline = headline + SS + " ";
@@ -249,6 +270,8 @@ NgramDataSet::readText(ioFile* iof)
         }
     }
   int readLineNumber = 0;
+  // for test
+  //cout << "NgramDataSet::readText here1" << endl;
   while (!iof->getEOF())
     {
       if (iof->getLine(line))
@@ -259,7 +282,11 @@ NgramDataSet::readText(ioFile* iof)
               line = headline + line + tailline;
               if (type == 0 || type == 2)
                 {
+            	  // for test
+            	  //cout << "NgramDataSet::readText here 4" << endl;
                   addLine(line);
+                  // for test
+                  //cout << "NgramDataSet::readText here2" << endl;
                 }
               else if (type == 1)
                 {
@@ -272,15 +299,18 @@ NgramDataSet::readText(ioFile* iof)
               cerr << "WARNING: Line " << line << " is empty" << endl;
             }
         }
+      // for test
+	  //cout << "NgramDataSet::readText here3" << endl;
+	  //cout << "NgramDataSet::readText readLineNumber: " << readLineNumber << endl;
       readLineNumber++;
-/*
+
 #if PRINT_DEBUG
       if (readLineNumber % NLINEPRINT == 0)
         {
           cout << readLineNumber << " ... " << flush;
         }
 #endif
-*/
+
     }
 #if PRINT_DEBUG
   cout << endl;
@@ -292,6 +322,8 @@ int
 NgramDataSet::resamplingText(ioFile* iof, int totalLineNumber,
     int resamplingLineNumber)
 {
+	// for test
+	cout << "NgramDataSet::resamplingText here" << endl;
   int* resamplingLineId = new int[resamplingLineNumber];
   resamplingSentence(totalLineNumber, resamplingLineNumber, resamplingLineId);
 
@@ -420,6 +452,8 @@ NgramDataSet::readCoBiNgram(ioFile* iof)
   int i;
   int N;
   iof->readInt(N);
+  // for test
+  //cout << "NgramDataSet::readCoBiNgram N: " << N << endl;
   int readTextNgram[N];
   // Order in the file can be larger than order of model
   int offset = N - n;
@@ -472,11 +506,17 @@ NgramDataSet::createTensor()
       delete[] dataTensor.data;
       dataTensor.data = data;
     }
+  // for test
+  //cout << "NgramDataSet::createTensor dataTensor before sorting: " << endl;
+  //dataTensor.write();
   // Sort using quicksort
   if (groupContext)
     {
       sortNgram();
     }
+  // for test
+  //cout << "NgramDataSet::createTensor dataTensor after sorting: " << endl;
+  //dataTensor.write();
   // Edit info integer to keep the info for the first next n-gram
   // which has a different context
   int ngramId;
@@ -507,6 +547,9 @@ NgramDataSet::createTensor()
     }
   data[ngramNumber * (n + 3) - 1] = ngramNumber;
   probTensor.resize(ngramNumber, 1);
+  // for test
+  //cout << "NgramDataSet::createTensor dataTensor: " << endl;
+  //dataTensor.write();
   return dataTensor;
 }
 
@@ -604,13 +647,59 @@ NgramDataSet::computePerplexity()
   return perplexity;
 }
 
-int
+/*int
 NgramDataSet::addLine(ioFile* iof)
 {
   string line;
   iof->getLine(line);
   addLine(line);
   return 1;
+}*/
+
+int
+NgramDataSet::addLine(ioFile* iof) {
+	int i = 0;
+	string line;
+	string headline;
+	string invLine;
+	string tailline;
+	headline = "";
+	tailline = "";
+	if (type == 0) {
+		for (i = 0; i < BOS; i++) {
+			headline = headline + SS + " ";
+        }
+		tailline = tailline + " " + ES;
+    }
+	else if (type == 1) {
+		for (i = 0; i < BOS; i++) {
+			tailline = tailline + " " + ES;
+        }
+		headline = headline + SS + " ";
+
+    }
+	else if (type == 2) {
+		for (i = 0; i < BOS / 2; i++) {
+			tailline = tailline + " " + ES;
+			headline = headline + SS + " ";
+        }
+    }
+	if (iof->getLine(line)) {
+		if (!checkBlankString(line)) {
+			line = headline + line + tailline;
+			if (type == 0 || type == 2) {
+				addLine(line);
+            }
+			else if (type == 1) {
+				invLine = inverse(line);
+				addLine(invLine);
+            }
+        }
+		else {
+			cerr << "WARNING: Line " << line << " is empty" << endl;
+        }
+    }
+	return 1;
 }
 
 int

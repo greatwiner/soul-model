@@ -46,6 +46,8 @@ public:
   backward(floatTensor& gradOutput);
   void
   updateParameters(float learningRate);
+  float
+  distance2(RRLinear& anotherRRLinear);
   void
   read(ioFile *iof);
   void

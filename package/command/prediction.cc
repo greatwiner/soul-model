@@ -8,154 +8,107 @@
 #include "ioFile.H"
 
 float
-prediction(NeuralModel* model, int start, int end, char* prefixModelFiles, char* dataFile, int n, int blockSize,
-		string validType, int step, int allocation, int calDist, char* distFileName) {
+prediction(NeuralModel* model, char* modelFileName, char* dataFile, int n, int blockSize,
+		string validType, int calDist) {
 	floatTensor probTensor;
 	int ngramNumber = 0;
 	// for test
 	//cout << "here i am" << endl;
 	//Model* model = new NgramModel();
 	int nIte = 0;
-	ofstream distFile;
-	distFile.open(distFileName, ios_base::app);
-	for (int i = start; i <= end; i = i + step) {
+	ioFile modelFiles;
+	modelFiles.takeReadFile(modelFileName);
+	while (!modelFiles.getEOF()) {
 		nIte += 1;
 		// for test
 		cout << "ite " << nIte << endl;
-		char fileName[260];
-		char cvstr[260];
-		strcpy(fileName, prefixModelFiles);
-		sprintf(cvstr, "%ld", i);
-		strcat(fileName, cvstr);
+		string filename;
+		cout << "prediction::prediction here" << endl;
+		modelFiles.getLine(filename);
+		cout << "prediction::prediction here 1" << endl;
 		ioFile modelFile;
-		modelFile.takeReadFile(fileName);
-		floatTensor prevLookupTableRepre;
-		if (calDist == 1 && i != start) {
-			//prevLookupTableRepre.copy(model->baseNetwork->lkt->weight);
-			prevLookupTableRepre.copy(model->outputNetwork[0]->weight);
-			//prevLookupTableRepre.copy(model->baseNetwork->modules[0]->weight);
+		char filename1[260];
+		strcpy(filename1, filename.c_str());
+		cout << "prediction::prediction here 3" << endl;
+		// for test
+		cout << "prediction::prediction filename1: " << filename1 << endl;
+		int open=modelFile.takeReadFile(filename1);
+		cout << "prediction::prediction here 2" << endl;
+		if (open==0) {
+			nIte -= 1;
+			break;
 		}
-		if (allocation == 1 && i == start) {
+		cout << "Read file: " << filename << endl;
+		floatTensor prevLookupTableRepre;
+		if (calDist == 1 && nIte > 1) {
+			prevLookupTableRepre.copy(model->baseNetwork->lkt->weight);
+		}
+		if (nIte == 1) {
+			cout << "Allocation = 1" << endl;
+			cout << "prediction::prediction here 4" << endl;
 			model->read(&modelFile, 1, blockSize);
-			// for test
+			cout << "prediction::prediction here 5" << endl;
 			model->computeProbability(model->dataSet, dataFile, validType);
+			cout << "prediction::prediction here 6" << endl;
 		}
 		else {
-			model->read(&modelFile, 0, blockSize);
-			model->computeProbability();
+			cout << "Allocation = 0" << endl;
+			if (PREDICTION_ALLO == 1) {
+				model->read(&modelFile, 1, blockSize);
+				model->computeProbability(model->dataSet, dataFile, validType);
+			}
+			else {
+				model->read(&modelFile, 0, blockSize);
+				model->computeProbability();
+			}
 		}
-		if (i == start) {
+		if (nIte == 1) {
 			ngramNumber = model->dataSet->ngramNumber;
 			probTensor.resize(ngramNumber, 1);
 			probTensor = 0;
 		}
 		probTensor.axpy(model->dataSet->probTensor, 1);
-		if (calDist == 1 && i != start) {
+		if (calDist == 1 && nIte > 1) {
 			floatTensor curLookupTableRepre;
-			//curLookupTableRepre.copy(model->baseNetwork->lkt->weight);
-			curLookupTableRepre.copy(model->outputNetwork[0]->weight);
-			//curLookupTableRepre.copy(model->baseNetwork->modules[0]->weight);
+			curLookupTableRepre.copy(model->baseNetwork->lkt->weight);
 			floatTensor distLkt;
 			distLkt.copy(curLookupTableRepre);
 			distLkt.axpy(prevLookupTableRepre, -1);
-			float distAngle2 = prevLookupTableRepre.angleDist(distLkt);
 			float distAngle = prevLookupTableRepre.angleDist(curLookupTableRepre);
-			float distAbsAvg = distLkt.sumSquared()/(distLkt.size[0]*distLkt.size[1]);
+			float distAbsAvg = distLkt.averageSquareBig();
 			cout << "Squared average of current vector: ";
-			cout << curLookupTableRepre.averageSquare() << endl;
-			cout << "Angle distance between previous vector and the distance vector: ";
-			cout << distAngle2 << endl;
-			cout << "Average absolute distance between iteration " << i << " and iteration" << i-step << " : ";
+			cout << curLookupTableRepre.averageSquareBig() << endl;
+			cout << "Average absolute distance between iteration " << nIte << " and iteration" << nIte-1 << " : ";
 			cout << distAbsAvg << endl;
-			cout << "Angle distance between iteration " << i << " and interation "<< i-step << " : ";
+			cout << "Angle distance between iteration " << nIte << " and interation "<< nIte-1 << " : ";
 			cout << distAngle << endl;
-			distFile << i-step << " " << distAbsAvg << " " << distAngle << endl;
-			strcat(fileName, ".dist");
-			ioFile fileDist;
-			fileDist.takeWriteFile(fileName);
-			floatTensor distTen;
-			distTen.resize(prevLookupTableRepre.size[1], 1);
-			for (int ind = 0; ind < prevLookupTableRepre.size[1]; ind++) {
-				floatTensor selectPrevLookupTableRepre;
-				floatTensor selectCurLookupTableRepre;
-				selectPrevLookupTableRepre.select(prevLookupTableRepre, 1, ind);
-				selectCurLookupTableRepre.select(curLookupTableRepre, 1, ind);
-				distTen(ind, 0) = selectPrevLookupTableRepre.angleDist(selectCurLookupTableRepre);
-			}
-			distTen.write(&fileDist);
 		}
 	}
-
-	distFile.close();
-
 	probTensor.scal((float)1/nIte);
 	float perplexity = 0;
 	for (int i = 0; i < probTensor.length; i++) {
 		perplexity += log(probTensor(i));
 	}
 	perplexity = exp(-perplexity / ngramNumber);
-
 	return perplexity;
 }
 
 int
 main(int argc, char *argv[]) {
-	if (argc != 9) {
-		cout << "start end prefixModelFiles dataFile n blockSize validType step" << endl;
+	if (argc != 6) {
+		cout << "modelFileName dataFile n blockSize validType" << endl;
 		return 0;
 	}
-	int start = atoi(argv[1]);
-	int end = atoi(argv[2]);
-	char* prefixModelFiles = argv[3];
-	char* dataFile = argv[4];
-	int n = atoi(argv[5]);
-	int blockSize = atoi(argv[6]);
-	string validType = argv[7];
-	int step = atoi(argv[8]);
-	char outputPerSyn[260];
-	strcpy(outputPerSyn, prefixModelFiles);
-	strcat(outputPerSyn, "outper.Syn");
-	ofstream outputPerpSyn;
-	outputPerpSyn.open(outputPerSyn);
-	int ind = start;
+	char* modelFileName = argv[1];
+	char* dataFile = argv[2];
+	int n = atoi(argv[3]);
+	int blockSize = atoi(argv[4]);
+	string validType = argv[5];
 	NeuralModel* model = new NgramModel();
-	char outputDistFileName[260];
-	strcpy(outputDistFileName, prefixModelFiles);
-	strcat(outputDistFileName, "out.squareDist");
-	//ofstream outputDistFile;
-	//outputDistFile.open(outputDistFileName);
-	/*while (ind <= end) {
-		// for test
-		cout << "ind: " << ind << endl;
-		int allo = 0;
-		if (ind == start) {
-			allo = 1;
-		}
-		int calDist = 0;
-		if (ind == start) {
-			calDist = 1;
-		}
-		float dist = 0.0;*/
-	    int allo = 1;
-	    int calDist = 1;
-		float per = prediction(model, ind, end, prefixModelFiles, dataFile, n, blockSize, validType, step, allo, calDist, outputDistFileName);
-		outputPerpSyn << ind << " " << per << endl;
-		//ind += step;
-	//}
-	outputPerpSyn.close();
-	/*outils* otl = new outils();
-	otl->sgenrand(time(NULL) + getpid());
-	floatTensor out;
-	out.resize(100, 100);
-	out.initializeNormal(otl);
-	out.write();
-	cout << out.sumSquared()/(out.size[0]*out.size[1]) << endl;
-	float sum = 0.0;
-	for (int i = 0; i < out.size[0]; i ++) {
-		for (int j = 0; j < out.size[1]; j ++) {
-			sum += out(i,j);
-		}
-	}
-	cout << sum/(out.size[0]*out.size[1]) << endl;*/
+	int allo = 1;
+	int calDist = 1;
+	float per = prediction(model, modelFileName, dataFile, n, blockSize, validType, calDist);
+	cout << per << endl;
+	delete model;
 	return 0;
 }

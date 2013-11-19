@@ -91,14 +91,20 @@ floatTensor::~floatTensor()
     {
       if (size != NULL)
         {
+    	  // for test
+    	  //cout << "floatTensor::~floatTensor size: " << size << endl;
           delete[] size;
         }
       if (stride != NULL)
         {
+    	  // for test
+		  //cout << "floatTensor::~floatTensor stride: " << stride << endl;
           delete[] stride;
         }
       if (data != NULL && haveMemory)
         {
+    	  // for test
+		  //cout << "floatTensor::~floatTensor data: " << data << endl;
           delete[] data;
         }
     }
@@ -144,31 +150,49 @@ void
 floatTensor::info()
 {
   cout << "# floatTensor" << endl;
+  // for test
+  cout << "floatTensor::info size: " << size << endl;
   cout << "dimension " << size[0] << " " << size[1] << endl;
+  // for test
+  cout << "floatTensor::info stride: " << stride << endl;
   cout << "stride " << stride[0] << " " << stride[1] << endl;
+  // for test
+  cout << "floatTensor::info data: " << data << endl;
 }
 int
 floatTensor::resize(int size0, int size1)
 {
+	// for test
+	//cout << "floatTensor::resize here" << endl;
   if (haveMemory == 1 && size[0] == size0 && size[1] == size1)
     {
+	  // for test
+	  //cout << "floatTensor::resize here 1" << endl;
       return 0;
     }
   if (size == NULL)
     {
+	  // for test
+	  //cout << "floatTensor::resize here 2" << endl;
       size = new int[2];
       stride = new int[2];
     }
   else
     {
+	  // for test
+	  //cout << "floatTensor::resize here 3" << endl;
       delete[] data;
     }
   size[0] = size0;
   size[1] = size1;
   stride[0] = 1;
   stride[1] = size0;
+  // for test
+  //cout << "floatTensor::resize here 4" << endl;
   try
     {
+	  // for test
+	  //cout << "floatTensor::resize here 5" << endl;
       data = new float[size0 * size1];
     }
   catch (bad_alloc& ba)
@@ -176,6 +200,8 @@ floatTensor::resize(int size0, int size1)
       cerr << "ERROR floatTensor resize " << ba.what() << endl;
     }
 
+  // for test
+  //cout << "floatTensor::resize here 6" << endl;
   haveMemory = 1;
   length = size[0] * size[1];
   return 1;
@@ -272,6 +298,8 @@ floatTensor::copy(floatTensor& src)
 {
   if (size == NULL)
     {
+	  // for test
+	  //cout << "floatTensor::copy resize" << endl;
       resize(src);
     }
   if (length != src.length || size[0] != src.size[0] || size[1] != src.size[1])
@@ -281,6 +309,11 @@ floatTensor::copy(floatTensor& src)
           << src.size[0] << " " << size[1] << " " << src.size[1] << endl;
       exit(1);
     }
+  // for test
+  //cout << "floatTensor::copy this: " << endl;
+  //this->info();
+  //cout << "floatTensor::copy src: " << endl;
+  //src.info();
   for (int i = 0; i < size[0]; i++)
     {
       for (int j = 0; j < size[1]; j++)
@@ -289,6 +322,36 @@ floatTensor::copy(floatTensor& src)
               * src.stride[1]];
         }
     }
+  // for test
+  //cout << "floatTensor::copy src data: " << src.data << endl;
+}
+
+void
+floatTensor::copy(floatTensor& src, floatTensor& weight) {
+	if (size == NULL) {
+		// for test
+		//cout << "floatTensor::copy resize" << endl;
+		resize(src);
+	}
+	if (length != src.length || size[0] != src.size[0] || size[1] != src.size[1]) {
+		cerr << "ERROR: Copy float tensor with different size\n";
+		cerr << length << " " << src.length << " " << size[0] << " "
+	          << src.size[0] << " " << size[1] << " " << src.size[1] << endl;
+		exit(1);
+	}
+	// for test
+	//cout << "floatTensor::copy weight size: " << weight.size << endl;
+	for (int i = 0; i < size[0]; i++) {
+		for (int j = 0; j < size[1]; j++) {
+			// for test
+			//cout << "floatTensor::copy i, j : " << i << " ," << j << endl;
+			//cout << "floatTensor::copy weight size: " << weight.size << endl;
+			data[i * stride[0] + j * stride[1]] = src.data[i * src.stride[0] + j
+	              * src.stride[1]];
+		}
+	}
+	// for test
+	//cout << "floatTensor::copy weight size: " << weight.size << endl;
 }
 
 void
@@ -325,7 +388,7 @@ floatTensor::mlog(floatTensor& src)
 #else
   for (int i = 0; i < length; i++)
     {
-      data[i] = log(src.data[i]);
+      data[i] = ::log(src.data[i]);
     }
 #endif
 }
@@ -444,6 +507,7 @@ floatTensor::axpy(floatTensor& tensor1, float alpha)//y = ax + y
 {
   int lstride = 1;
   axpy_(&length, &alpha, tensor1.data, &lstride, data, &lstride);
+
 }
 
 void
@@ -530,6 +594,7 @@ floatTensor::dot(floatTensor& src)
     }
   else
     {
+	  cout << "floatTensor::dot here1" << endl;
       float sum = 0;
       for (int i = 0; i < size[0]; i++)
         {
@@ -546,23 +611,57 @@ floatTensor::dot(floatTensor& src)
 void
 floatTensor::read(ioFile* iof)
 {
-  int* newSize = new int[2];
-  newSize = iof->readIntArray(newSize, 2);
-  resize(newSize[0], newSize[1]);
-  delete[] newSize;
-
-  length = size[0] * size[1];
-  data = iof->readFloatArray(data, length);
+	// for test
+	//cout << "floatTensor::read here" << endl;
+	if (READ_SHARE_W == 1) {
+		// for test
+		//cout << "floatTensor::read here 1" << endl;
+		iof->readInt(haveMemory);
+		// for test
+		//cout << "floatTensor::read haveMemory: " << haveMemory << endl;
+	}
+	if (haveMemory == -1) {
+		cout << "WARNING: Try reading tensor with haveMemory = -1" << endl;
+		return;
+	}
+	// for test
+	//cout << "floatTensor::read here 2" << endl;
+	size = new int[2];
+	iof->readIntArray(size, 2);
+	if (haveMemory == 0) {
+		cout << "WARNING: Try reading tensor with haveMemory = 0" << endl;
+		return;
+	}
+	// for test
+	//cout << "floatTensor::read here 3" << endl;
+	resize(size[0], size[1]);
+	// for test
+	//cout << "floatTensor::read here 4" << endl;
+	// for test
+	//cout << "floatTensor::read here 5" << endl;
+	length = size[0] * size[1];
+	data = iof->readFloatArray(data, length);
 }
 void
 floatTensor::write(ioFile* iof)
 {
-  if (haveMemory == 0)
-    {
-      cerr << "ERROR: Try writing tensor with haveMemory = 0" << endl;
+	iof->writeInt(haveMemory);
+	if (haveMemory == -1) {
+		cout << "WARNING: Try writing tensor with haveMemory = -1" << endl;
+		return;
     }
-  iof->writeIntArray(size, 2);
-  iof->writeFloatArray(data, length);
+	// for test
+	//cout << "floatTensor::write here" << endl;
+	iof->writeIntArray(size, 2);
+	// for test
+	//cout << "floatTensor::write here 1" << endl;
+	if (haveMemory == 0) {
+		cout << "WARNING: Try writing tensor with haveMemory = 0" << endl;
+		return;
+	}
+	iof->writeFloatArray(data, length);
+	// for test
+	//cout << "floatTensor::write here 2" << endl;
 }
 
 void
@@ -627,16 +726,11 @@ floatTensor::initializeNormal(outils* otl) {
 	}
 }
 
-void
-floatTensor::log(floatTensor& src)
-{
-	log_(length, src.data, data); // y = exp(-x)
-}
-
 float
 floatTensor::initializeNormalOneElement(outils* otl) {
 	// uniformly distributed float numbers
 	float U1=otl->genrand();
+	if (U1 < 0.000001) U1 = 0.000001;
 	float U2=otl->genrand();
 	return sqrt(-2*::log(U1))*cos(2*M_PI*U2);
 }
@@ -651,7 +745,191 @@ floatTensor::averageSquare() {
 	return sumSquared()/(this->size[0]*this->size[1]);
 }
 
+int*
+floatTensor::getSize() {
+	return size;
+}
+
+int
+floatTensor::getSize(int i) {
+	return size[i];
+}
+
+void
+floatTensor::setSize(int i, int value) {
+	size[i] = value;
+}
+
+float
+floatTensor::averageSquareBig() {
+	float sum = 0;
+	if (size[0] > size[1]) {
+		for (int i = 0; i < size[0]; i ++) {
+			floatTensor select;
+			select.select(*this, 0, i);
+			sum += select.averageSquare();
+		}
+		return sum/size[0];
+	}
+	else {
+		for (int i = 0; i < size[1]; i ++) {
+			floatTensor select;
+			select.select(*this, 1, i);
+			sum += select.averageSquare();
+		}
+		return sum/size[1];
+	}
+}
+
+int
+floatTensor::testNan() {
+	if (size[0] < size[1]) {
+		for (int i = 0; i < size[1]; i ++) {
+			floatTensor select;
+			select.select(*this, 1, i);
+			if (isnan(select.averageSquareBig()) != 0) {
+				return 1;
+			}
+		}
+	}
+	else {
+		for (int i = 0; i < size[0]; i ++) {
+			floatTensor select;
+			select.select(*this, 0, i);
+			if (isnan(select.averageSquareBig()) != 0) {
+				return 1;
+			}
+		}
+	}
+	return 0;
+}
+
+int
+floatTensor::testInf() {
+	/*if (size[0] < size[1]) {
+		for (int i = 0; i < size[1]; i ++) {
+			floatTensor select;
+			select.select(*this, 1, i);
+			cout << i << endl;
+			select.write();
+			int res = isinf(select.averageSquare());
+			if (res != 0) {
+				if (res == -1) {
+					cout << "floatTensor::testInf negative infinity" << endl;
+				}
+				else {
+					cout << "floatTensor::testInf positive infinity" << endl;
+				}
+				return res;
+			}
+			cout << i << " " << select.averageSquare() << endl;
+		}
+	}
+	else {
+		for (int i = 0; i < size[0]; i ++) {
+			floatTensor select;
+			select.select(*this, 0, i);
+			cout << i << endl;
+			select.write();
+			int res = isinf(select.averageSquare());
+			if (res != 0) {
+				if (res == -1) {
+					cout << "floatTensor::testInf negative infinity" << endl;
+				}
+				else {
+					cout << "floatTensor::testInf positive infinity" << endl;
+				}
+				return res;
+			}
+			cout << i << " " << select.averageSquare() << endl;
+		}
+	}*/
+	for (int i = 0; i < size[0]; i++) {
+		for (int j = 0; j < size[1]; j++) {
+			int res = isinf(data[i*stride[0] + j*stride[1]]);
+			if (res != 0) {
+				cout << "floatTensor::testInf " << res << " " << i << " " << j << endl;
+				return res;
+			}
+		}
+	}
+	return 0;
+}
+
+int
+floatTensor::testNanShow() {
+	if (size[0] < size[1]) {
+		for (int i = 0; i < size[1]; i ++) {
+			floatTensor select;
+			select.select(*this, 1, i);
+			if (isnan(select.averageSquare()) != 0) {
+				return 1;
+			}
+			else {
+				cout << "floatTensor::testNanShow 1" << endl;
+				cout << "floatTensor::testNanShow i: " << i << endl;
+				cout << "floatTensor::testNanShow aS: " << select.averageSquare() << endl;
+			}
+		}
+	}
+	else {
+		for (int i = 0; i < size[0]; i ++) {
+			floatTensor select;
+			select.select(*this, 0, i);
+			if (isnan(select.averageSquare()) != 0) {
+				return 1;
+			}
+			else {
+				cout << "floatTensor::testNanShow 0" << endl;
+				cout << "floatTensor::testNanShow i: " << i << endl;
+				cout << "floatTensor::testNanShow aS: " << select.averageSquare() << endl;
+			}
+		}
+	}
+	return 0;
+}
+
 float
 floatTensor::angleDist(floatTensor& anotherVector) {
-	return this->dot(anotherVector)/sqrt(this->sumSquared()*anotherVector.sumSquared());
+	//return this->dot(anotherVector)/sqrt(this->averageSquareBig()*this->size[0]*this->size[1]*anotherVector.averageSquareBig()*anotherVector.size[0]*anotherVector.size[1]);
+	if (this->size[0] != anotherVector.size[0] || this->size[1] != anotherVector.size[1]) {
+	  cout << "The two vectors do not have same size" << endl;
+	  this->info();
+	  anotherVector.info();
+	  return -1000;
+	}
+	else {
+	  float sum=0;
+	  if (size[0] > size[1]) {
+		  for (int i = 0; i < size[0]; i ++) {
+			  floatTensor select1;
+			  select1.select(*this, 0, i);
+			  floatTensor select2;
+			  select2.select(anotherVector, 0, i);
+			  sum+=select1.dot(select2);
+		  }
+	  }
+	  else {
+		  for (int i = 0; i < size[1]; i ++) {
+			  floatTensor select1;
+			  select1.select(*this, 1, i);
+			  floatTensor select2;
+			  select2.select(anotherVector, 1, i);
+			  sum+=select1.dot(select2);
+		  }
+	  }
+	  return sum/sqrt(this->averageSquare()*this->size[0]*this->size[1]*anotherVector.averageSquare()*anotherVector.size[0]*anotherVector.size[1]);
+	}
+}
+
+void
+floatTensor::correct(outils* otl) {
+	for (int i = 0; i < size[0]; i ++) {
+		for (int j = 0; j < size[1]; j ++) {
+			if (isnan(data[i*stride[0] + j*stride[1]]) != 0 || isinf(data[i*stride[0] + j*stride[1]]) != 0) {
+				data[i*stride[0] + j*stride[1]] = this->initializeNormalOneElement(otl);
+				cout << "floatTensor::correct " << i << " " << j << endl;
+			}
+		}
+	}
 }

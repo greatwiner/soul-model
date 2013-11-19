@@ -13,10 +13,11 @@
 
 class floatTensor : public Tensor
 {
+//protected:
 public:
   // Data
-  int* size;
-  int* stride;
+	int* size;
+	int* stride;
   float* data;
   // Method
   floatTensor();
@@ -53,6 +54,8 @@ public:
   select(floatTensor& src, int sd, int sliceIndex);
   void
   copy(floatTensor& src);
+  void
+  copy(floatTensor&, floatTensor&);
   void
   tieData(floatTensor& src);
 
@@ -113,10 +116,28 @@ public:
   averageSquare();
 
   float
-  initializeNormalOneElement(outils* otl);
+  averageSquareBig();
+
+  int
+  testNan();
+
+  int
+  testInf();
+
+  int
+  testNanShow();
+
+  int*
+  getSize();
+
+  int
+  getSize(int i);
 
   void
-  log(floatTensor& src);
+  setSize(int i, int value);
+
+  float
+  initializeNormalOneElement(outils* otl);
 
   void
   initializeNormal(outils* otl);
@@ -169,6 +190,9 @@ public:
   // calculate angle distance
   float
   angleDist(floatTensor& anotherVector);
+
+  void
+  correct(outils* otl);
 
 };
 

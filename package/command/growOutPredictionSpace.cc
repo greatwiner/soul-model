@@ -118,7 +118,7 @@ main(int argc, char *argv[])
       oslModel->outputVoc = oslModel->inputVoc;
       ioFile oIof;
       oIof.takeWriteFile(outModelFileName);
-      oslModel->write(&oIof);
+      oslModel->write(&oIof, 1);
       oslModel->outputVoc = oldVoc;
       delete slModel;
       delete oslModel;

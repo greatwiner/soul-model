@@ -12,15 +12,31 @@ NgramWordTranslationModel::NgramWordTranslationModel()
 
 NgramWordTranslationModel::~NgramWordTranslationModel()
 {
+	// for test
+	//cout << "NgramWordTranslationModel::~NgramWordTranslationModel here" << endl;
   delete baseNetwork;
+  // for test
+  //cout << "NgramWordTranslationModel::~NgramWordTranslationModel here 1" << endl;
   for (int idel = 0; idel < outputNetworkNumber; idel++)
     {
+	  // for test
+	  //cout << "NgramWordTranslationModel::~NgramWordTranslationModel idel: " << idel << endl;
       delete outputNetwork[idel];
     }
+  // for test
+  //cout << "NgramWordTranslationModel::~NgramWordTranslationModel here 2" << endl;
   delete[] outputNetwork;
+  // for test
+  //cout << "NgramWordTranslationModel::~NgramWordTranslationModel here 3" << endl;
   delete inputVoc;
+  // for test
+  //cout << "NgramWordTranslationModel::~NgramWordTranslationModel here 4" << endl;
   delete outputVoc;
+  // for test
+  //cout << "NgramWordTranslationModel::~NgramWordTranslationModel here 5" << endl;
   delete dataSet;
+  // for test
+  //cout << "NgramWordTranslationModel::~NgramWordTranslationModel here 6" << endl;
 }
 
 void
@@ -80,7 +96,7 @@ NgramWordTranslationModel::allocation()
     }
   probabilityOne.resize(blockSize, 1);
   int outputNetworkNumber = outputNetworkSize.size[0];
-  outputNetwork = new LinearSoftmax*[outputNetworkNumber];
+  outputNetwork = new Module*[outputNetworkNumber];
   LinearSoftmax* sl = new LinearSoftmax(hiddenLayerSize, outputNetworkSize(0),
       blockSize, otl);
   outputNetwork[0] = sl;
@@ -417,9 +433,16 @@ NgramWordTranslationModel::read(ioFile* iof, int allocation, int blockSize)
 {
   string readFormat;
 
+  // for test
+  //cout << "NgramWordTranslationModel::read here " << endl;
   iof->readString(name);
   iof->readString(readFormat);
   iof->readInt(ngramType);
+  // for test
+  //cout << "NgramWordTranslationModel::read here 1" << endl;
+  //cout << "NgramWordTranslationModel::read name: " << name << endl;
+  //cout << "NgramWordTranslationModel::read readFormat: " << readFormat << endl;
+  //cout << "NgramWordTranslationModel::read ngramType: " << ngramType << endl;
   inputVoc = new SoulVocab();
   outputVoc = new SoulVocab();
   iof->readInt(inputVoc->wordNumber);
@@ -427,6 +450,10 @@ NgramWordTranslationModel::read(ioFile* iof, int allocation, int blockSize)
   iof->readInt(mapIUnk);
   iof->readInt(mapOUnk);
   iof->readInt(BOS);
+  // for test
+  //cout << "NgramWordTranslationModel::read here 2" << endl;
+  //cout << "NgramWordTranslationModel::read inputVoc->wordNumber: " << inputVoc->wordNumber << endl;
+  //cout << "NgramWordTranslationModel::read outputVoc->wordNumber: " << outputVoc->wordNumber << endl;
   if (blockSize != 0)
     {
       this->blockSize = blockSize;
@@ -436,38 +463,71 @@ NgramWordTranslationModel::read(ioFile* iof, int allocation, int blockSize)
       this->blockSize = DEFAULT_BLOCK_SIZE;
     }
   iof->readInt(n);
+  // for test
+  //cout << "NgramWordTranslationModel::read here 3" << endl;
+  //cout << "NgramWordTranslationModel::read n: " << n << endl;
   nm = n * 2;
   iof->readInt(dimensionSize);
   iof->readInt(hiddenNumber);
   iof->readString(nonLinearType);
   iof->readInt(maxCodeWordLength);
   iof->readInt(outputNetworkNumber);
+  // for test
+  //cout << "NgramWordTranslationModel::read here 4" << endl;
   codeWord.resize(outputVoc->wordNumber, maxCodeWordLength);
   outputNetworkSize.resize(outputNetworkNumber, 1);
   codeWord.read(iof);
+  // for test
+  //cout << "NgramWordTranslationModel::read here 5" << endl;
   outputNetworkSize.read(iof);
+  // for test
+  //cout << "NgramWordTranslationModel::read here 6" << endl;
   hiddenLayerSizeArray.resize(hiddenNumber, 1);
   hiddenLayerSizeArray.read(iof);
+  // for test
+  //cout << "NgramWordTranslationModel::read here 7" << endl;
   hiddenLayerSize = hiddenLayerSizeArray(hiddenLayerSizeArray.length - 1);
   if (allocation)
     {
       this->allocation();
     }
+  // for test
+  //cout << "NgramWordTranslationModel::read here 71" << endl;
   baseNetwork->read(iof);
+  // for test
+  //cout << "NgramWordTranslationModel::read here 8" << endl;
+  // for test
+  //cout << "NgramWordTranslationModel::read lkt name: " << baseNetwork->lkt->name << endl;
+  //cout << "NgramWordTranslationModel::read first hidden layer name: " << baseNetwork->modules[0]->name << endl;
   int i;
   for (i = 0; i < outputNetworkSize.size[0]; i++)
     {
       outputNetwork[i]->read(iof);
+      // for test
+      //cout << "NgramWordTranslationModel::read here 9" << endl;
+      //cout << "NgramWordTranslationModel::read outputNetwork " << i << " name: " << outputNetwork[i]->name << endl;
     }
   inputVoc->read(iof);
+  // for test
+  //cout << "NgramWordTranslationModel::read here 10" << endl;
   outputVoc->read(iof);
+  // for test
+  //cout << "NgramWordTranslationModel::read here 11" << endl;
+  // for test
+  //cout << "NgramWordTranslationModel::read reference: " << outputVoc->table[0]->next->next << " index: " << outputVoc->table[0]->next->next->index << " word: " << outputVoc->table[0]->next->next->word << endl;
 }
 
 void
-NgramWordTranslationModel::write(ioFile* iof)
+NgramWordTranslationModel::write(ioFile* iof, int closeFile)
 {
+	// for test
+	//cout << "NgramWordTranslationModel::write here" << endl;
   iof->writeString(name);
+  // for test
+  //cout << "NgramWordTranslationModel::write name: " << name << endl;
   iof->writeString(iof->format);
+  // for test
+  //cout << "NgramWordTranslationModel::write iof->format: " << iof->format << endl;
 
   iof->writeInt(ngramType);
   iof->writeInt(inputVoc->wordNumber);
@@ -481,17 +541,40 @@ NgramWordTranslationModel::write(ioFile* iof)
   iof->writeString(nonLinearType);
   iof->writeInt(maxCodeWordLength);
   iof->writeInt(outputNetworkNumber);
+  // for test
+  //cout << "NgramWordTranslationModel::write here 1" << endl;
   codeWord.write(iof);
+  // for test
+  //cout << "NgramWordTranslationModel::write here 2" << endl;
   outputNetworkSize.write(iof);
+  // for test
+  //cout << "NgramWordTranslationModel::write here 3" << endl;
   hiddenLayerSizeArray.write(iof);
+  // for test
+  //cout << "NgramWordTranslationModel::write here 4" << endl;
   baseNetwork->write(iof);
+  // for test
+  //cout << "NgramWordTranslationModel::write here 5" << endl;
   int i;
   for (i = 0; i < outputNetworkSize.size[0]; i++)
     {
       outputNetwork[i]->write(iof);
+      // for test
+      //cout << "NgramWordTranslationModel::write i: " << i << endl;
     }
+  // for test
+  //cout << "NgramWordTranslationModel::write here 6" << endl;
   inputVoc->write(iof);
+  // for test
+  //cout << "NgramWordTranslationModel::write here 7" << endl;
   outputVoc->write(iof);
-  iof->freeWriteFile();
+  // for test
+  //cout << "NgramWordTranslationModel::write here 8" << endl;
+  //iof->freeWriteFile();
+  // for test
+  //cout << "NgramWordTranslationModel::write here 9" << endl;
+  if (closeFile == 1) {
+	  iof->freeWriteFile();
+  }
 }
 

@@ -12,12 +12,22 @@ RLinear::RLinear(int inputSize, int blockSize, int n, string nonLinearType,
   this->n = n;
   BPTT = n - 1;
   this->inputSize = inputSize;
+  // for test
+  //cout << "RLinear::RLinear inputSize: " << inputSize << endl;
   this->nonLinearType = nonLinearType;
   this->share = share;
+  // for test
+  //cout << "RLinear::RLinear share: " << share << endl;
   this->otl = otl;
   weight.resize(inputSize, inputSize);
+  // for test
+  //cout << "RLinear::RLinear weight: " << endl;
+  //weight.info();
   weight.uniform(LINEAR_INIT0, LINEAR_INIT1, otl);
   cstInput.resize(inputSize, blockSize);
+  // for test
+  //cout << "RLinear::RLinear cstInput: " << endl;
+  //cstInput.info();
   vectorInput.resize(inputSize, 1);
   vectorInput.uniform(LKT_INIT0, LKT_INIT1, otl);
   floatTensor initSelectInput;
@@ -28,6 +38,9 @@ RLinear::RLinear(int inputSize, int blockSize, int n, string nonLinearType,
       initSelectInput.copy(vectorInput);
     }
   gradInput.resize(inputSize * (n - 1), blockSize);
+  // for test
+  //cout << "RLinear::RLinear gradInput: " << endl;
+  //gradInput.info();
   size = 0;
 
   step = 1;
@@ -46,8 +59,12 @@ RLinear::RLinear(int inputSize, int blockSize, int n, string nonLinearType,
   for (i = 0; i < n - 2; i++)
     {
       lModule = new BLinear(inputSize, inputSize, blockSize, otl);
+      //for test
+      //cout << "RLinear::RLinear create lModule" << endl;
       if (share)
         {
+    	  // for test
+    	  //cout << "RLinear::RLinear sharing weight" << endl;
           lModule->shareWeight(weight);
         }
       add(lModule);
@@ -64,6 +81,8 @@ RLinear::RLinear(int inputSize, int blockSize, int n, string nonLinearType,
     }
   //Last don't add Sigmoid, Tanh, add in NgramModel
   lModule = new BLinear(inputSize, inputSize, blockSize, otl);
+  // for test
+  //cout << "RLinear::RLinear last BLinear" << endl;
   if (share)
     {
       lModule->shareWeight(weight);
@@ -117,6 +136,8 @@ RLinear::forward(floatTensor& input)
   int i;
   for (i = 0; i < n - 1; i++)
     {
+	  // for test
+	  //cout << "RLinear::forward i: " << i << endl;
       subInput.sub(input, inputSize * i, inputSize * (i + 1) - 1, 0,
           blockSize - 1);
       modules[i * step]->bias.copy(subInput);

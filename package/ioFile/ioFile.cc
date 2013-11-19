@@ -59,12 +59,18 @@ ioFile::check(char* fileName, int out)
 int
 ioFile::getEOF()
 {
+	// for test
+	//cout << "ioFile::getEOF here" << endl;
   if (compressed)
     {
+	  // for test
+	  //cout << "ioFile::getEOF here 1" << endl;
       return feof(zipFi);
     }
   else
     {
+	  // for test
+	  //cout << "ioFile::getEOF here 2 fi: " << fi << endl;
       return (*fi).eof();
     }
 }
@@ -77,11 +83,15 @@ ioFile::takeReadFile(char* readFileName)
     {
       return 0;
     }
+  // for test
+  //cout << "ioFile::takeReadFile ok for file exists" << endl;
   compressed = 0;
   char *s;
   s = strstr(readFileName, ".gz");
   if (s != NULL) // compressed with gzip
     {
+	  // for test
+	  //cout << "ioFile::takeReadFile here" << endl;
       if (zipFi != NULL)
         {
           fclose(zipFi);
@@ -93,19 +103,32 @@ ioFile::takeReadFile(char* readFileName)
     }
   else
     {
+	  // for test
+	  //cout << "ioFile::takeReadFile here 1 fi: " << fi << endl;
+	  //cout << "ioFile::takeReadFile here 1 format: " << format << endl;
       if (fi != NULL)
         {
+    	  // for test
+    	  //cout << "ioFile::takeReadFile here 2" << endl;
           fi->close();
           delete fi;
         }
       if (format == TEXT)
         {
+    	  // for test
+    	  //cout << "ioFile::takeReadFile here 3" << endl;
           fi = new ifstream(readFileName);
+          // for test
+          //cout << "ioFile::takeReadFile fi: " << fi << endl;
           return fi->good();
         }
       else if (format == BINARY)
         {
+    	  // for test
+		  //cout << "ioFile::takeReadFile here 4" << endl;
           fi = new ifstream(readFileName, ios::binary);
+          // for test
+          //cout << "ioFile::takeReadFile fi: " << fi << endl;
           return fi->good();
         }
     }
@@ -352,12 +375,22 @@ int
 ioFile::readString(string& out)
 {
   string str = "";
+  // for test
+  //cout << "ioFile::readString here" << endl;
   while (str == "" && !getEOF())
     {
+	  // for test
+	  //cout << "ioFile::readString here 1" << endl;
       getLine(str);
+      // for test
+      //cout << "ioFile::readString here 2" << endl;
 
     }
+  // for test
+  //cout << "ioFile::readString here 3" << endl;
   istringstream streamStr(str);
+  // for test
+  //cout << "ioFile::readString here 4" << endl;
   streamStr >> out; //Don't need blank
   return 1;
 }

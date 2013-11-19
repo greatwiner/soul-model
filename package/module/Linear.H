@@ -26,6 +26,8 @@ public:
   // Pointer to a random generator
   outils* otl;
 
+  Linear();
+
   Linear(int inputSize, int outputSize, int blockSize, outils* otl);
 
   ~Linear();
@@ -41,6 +43,8 @@ public:
   backward(floatTensor& gradOutput);
   void
   updateParameters(float learningRate);
+  float
+  distance2(Linear& anotherLinear);
 
   void
   read(ioFile *iof);

@@ -142,6 +142,8 @@ int
 RecurrentDataSet::resamplingSentence(int totalLineNumber,
     int resamplingLineNumber, int* resamplingLineId)
 {
+	// for test
+	//cout << "RecurrentDataSet::resamplingSentence here" << endl;
   if (totalLineNumber == resamplingLineNumber)
     {
       int i;
@@ -166,6 +168,8 @@ RecurrentDataSet::resamplingSentence(int totalLineNumber,
         }
       else
         {
+    	  // for test
+    	  //cout << "RecurrentDataSet::resamplingSentence here 1" << endl;
           int* buff = new int[totalLineNumber];
           int chosenPos;
           int i;
@@ -224,8 +228,14 @@ int
 RecurrentDataSet::resamplingText(ioFile* iof, int totalLineNumber,
     int resamplingLineNumber)
 {
+	// for test
+	//cout << "RecurrentDataSet::resamplingText here" << endl;
   int* resamplingLineId = new int[resamplingLineNumber];
+  // for test
+  //cout << "RecurrentDataSet::resamplingText here 1" << endl;
   resamplingSentence(totalLineNumber, resamplingLineNumber, resamplingLineId);
+  // for test
+  //cout << "RecurrentDataSet::resamplingText here 2" << endl;
 
   string line;
   string headline;
@@ -238,7 +248,6 @@ RecurrentDataSet::resamplingText(ioFile* iof, int totalLineNumber,
         {
           if (readLineNumber == resamplingLineId[currentId])
             {
-
               if (!checkBlankString(line))
                 {
                   line = headline + line + " " + ES;
@@ -271,20 +280,33 @@ RecurrentDataSet::resamplingText(ioFile* iof, int totalLineNumber,
 intTensor&
 RecurrentDataSet::createTensor()
 {
+	// for test
+	//cout << "RecurrentDataSet::createTensor here" << endl;
   intTensor pos;
   pos.resize(blockSize, 1);
   intTensor dis;
   dis.resize(blockSize, 1);
+  // for test
+  //cout << "RecurrentDataSet::createTensor blockSize: " << blockSize << endl;
+
   int outMBlock = findPos(pos, dis) / (n + 3);
+  // for test
+  //cout << "RecurrentDataSet::createTensor here 4" << endl;
   int outNgramNumber = blockSize * outMBlock;
   int rNBlock;
   int rBlockSize;
   intTensor ssArray;
   ssArray.resize(n + 2, 1);
+  // for test
+  //cout << "RecurrentDataSet::createTensor here 5" << endl;
   ssArray = inputVoc->ss;
+  // for test
+  //cout << "RecurrentDataSet::createTensor here 6" << endl;
   ssArray(n - 1) = SIGN_NOT_WORD;
   ssArray(n) = ID_END_NGRAM;
   ssArray(n + 1) = SIGN_NOT_WORD;
+  // for test
+  //cout << "RecurrentDataSet::createTensor here 1" << endl;
 
   dataTensor.resize(outNgramNumber, n + 3);
   int rN;
@@ -312,7 +334,13 @@ RecurrentDataSet::createTensor()
               + rNBlock * blockSize + 1;
         }
     }
+  // for test
+  //cout << "RecurrentDataSet::createTensor here 2" << endl;
   probTensor.resize(ngramNumber, 1);
+  // for test
+  //cout << "RecurrentDataSet::createTensor here 3" << endl;
+  //cout << "RecurrentDataSet::createTensor output of all: " << endl;
+  //dataTensor.write();
   return dataTensor;
 }
 
@@ -393,42 +421,77 @@ RecurrentDataSet::writeReBiNgram(ioFile* iof)
 int
 RecurrentDataSet::findPos(intTensor& pos, intTensor& dis)
 {
+	// for test
+	//cout << "RecurrentDataSet::findPos here" << endl;
+	//cout << "RecurrentDataSet::findPos pos: " << endl;
+	//pos.write();
+	//cout << "RecurrentDataSet::findPos dis" << endl;
+	//dis.write();
   pos(0) = 0;
   int rBlockSize;
   int dBlockSize = ngramNumber / blockSize;
+  // for test
+  //cout << "RecurrentDataSet::findPos ngramNumber: " << ngramNumber << endl;
+  //cout << "RecurrentDataSet::findPos dBlockSize: " << dBlockSize << endl;
   if (dBlockSize * blockSize < ngramNumber)
     {
       dBlockSize++;
     }
+  // for test
+  //cout << "RecurrentDataSet::findPos here 1" << endl;
   int max = 0;
   int maxPos = (ngramNumber - 1) * (n + 3);
+  // for test
+  //cout << "RecurrentDataSet::findPos here 2" << endl;
   for (rBlockSize = 1; rBlockSize < blockSize; rBlockSize++)
     {
+	  // for test
+	  //cout << "RecurrentDataSet::findPos rBlockSize: " << rBlockSize << endl;
       pos(rBlockSize) = pos(rBlockSize - 1) + (dBlockSize - 1) * (n + 3);
+      // for test
+      //cout << "RecurrentDataSet::findPos here 5" << endl;
       if (pos(rBlockSize) > maxPos)
         {
+    	  // for test
+    	  //cout << "RecurrentDataSet::findPos here 6" << endl;
           pos(rBlockSize) = maxPos;
         }
       else
         {
-          while (data[pos(rBlockSize) + n - 1] != inputVoc->es)
+    	  // for test
+    	  //cout << "RecurrentDataSet::findPos here 7" << endl;
+    	  //cout << "RecurrentDataSet::findPos output->es: " << outputVoc->es << endl;
+          while (data[pos(rBlockSize) + n - 1] != outputVoc->es)
             {
+        	  // for test
+        	  //cout << "RecurrentDataSet::findPos continue bouque" << endl;
+        	  //cout << data[pos(rBlockSize) + n - 1];
               pos(rBlockSize) += n + 3;
             }
           pos(rBlockSize) += n + 3;
         }
+      // for test
+      //cout << "RecurrentDataSet::findPos here 8" << endl;
       dis(rBlockSize - 1) = pos(rBlockSize) - pos(rBlockSize - 1);
+      // for test
+      //cout << "RecurrentDataSet::findPos here 9" << endl;
       if (max < dis(rBlockSize - 1))
         {
+    	  // for test
+    	  //cout << "RecurrentDataSet::findPos here 10" << endl;
           max = dis(rBlockSize - 1);
         }
 
     }
+  // for test
+  //cout << "RecurrentDataSet::findPos here 3" << endl;
   dis(blockSize - 1) = ngramNumber * (n + 3) - pos(blockSize - 1);
   if (max < dis(blockSize - 1))
     {
       max = dis(blockSize - 1);
     }
+  // for test
+  //cout << "RecurrentDataSet::findPos here 4" << endl;
   return max;
 }
 
@@ -447,6 +510,8 @@ RecurrentDataSet::computePerplexity()
     {
       perplexity += log(probTensor(i));
     }
+  // for test
+  cout << "RecurrentDataSet::computePerplexity perplexity: " << perplexity << endl;
   perplexity = exp(-perplexity / ngramNumber);
   return perplexity;
 }

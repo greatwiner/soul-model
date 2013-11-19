@@ -80,7 +80,7 @@ NgramPhraseTranslationModel::allocation()
     }
   probabilityOne.resize(blockSize, 1);
   int outputNetworkNumber = outputNetworkSize.size[0];
-  outputNetwork = new LinearSoftmax*[outputNetworkNumber];
+  outputNetwork = new Module*[outputNetworkNumber];
   LinearSoftmax* sl = new LinearSoftmax(hiddenLayerSize, outputNetworkSize(0),
       blockSize, otl);
   outputNetwork[0] = sl;
@@ -490,7 +490,7 @@ NgramPhraseTranslationModel::read(ioFile* iof, int allocation, int blockSize)
 }
 
 void
-NgramPhraseTranslationModel::write(ioFile* iof)
+NgramPhraseTranslationModel::write(ioFile* iof, int closeFile)
 {
   iof->writeString(name);
   iof->writeString(iof->format);
@@ -517,6 +517,8 @@ NgramPhraseTranslationModel::write(ioFile* iof)
     }
   inputVoc->write(iof);
   outputVoc->write(iof);
-  iof->freeWriteFile();
+  if (closeFile == 1) {
+	  iof->freeWriteFile();
+  }
 }
 

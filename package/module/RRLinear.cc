@@ -77,6 +77,9 @@ RRLinear::RRLinear(int inputSize, int blockSize, int n, string nonLinearType,
     }
   //Three lines below create the link between input of one module with output of previous one
   firstTime = 1;
+  // for test
+  //cout << "RRLinear::RRLinear forward from lastInput" << endl;
+  //cout << "RRLinear::RRLinear lastInput: " << endl;
   forward(lastInput);
   firstTime = 0;
 }
@@ -134,6 +137,8 @@ RRLinear::add(Module* module, Module* module1)
 floatTensor&
 RRLinear::forward(floatTensor& input)
 {
+	// for test
+	//cout << "RRLinear::forward firstTime: " << firstTime << endl;
   if (firstTime == 2) // Discontinuous case
     {
       int i;
@@ -293,6 +298,20 @@ RRLinear::updateParameters(float learningRate)
           modules[i]->updateParameters(learningRate);
         }
     }
+}
+float
+RRLinear::distance2(RRLinear& anotherRRLinear) {
+	floatTensor distMatrix;
+	distMatrix.copy(this->vectorInput);
+	distMatrix.axpy(anotherRRLinear.vectorInput, -1);
+	float res1 = distMatrix.sumSquared();
+	if (res1 > 0) {
+		cout << "RRLinear::distance2 res1 > 0" << endl;
+	}
+	distMatrix.resize(this->weight);
+	distMatrix.copy(this->weight);
+	distMatrix.axpy(anotherRRLinear.weight, -1);
+	return res1+distMatrix.sumSquared();
 }
 void
 RRLinear::read(ioFile* iof)

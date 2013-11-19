@@ -25,7 +25,7 @@ public:
   Module** modules;
 
   // Here is LookupTable
-  LookupTable* lkt;
+  Embeddings* lkt;
 
   // Tensor for forward and backward pass
   floatTensor currentOutput;
@@ -52,5 +52,7 @@ public:
   read(ioFile *iof);
   void
   write(ioFile * iof);
+  void
+  write(ioFile* iof, string name);
 };
 

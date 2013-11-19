@@ -181,8 +181,10 @@ void
 FunctionDataSet::createTensor()
 {
   dataTensor.haveMemory = 0;
-  dataTensor.size[0] = dataNumber;
-  dataTensor.size[1] = dim + 1;
+  dataTensor.setSize(0, dataNumber);
+  //dataTensor.size[0] = dataNumber;
+  dataTensor.setSize(1, dim+1);
+  //dataTensor.size[1] = dim + 1;
   dataTensor.stride[0] = dim + 1;
   dataTensor.stride[1] = 1;
   if (dataTensor.data != data)

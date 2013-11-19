@@ -20,37 +20,34 @@ public:
   firstTime();
   int
   train(char* dataFileName, int maxExampleNumber, int iteration,
-      string learningRateType, float learningRate, float learningRateDecay);
+      string learningRateType, float learningRateForRd, float learningRateForParas, float learningRateDecay);
   /*int
   forwardProbability(intTensor& ngramTensor, floatTensor& probTensor);*/
 
   void
-  forwardBackwardAllData(char* dataFileString, int maxExampleNumber, int iteration, int* numberExamples,
-  		float learningRate, int* accept);
+  forwardBackwardAllData(char* dataFileString, int maxExampleNumber, int iteration,
+  		float learningRateForRd, float learningRateForParas);
 
   void
   forwardProbabilityAllData(char* dataFileString, int maxExampleNumber, int iteration);
 
   void
-  updateAllParameters(float learningRate);
+  updateAllParameters(float learningRateForRd, float learningRateForParas, int last);
 
   void
-  reUpdateParameters(int accept);
+  updateAllRandomness(float learningRate);
 
-  void
-  updateAllRandomness(float learningRate, float RATE);
-
-  void
-  resetGradients();
+  /*void
+  resetGradients();*/
 
   void
   initializeP();
 
   void
-  trainOne(intTensor& context, intTensor& word, float learningRate, int subBlockSize, int last);
+  trainOne(intTensor& context, intTensor& word, float learningRateForRd, float learningRateForParas, int subBlockSize, int last);
 
   void
-  forwardBackwardOne(intTensor& context, intTensor& word, int subBlockSize, int last);
+  forwardBackwardOne(intTensor& context, intTensor& word, int subBlockSize, int last, float learningRateForRd, float learningRateForParas);
 
   float
   calculeH(float RATE);

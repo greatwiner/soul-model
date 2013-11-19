@@ -2,20 +2,20 @@
 LinearSoftmax_Bayes::LinearSoftmax_Bayes(int inputSize, int outputSize, int blockSize,
     outils* otl) : LinearSoftmax(inputSize, outputSize, blockSize, otl)
 {
-  prevWeight.resize(weight);
-  gradWeight.resize(weight);
-  prevGradWeight.resize(weight);
-  prevBias.resize(bias);
-  gradBias.resize(bias);
-  prevGradBias.resize(bias);
+  //prevWeight.resize(weight);
+  //gradWeight.resize(weight);
+  //prevGradWeight.resize(weight);
+  //prevBias.resize(bias);
+  //gradBias.resize(bias);
+  //prevGradBias.resize(bias);
   pWeight.resize(weight);
   pBias.resize(bias);
 
-  prevWeight.copy(weight);
-  gradWeight = 0;
-  prevGradWeight = 0;
-  gradBias = 0;
-  prevGradBias = 0;
+  //prevWeight.copy(weight);
+  //gradWeight = 0;
+  //prevGradWeight = 0;
+  //gradBias = 0;
+  //prevGradBias = 0;
 }
 
 void
@@ -31,13 +31,13 @@ LinearSoftmax_Bayes::changeBlockSize(int blockSize)
 	output.resize(outputSize, blockSize);
 	gradOutput.resize(output);
 	preOutput.resize(outputSize, blockSize);
-	prevWeight.resize(weight);
-	gradWeight.resize(weight);
-	prevGradWeight.resize(weight);
+	//prevWeight.resize(weight);
+	//gradWeight.resize(weight);
+	//prevGradWeight.resize(weight);
 	bias.resize(outputSize, 1);
-	prevBias.resize(bias);
-	gradBias.resize(bias);
-	prevGradBias.resize(bias);
+	//prevBias.resize(bias);
+	//gradBias.resize(bias);
+	//prevGradBias.resize(bias);
 	pWeight.resize(weight);
 	pBias.resize(bias);
 
@@ -48,11 +48,6 @@ LinearSoftmax_Bayes::reset()
 {
   weight.uniform(LINEAR_INIT0, LINEAR_INIT1, otl);
   bias.uniform(LINEAR_INIT0, LINEAR_INIT1, otl);
-  prevWeight.copy(weight);
-  gradWeight = 0;
-  prevGradWeight = 0;
-  gradBias = 0;
-  prevGradBias = 0;
 }
 
 floatTensor&
@@ -66,42 +61,39 @@ floatTensor&
 LinearSoftmax_Bayes::backward(intTensor& word, int last) {
     LinearSoftmax::backward(word);
     // accumulate gradient
-	gradWeight.gemm(input, 'N', gradOutput, 'T', 1, 1);
-	if (last == 1) {
-		gradWeight.axpy(weight, weightDecay);
-	}
-	gradBias.gemv(gradOutput, 'N', V1col, 1, 1);
+	//gradWeight.gemm(input, 'N', gradOutput, 'T', 1, 1);
+	//gradWeight.axpy(weight, weightDecay);
+	//gradBias.gemv(gradOutput, 'N', V1col, 1, 1);
 	return gradInput;
 }
 
 void
-LinearSoftmax_Bayes::updateParameters(float learningRate)
+LinearSoftmax_Bayes::updateParameters(float learningRateForRd, float learningRateForParas, int last)
 {
-	//because the objective function has the regularization term with constant weightDecay
-  /*weight.gemm(input, 'N', gradOutput, 'T', -learningRate,
-      1 - learningRate * weightDecay);*/
-	// for Hamiltonian algorithm
-	cout << "LinearSoftmax_Bayes::updateParameters gradWeight scale: " << 0.5*learningRate*gradWeight.averageSquare() << endl;
-	cout << "LinearSoftmax_Bayes::updateParameters gradWeight angle: " << weight.angleDist(gradWeight) << endl;
-	cout << "LinearSoftmax_Bayes::updateParameters pWeight scale: " << pWeight.averageSquare() << endl;
-	cout << "LinearSoftmax_Bayes::updateParameters pWeight angle: " << weight.angleDist(pWeight) << endl;
-	weight.axpy(pWeight, sqrt(2*learningRate));
-	//bias.gemv(gradOutput, 'N', V1col, -learningRate, 1);
-	bias.axpy(pBias, sqrt(2*learningRate));
+	if (last==1) {
+		//this->prevWeight.copy(weight);
+		//this->prevBias.copy(bias);
+		weight.axpy(pWeight, sqrt(learningRateForParas));
+		bias.axpy(pBias, sqrt(learningRateForParas));
+	}
+	else {
+		weight.gemm(input, 'N', gradOutput, 'T', -sqrt(learningRateForRd*learningRateForParas),
+		      1 - sqrt(learningRateForRd*learningRateForParas) * weightDecay);
+		bias.gemv(gradOutput, 'N', V1col, -sqrt(learningRateForRd*learningRateForParas), 1);
+	}
+	/*if (weight.testNan() != 0) {
+		weight.copy(prevWeight);
+	}
+	if (bias.testNan() != 0) {
+		bias.copy(prevBias);
+	}*/
 }
 
 void
-LinearSoftmax_Bayes::updateRandomness(float learningRate, float RATE) {
-	// for test
-	floatTensor scaledGradWeight;
-	floatTensor scaledGradBias;
-	scaledGradWeight.copy(gradWeight);
-	scaledGradBias.copy(gradBias);
-	scaledGradWeight.scal(1/RATE);
-	scaledGradBias.scal(1/RATE);
-	cout << "LinearSoftmax_Bayes::updateRandomness angle g and u: " << pWeight.angleDist(gradWeight) << endl;
-	pWeight.axpy(scaledGradWeight, -sqrt(0.5*learningRate));
-	pBias.axpy(scaledGradBias, -sqrt(0.5*learningRate));
+LinearSoftmax_Bayes::updateRandomness(float learningRateForRd) {
+	pWeight.gemm(input, 'N', gradOutput, 'T', -sqrt(learningRateForRd), 1);
+	pWeight.axpy(weight, -sqrt(learningRateForRd)*weightDecay);
+	pBias.gemv(gradOutput, 'N', V1col, -sqrt(learningRateForRd), 1);
 }
 
 int
@@ -118,8 +110,6 @@ void
 LinearSoftmax_Bayes::initializeP() {
 	this->pWeight.initializeNormal(this->otl);
 	this->pBias.initializeNormal(this->otl);
-	cout << "LinearSoftmax::initializeP pWeight scale: " << pWeight.sumSquared()/(pWeight.size[0]*pWeight.size[1]) << endl;
-	cout << "LinearSoftmax::initializeP pWeight angle: " << weight.angleDist(pWeight) << endl;
 }
 
 float
@@ -139,24 +129,7 @@ LinearSoftmax_Bayes::calculeH() {
 	ki = this->getKinetic();
 	wD = this->getWeightDecayTerm();
 	// for test
-	cout << "LinearSoftmax_Bayes::calculeH kinetic: " << ki << endl;
-	cout << "LinearSoftmax_Bayes::calculeH weight decay: " << wD << endl;
+	//cout << "LinearSoftmax_Bayes::calculeH kinetic: " << ki << endl;
+	//cout << "LinearSoftmax_Bayes::calculeH weight decay: " << wD << endl;
 	return ki + this->weightDecay*wD;
-}
-
-void
-LinearSoftmax_Bayes::reUpdateParameters(int accept) {
-	if (accept == 1) {
-		prevWeight.copy(weight);
-		prevBias.copy(bias);
-		prevGradWeight.copy(gradWeight);
-		prevGradBias.copy(gradBias);
-	}
-	else {
-		weight.copy(prevWeight);
-		// for test
-		bias.copy(prevBias);
-		gradWeight.copy(prevGradWeight);
-		gradBias.copy(prevGradBias);
-	}
 }

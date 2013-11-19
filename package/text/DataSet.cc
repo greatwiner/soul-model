@@ -60,6 +60,7 @@ DataSet::resamplingDataDes(char* dataDesFileName, int type)
         {
           istringstream ostr(line);
           ostr >> dataFileName >> totalLineNumber >> percent;
+          //cout << "DataSet::resamplingDataDes line: " << line << endl;
           if (percent < 1)
             {
               resampling = 1;

@@ -39,7 +39,11 @@ main(int argc, char *argv[])
       READMODEL(model, blockSize, modelFileName);
 
       time(&start);
+      // for test
+      cout << "text2Perplexity::main here1" << endl;
       float perplexity = model->computePerplexity(model->dataSet, textFileName, textType);
+      // for test
+      cout << "text2Perplexity::main here2" << endl;
       int countNgram;
       countNgram = model->dataSet->ngramNumber;
       time(&end);
@@ -48,6 +52,8 @@ main(int argc, char *argv[])
           << " ngrams)" << endl;
       cout << "Finish after " << difftime(end, start) / 60 << " minutes"
           << endl;
+      // for test
+      cout << "text2Perplexity::main here3" << endl;
       delete model;
     }
   return 0;

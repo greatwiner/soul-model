@@ -24,7 +24,15 @@ Sigmoid::changeBlockSize(int blockSize)
 floatTensor&
 Sigmoid::forward(floatTensor& input)
 {
+	// for test
+	//cout << "Sigmoid::forward here" << endl;
+	//cout << "Sigmoid::forward input: " << endl;
+	//input.info();
+	//cout << "Sigmoid::forward output: " << endl;
+	//output.info();
   output.sigm(input);
+  // for test
+  //cout << "Sigmoid::forward here1" << endl;
 
   if (infoIof.fo != NULL)
     {
@@ -47,6 +55,17 @@ Sigmoid::backward(floatTensor& gradOutput)
 {
   gradInput.invsigm(output);
   gradInput.product(gradOutput);
+  /*if (gradInput.testNan() != 0) {
+	  cout << "Sigmoid::backward gradInput is nan" << endl;
+	  cout << "Sigmoid::backward program will exit" << endl;
+	  if (gradOutput.testNan() != 0) {
+		  cout << "Sigmoid::backward because gradOutput is nan" << endl;
+	  }
+	  if (output.testNan() != 0) {
+		  cout << "Sigmoid::backward because output is nan" << endl;
+	  }
+	  exit(0);
+  }*/
   return gradInput;
 }
 void

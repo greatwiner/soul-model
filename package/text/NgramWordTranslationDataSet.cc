@@ -283,26 +283,51 @@ NgramWordTranslationDataSet::resamplingText(ioFile* iof, int totalLineNumber,
     }
   int* resamplingLineId = new int[resamplingLineNumber];
   resamplingSentence(totalLineNumber, resamplingLineNumber, resamplingLineId);
+  //cout << "NgramWordTranslationDataSet::resamplingText resamplingLineId: " << resamplingLineId[0] << " " << resamplingLineId[resamplingLineNumber-1] << endl;
 
   int readLineNumber = 0;
   int currentId = 0;
   string line;
-  while (!iof->getEOF())
+  while (!iof->getEOF() && readLineNumber <= resamplingLineId[resamplingLineNumber-1])
     {
       if (readLineNumber != resamplingLineId[currentId])
         {
           line = "";
           while (line != "EOS")
             {
+        	  int empty = 0;
               iof->getLine(line);
+              if (line == "") empty++;
+              if (empty >= 100) {
+            	  //cout << "NgramWordTranslationDataSet::resamplingText resamplingLineId: dacbiet" << resamplingLineId[0] << " " << resamplingLineId[resamplingLineNumber-1] << endl;
+            	  break;
+              }
+              // for test
+              /*if (readLineNumber >= 1920000) {
+            	  cout << "NgramTranslationDataSet::resamplingText line: " << line << endl;
+              }*/
             }
+          // for test
+          /*if (readLineNumber >= 1920000) {
+        	  cout << "NgramTranslationDataSet::resamplingText here1" << endl;
+          }*/
         }
       else
         {
           currentId++;
+          // for test
+          /*if (readLineNumber >= 1920000) {
+        	  cout << "NgramTranslationDataSet::resamplingText here4: " << endl;
+          }*/
           addLine(iof);
+          // for test
+          /*if (readLineNumber >= 1920000) {
+        	  cout << "NgramTranslationDataSet::resamplingText here2" << endl;
+          }*/
           if (currentId == resamplingLineNumber)
             {
+        	  // for test
+        	  //cout << "NgramTranslationDataSet::resamplingText here3" << endl;
               break;
             }
         }
@@ -311,14 +336,20 @@ NgramWordTranslationDataSet::resamplingText(ioFile* iof, int totalLineNumber,
       if (readLineNumber % NLINEPRINT == 0)
         {
           cout << readLineNumber << " ... " << flush;
+          //cout << "NgramWordTranslationDataSet::resamplingText resamplingLineId: " << resamplingLineId[0] << " " << resamplingLineId[resamplingLineNumber-1] << endl;
         }
 #endif
     }
-
-#if PRINT_DEBUG
+// for test
+  //cout << "NgramWordTranslationDataSet::resamplingText here5" << endl;
+  //cout << "NgramWordTranslationDataSet::resamplingText resamplingLineId: " << resamplingLineId[0] << " " << resamplingLineId[resamplingLineNumber-1] << endl;
+  delete[] resamplingLineId;
+  //cout << "NgramWordTranslationDataSet::resamplingText resamplingLineId: " << resamplingLineId[0] << " " << resamplingLineId[resamplingLineNumber-1] << endl;
+  #if PRINT_DEBUG
   cout << endl;
 #endif
-  delete[] resamplingLineId;
+  // for test
+  //cout << "NgramWordTranslationDataSet::resamplingText here6" << endl;
   return ngramNumber;
 }
 

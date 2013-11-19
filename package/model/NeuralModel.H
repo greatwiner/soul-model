@@ -50,7 +50,7 @@ public:
   // LookupTable -> Linear -> ... -> First hidden layer
   Sequential* baseNetwork;
   // Layers of softmax for output tree
-  LinearSoftmax** outputNetwork;
+  Module** outputNetwork;
 
   // Code of words in the tree
   intTensor codeWord;
@@ -209,6 +209,6 @@ public:
   virtual void
   read(ioFile* iof, int allocation, int blockSize) = 0;
   virtual void
-  write(ioFile* iof) = 0;
+  write(ioFile* iof, int closeFile) = 0;
 };
 

@@ -99,10 +99,10 @@ main(int argc, char *argv[])
       inModel->outputNetworkSize.resize(newOutputNetworkSize);
       inModel->outputNetworkSize.copy(newOutputNetworkSize);
       //New outputNetwork
-      LinearSoftmax** oldOutputNetwork = inModel->outputNetwork;
+      Module** oldOutputNetwork = inModel->outputNetwork;
       inModel->outputNetworkNumber = newOutputNetworkSize.size[0];
 
-      inModel->outputNetwork = new LinearSoftmax*[inModel->outputNetworkNumber];
+      inModel->outputNetwork = new Module*[inModel->outputNetworkNumber];
       LinearSoftmax* sl = new LinearSoftmax(inModel->hiddenLayerSize,
           inModel->outputNetworkSize(0), inModel->blockSize, inModel->otl);
       inModel->outputNetwork[0] = sl;
@@ -153,7 +153,7 @@ main(int argc, char *argv[])
 
       ioFile oIof;
       oIof.takeWriteFile(outModelFileName);
-      inModel->write(&oIof);
+      inModel->write(&oIof, 1);
 
       delete oldOutputVoc;
       delete[] oldOutputNetwork;

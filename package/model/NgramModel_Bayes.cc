@@ -46,11 +46,9 @@ NgramModel_Bayes::initializeP() {
 void
 NgramModel_Bayes::firstTime()
 {
-	// randomly sampling p
-	initializeP();
 }
 
-void
+/*void
 NgramModel_Bayes::resetGradients() {
 	this->baseNetwork->lkt->gradWeight=0;
 	for (int i = 0; i < this->baseNetwork->size; i ++) {
@@ -63,14 +61,13 @@ NgramModel_Bayes::resetGradients() {
 		static_cast<LinearSoftmax_Bayes*>(this->outputNetwork[i])->gradWeight=0;
 		static_cast<LinearSoftmax_Bayes*>(this->outputNetwork[i])->gradBias=0;
 	}
-}
+}*/
 
 void
-NgramModel_Bayes::forwardBackwardAllData(char* dataFileString, int maxExampleNumber, int iteration, int* numberExamples,
-		float learningRate, int* accept) {
+NgramModel_Bayes::forwardBackwardAllData(char* dataFileString, int maxExampleNumber, int iteration, float learningRateForRd, float learningRateForParas) {
 	// we do forward and backward, and calculate the gradients, so all gradients have to be
 	// reset
-    this->resetGradients();
+    //this->resetGradients();
 
     // data file
 	ioFile dataIof;
@@ -126,9 +123,6 @@ NgramModel_Bayes::forwardBackwardAllData(char* dataFileString, int maxExampleNum
 	// the number of blocks
 	int blockNumber = maxExampleNumber / blockSize;
 
-	// retains the number of examples
-	*numberExamples = maxExampleNumber;
-
 	// the number of remaining examples
 	int remainingNumber = maxExampleNumber - blockSize * blockNumber;
 
@@ -141,40 +135,23 @@ NgramModel_Bayes::forwardBackwardAllData(char* dataFileString, int maxExampleNum
 			break;
 		}
 		currentExampleNumber += blockSize;
-	      /*if (learningRateType == LEARNINGRATE_NORMAL)
-	        {
-	          currentLearningRate = learningRate / (1 + nstep * learningRateDecay);
-	        }
-	      else if (learningRateType == LEARNINGRATE_DOWN)
-	        {
-	          currentLearningRate = learningRate;
-	        }*/
-		// when readTensor is charged, these new values are also charged into context and word
 
-		// trainOne = forward + backward + calculate gradients for a block. This function also
-		// update all parameters in back-propagation
-		// indicates if this is the last block
 		int last = 0;
-		if (remainingNumber == 0 && i == blockNumber - 1) last = 1;
-		trainOne(context, word, learningRate, blockSize, last);
-		/*if (acceptForOne == 1 && *accept == 0) {
-			*accept = 1;
-		}*/
-		//probabilityOne = this->forwardOne(context, word);
-		/*probabilityOne.write();
-		cout << endl;*/
-		//cout << this->trainPer << endl;
-		/*for (int i = 0; i < probabilityOne.size[0]; i ++) {
-		  	  this->trainLikel -= log(probabilityOne(i));
-	  	  }*/
+		if (i==0) {
+			last = 1;
+			cout << "NgramModel_Bayes::forwardBackwardAllData last=1" << endl;
+		}
+
+		trainOne(context, word, learningRateForRd, learningRateForParas, blockSize, last);
+
 		nstep += blockSize;
 	#if PRINT_DEBUG
 	      if (currentExampleNumber > iPercent)
 	        {
 	          percent++;
 	          iPercent = aPercent * percent;
-	          //cout << (REAL) currentExampleNumber / maxExampleNumber << " ... "
-	            //  << flush;
+	          cout << (float) currentExampleNumber / maxExampleNumber << " ... "
+	              << flush;
 	        }
 	#endif
 	    }
@@ -191,98 +168,108 @@ NgramModel_Bayes::forwardBackwardAllData(char* dataFileString, int maxExampleNum
 		subReadTensor.sub(readTensor, 0, remainingNumber - 1, 0, N - 1);
 		subReadTensor.copy(lastReadTensor);
 		if (!dataIof.getEOF()) {
-	          /*if (learningRateType == LEARNINGRATE_NORMAL)
-	            {
-	              currentLearningRate = learningRate / (1 + nstep
-	                  * learningRateDecay);
-	            }
-	          else if (learningRateType == LEARNINGRATE_DOWN)
-	            {
-	              currentLearningRate = learningRate;
-	            }*/
-	          // trainOne = forward + backward + calculate gradients
-			trainOne(context, word, learningRate, remainingNumber, 1);
-			/*if (acceptForOne == 1 && *accept == 0) {
-				*accept = 1;
-			}*/
-	          /*probabilityOne = this->forwardOne(context, word);
-	          for (int i = 0; i < probabilityOne.size[0]; i ++) {
-	        	  this->trainLikel -= log(probabilityOne(i));
-	          }*/
+
+			trainOne(context, word, learningRateForRd, learningRateForParas, remainingNumber, 0);
+
 		}
 	}
-	//for test
-	/*if (*accept == 0) {
-		cout << "ko chap nhan" << endl;
-	}
-	else {
-		cout << "chap nhan" << endl;
-	}*/
 }
 
 void
-NgramModel_Bayes::trainOne(intTensor& context, intTensor& word, float learningRate,
+NgramModel_Bayes::trainOne(intTensor& context, intTensor& word, float learningRateForRd, float learningRateForParas,
 		int subBlockSize, int last) {
-  // decode word to localCodeWord for SOUL structure
-  decodeWord(word, subBlockSize);
+	// decode word to localCodeWord for SOUL structure
+	decodeWord(word, subBlockSize);
 
-  // forward and backward and calculate gradient
-  forwardBackwardOne(context, word, subBlockSize, last);
+    // forward and backward and calculate gradient
+  	forwardBackwardOne(context, word, subBlockSize, last, learningRateForRd, learningRateForParas);
+
 }
 
 void
-NgramModel_Bayes::forwardBackwardOne(intTensor& context, intTensor& word, int subBlockSize, int last) {
-
-	baseNetwork->forward(context);
-
-	gradContextFeature = 0;
-
-	// counts until blocksize
-	int rBlockSize;
-
-	// id of parent
-	int idParent;
-
-	// local words, taken from localCodeWord
-	intTensor localWord;
-
-	// the id of a local word, used along with idParent
-	intTensor idLocalWord(1, 1);
-
-	// localword takes the first codeword elements of all words
-	localWord.select(localCodeWord, 1, 1);
-
-	// so forward using the principal output network
-	static_cast<LinearSoftmax_Bayes*>(outputNetwork[0])->forward(contextFeature);
-
-	// the localWord can be considered as output of the principal output network
-	gradInput = static_cast<LinearSoftmax_Bayes*>(outputNetwork[0])->backward(localWord, last);
-
-	// gradient on the output of the base network
-	gradContextFeature.axpy(gradInput, 1);
-
-	// takes one line of local word code
-	intTensor oneLocalCodeWord;
-	// now we iterate for each word in blocksize words
-	for (rBlockSize = 0; rBlockSize < subBlockSize; rBlockSize++) {
-		// a column of context feature corresponding to rBlockSize
-		selectContextFeature.select(contextFeature, 1, rBlockSize);
-		// a column of gradContextFeature
-		selectGradContextFeature.select(gradContextFeature, 1, rBlockSize);
-		oneLocalCodeWord.select(localCodeWord, 0, rBlockSize);
-		for (int i = 2; i < maxCodeWordLength; i += 2) {
-			if (oneLocalCodeWord(i) == SIGN_NOT_WORD) {
-			  break;
-			}
-			idLocalWord = oneLocalCodeWord(i + 1); // 3
-			idParent = oneLocalCodeWord(i); // 2
-			// for each outputNetwork in SOUL, we do a forward step and a backward step
-			static_cast<LinearSoftmax_Bayes*>(outputNetwork[idParent])->forward(selectContextFeature);
-			gradInput = static_cast<LinearSoftmax_Bayes*>(outputNetwork[idParent])->backward(idLocalWord, last);
-			selectGradContextFeature.axpy(gradInput, 1);
+NgramModel_Bayes::forwardBackwardOne(intTensor& context, intTensor& word, int subBlockSize, int last, float learningRateForRd, float learningRateForParas) {
+	time_t start, end;
+	int Tau = TAU;
+	for (int tau = 1; tau <= Tau; tau ++) {
+		if (Tau > 1) {
+			cout << "tau = " << tau << endl;
 		}
+		if (last==1 && tau == 1) {
+			//static_cast<Sequential_Bayes*>(baseNetwork)->initializeP();
+			time(&start);
+			this->initializeP();
+			time(&end);
+			cout << "Finish initializaP in " << difftime(end, start) << " s" << endl;
+		}
+		baseNetwork->forward(context);
+
+		gradContextFeature = 0;
+
+		// counts until blocksize
+		int rBlockSize;
+
+		// id of parent
+		int idParent;
+
+		// local words, taken from localCodeWord
+		intTensor localWord;
+
+		// the id of a local word, used along with idParent
+		intTensor idLocalWord(1, 1);
+
+		// localword takes the first codeword elements of all words
+		localWord.select(localCodeWord, 1, 1);
+
+		// so forward using the principal output network
+		/*if (last==1 && tau == 1) {
+			static_cast<LinearSoftmax_Bayes*>(outputNetwork[0])->initializeP();
+		}*/
+		static_cast<LinearSoftmax_Bayes*>(outputNetwork[0])->forward(contextFeature);
+
+		// the localWord can be considered as output of the principal output network
+		gradInput = static_cast<LinearSoftmax_Bayes*>(outputNetwork[0])->backward(localWord, last);
+		if (last==1) {
+			static_cast<LinearSoftmax_Bayes*>(outputNetwork[0])->updateRandomness(learningRateForRd);
+		}
+		static_cast<LinearSoftmax_Bayes*>(outputNetwork[0])->updateParameters(learningRateForRd, learningRateForParas, last);
+
+		// gradient on the output of the base network
+		gradContextFeature.axpy(gradInput, 1);
+
+		// takes one line of local word code
+		intTensor oneLocalCodeWord;
+		// now we iterate for each word in blocksize words
+		for (rBlockSize = 0; rBlockSize < subBlockSize; rBlockSize++) {
+			// a column of context feature corresponding to rBlockSize
+			selectContextFeature.select(contextFeature, 1, rBlockSize);
+			// a column of gradContextFeature
+			selectGradContextFeature.select(gradContextFeature, 1, rBlockSize);
+			oneLocalCodeWord.select(localCodeWord, 0, rBlockSize);
+			for (int i = 2; i < maxCodeWordLength; i += 2) {
+				if (oneLocalCodeWord(i) == SIGN_NOT_WORD) {
+					break;
+				}
+				idLocalWord = oneLocalCodeWord(i + 1); // 3
+				idParent = oneLocalCodeWord(i); // 2
+				// for each outputNetwork in SOUL, we do a forward step and a backward step
+				/*if (last==1 && tau == 1) {
+					static_cast<LinearSoftmax_Bayes*>(outputNetwork[idParent])->initializeP();
+				}*/
+				static_cast<LinearSoftmax_Bayes*>(outputNetwork[idParent])->forward(selectContextFeature);
+				gradInput = static_cast<LinearSoftmax_Bayes*>(outputNetwork[idParent])->backward(idLocalWord, last);
+				if (last==1) {
+					static_cast<LinearSoftmax_Bayes*>(outputNetwork[idParent])->updateRandomness(learningRateForRd);
+				}
+				static_cast<LinearSoftmax_Bayes*>(outputNetwork[idParent])->updateParameters(learningRateForRd, learningRateForParas, last);
+				selectGradContextFeature.axpy(gradInput, 1);
+			}
+		}
+		static_cast<Sequential_Bayes*>(baseNetwork)->backward(gradContextFeature, last);
+		if (last==1) {
+			static_cast<Sequential_Bayes*>(baseNetwork)->updateRandomness(learningRateForRd);
+		}
+		static_cast<Sequential_Bayes*>(baseNetwork)->updateParameters(learningRateForRd, learningRateForParas, last);
 	}
-	static_cast<Sequential_Bayes*>(baseNetwork)->backward(gradContextFeature, last);
 }
 
 void
@@ -398,21 +385,28 @@ NgramModel_Bayes::forwardProbabilityAllData(char* dataFileString, int maxExample
 }
 
 void
-NgramModel_Bayes::updateAllParameters(float learningRate) {
+NgramModel_Bayes::updateAllParameters(float learningRateForRd, float learningRateForParas, int last) {
 	// for test
 	//cout << this->outputNetworkNumber << endl;
 	for (int i = 0; i < this->outputNetworkNumber; i ++) {
-		static_cast<LinearSoftmax_Bayes*>(this->outputNetwork[i])->updateParameters(learningRate);
+		static_cast<LinearSoftmax_Bayes*>(this->outputNetwork[i])->updateParameters(learningRateForRd, learningRateForParas, last);
 	}
-	static_cast<Sequential_Bayes*>(this->baseNetwork)->updateParameters(learningRate);
+	static_cast<Sequential_Bayes*>(this->baseNetwork)->updateParameters(learningRateForRd, learningRateForParas, last);
 }
 
 void
-NgramModel_Bayes::updateAllRandomness(float learningRate, float RATE) {
+NgramModel_Bayes::updateAllRandomness(float learningRateForRd) {
 	for (int i = 0; i < this->outputNetworkNumber; i ++) {
-		static_cast<LinearSoftmax_Bayes*>(this->outputNetwork[i])->updateRandomness(learningRate, RATE);
+		// for test
+		cout << "NgramModel_Bayes::updateAllRandomness i: " << i << endl;
+		cout << "NgramModel_Bayes::updateAllRandomness outputNetworkNumber: " << outputNetworkNumber << endl;
+		static_cast<LinearSoftmax_Bayes*>(this->outputNetwork[i])->updateRandomness(learningRateForRd);
 	}
-	static_cast<Sequential_Bayes*>(this->baseNetwork)->updateRandomness(learningRate, RATE);
+	// for test
+	cout << "NgramModel_Bayes::updateAllRandomness here" << endl;
+	static_cast<Sequential_Bayes*>(this->baseNetwork)->updateRandomness(learningRateForRd);
+	// for test
+	cout << "NgramModel_Bayes::updateAllRandomness here1" << endl;
 }
 
 float
@@ -433,10 +427,10 @@ NgramModel_Bayes::calculeH(float RATE) {
 
 int
 NgramModel_Bayes::train(char* dataFileString, int maxExampleNumber, int iteration,
-    string learningRateType, float learningRate, float learningRateDecay) {
+    string learningRateType, float learningRateForRd, float learningRateForParas, float learningRateDecay) {
 	// define parameters for Hamiltonian algorithm
-	int Tau = 100;
-	float RATE = 0.1;
+	int Tau = 1;
+	float RATE = 1;
 
 	// indicates if the new values are accepted
 	int accept=0;
@@ -448,45 +442,45 @@ NgramModel_Bayes::train(char* dataFileString, int maxExampleNumber, int iteratio
 	float prevTrainLikel;
 	// randomly sampling p
 	// calculate the first Hamiltonian
-	firstTime();
 
 	// forward all the data file to calculate -training likelihood
-	forwardProbabilityAllData(dataFileString, maxExampleNumber, iteration);
+	//forwardProbabilityAllData(dataFileString, maxExampleNumber, iteration);
 
-	float prevH = calculeH(RATE);
-	// for test
-	cout << "Prev H: " << prevH << endl;
+	//float prevH = calculeH(RATE);
+	//cout << "Prev H: " << prevH << endl;
 
 	for (int subIter = 1; subIter <= Tau; subIter++) {
-		// for test
-		if (subIter % 1 == 0) {
+		/*if (subIter % 1 == 0) {
 			cout << subIter << endl;
 		}
 		if (subIter > 1) {
 			// p = p - epsilon*gnew/2
-			this->updateAllRandomness(learningRate, RATE);
+			this->updateAllRandomness(learningRateForRd, RATE);
 			// wnew = wnew + epsilon*p
-			this->updateAllParameters(learningRate);
+			this->updateAllParameters(learningRateForParas);
 		}
 		// do a forward and backward (and calculate the gradients)
 		// gnew = gradM(gnew)
-		forwardBackwardAllData(dataFileString, maxExampleNumber, iteration, &numberExamples, learningRate, &accept);
+		if (subIter==1) {
+			forwardBackwardAllData(dataFileString, maxExampleNumber, iteration, &numberExamples, learningRateForParas, &accept);
+		}
 		if (subIter > 1) {
 			// p = p - epsilon*gnew/2
-			this->updateAllRandomness(learningRate, RATE);
-		}
+			this->updateAllRandomness(learningRateForRd, RATE);
+		}*/
+		forwardBackwardAllData(dataFileString, maxExampleNumber, iteration, learningRateForRd, learningRateForParas);
 	}
 	// update Hamiltonian
 	// Mnew = findM(wnew)
-	prevTrainLikel = this->trainLikel;
-	forwardProbabilityAllData(dataFileString, maxExampleNumber, iteration);
-	float H = calculeH(RATE);
+	//prevTrainLikel = this->trainLikel;
+	//forwardProbabilityAllData(dataFileString, maxExampleNumber, iteration);
+	//float H = calculeH(RATE);
 	// for test
-	cout << "H: " << H << endl;
-	float dH = H-prevH;
+	//cout << "H: " << H << endl;
+	//float dH = H-prevH;
 	// for test
-	cout << "Difference in H: " << dH << endl;
-	if (dH < 0 || iteration == 1) {
+	//cout << "Difference in H: " << dH << endl;
+	/*if (dH < 0 || iteration == 1) {
 		accept = 1;
 		// for test
 		cout << "Iteration: " << iteration << endl;
@@ -504,8 +498,9 @@ NgramModel_Bayes::train(char* dataFileString, int maxExampleNumber, int iteratio
 			//accept = 0;
 			accept = 1;
 		}
-	}
+	}*/
   // for test
+	accept=1;
   if (accept == 1) {
 	  cout << "We accept" << endl;
   }
@@ -513,7 +508,7 @@ NgramModel_Bayes::train(char* dataFileString, int maxExampleNumber, int iteratio
 	  cout << "We do not accept" << endl;
   }
   // we accept or not the new parameters
-  reUpdateParameters(accept);
+  //reUpdateParameters(accept);
   // if not accept, we restore the value of likelihood
   /*if (accept == 0) {
 	  this->trainLikel = prevTrainLikel;
@@ -529,18 +524,6 @@ NgramModel_Bayes::train(char* dataFileString, int maxExampleNumber, int iteratio
   //this->trainPer = this->trainLikel/numberExamples;
   //*ptAccept = accept;
   return 1;
-}
-
-void
-NgramModel_Bayes::reUpdateParameters(int accept) {
-	// for test
-	//cout << "vi 1" << endl;
-	static_cast<Sequential_Bayes*>(this->baseNetwork)->reUpdateParameters(accept);
-	// for test
-	//cout << "vi 2" << endl;
-	for (int i = 0; i < this->outputNetworkNumber; i ++) {
-		static_cast<LinearSoftmax_Bayes*>(this->outputNetwork[i])->reUpdateParameters(accept);
-	}
 }
 
 /*int

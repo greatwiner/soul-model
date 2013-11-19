@@ -8,28 +8,6 @@ Sequential_Bayes::~Sequential_Bayes() {
 
 }
 
-/*floatTensor&
-Sequential_Bayes::backward(floatTensor& gradOutput)
-{
-  // gradOutput
-  currentGradOutput = gradOutput;
-
-  // pointers to modules of the base network
-  Module* currentModule = modules[size - 1];
-  Module* previousModule;
-  int i;
-  for (i = size - 2; i > -1; i--)
-    {
-      previousModule = modules[i];
-      currentGradOutput = currentModule->backward(currentGradOutput);
-      currentModule = previousModule;
-    }
-  // after the for iterations, currentModule = modules[0]
-  currentGradOutput = currentModule->backward(currentGradOutput);
-  currentGradOutput = lkt->backward(currentGradOutput);
-  return currentGradOutput;// = gradWeight
-}*/
-
 floatTensor&
 Sequential_Bayes::backward(floatTensor& gradOutput, int last) {
 	currentGradOutput = gradOutput;
@@ -52,7 +30,7 @@ Sequential_Bayes::backward(floatTensor& gradOutput, int last) {
 		currentGradOutput = d2->backward(currentGradOutput, last);
 	}
 	else {
-	  currentGradOutput = currentModule->backward(currentGradOutput);
+		currentGradOutput = currentModule->backward(currentGradOutput);
 	}
 	// Also backward with Lookup Table
 	currentGradOutput = static_cast<LookupTable_Bayes*>(lkt)->backward(currentGradOutput, last);
@@ -60,14 +38,14 @@ Sequential_Bayes::backward(floatTensor& gradOutput, int last) {
 }
 
 void
-Sequential_Bayes::updateRandomness(float learningRate, float RATE) {
+Sequential_Bayes::updateRandomness(float learningRate) {
 	for (int i = 0; i < size; i ++) {
 		if (Linear_Bayes* d1 = dynamic_cast<Linear_Bayes*>(modules[i])) {
-			d1->updateRandomness(learningRate, RATE);
+			d1->updateRandomness(learningRate);
 		}
 	}
 	if (LookupTable_Bayes* d2 = static_cast<LookupTable_Bayes*>(lkt)) {
-		d2->updateRandomness(learningRate, RATE);
+		d2->updateRandomness(learningRate);
 	}
 }
 
@@ -128,19 +106,13 @@ Sequential_Bayes::calculeH() {
 }
 
 void
-Sequential_Bayes::reUpdateParameters(int accept) {
-	// for test
-	//cout << "vi 1" << endl;
+Sequential_Bayes::updateParameters(float learningRateForRd, float learningRateForParas, int last) {
 	if (LookupTable_Bayes* dnmc = static_cast<LookupTable_Bayes*>(this->lkt)) {
-		dnmc->reUpdateParameters(accept);
+		dnmc->updateParameters(learningRateForRd, learningRateForParas, last);
 	}
-	// for test
-	//cout << "vi 2" << endl;
 	for (int i = 0; i < this->size; i ++) {
-		// for test
-		//cout << "vong thu " << i << endl;
 		if (Linear_Bayes* d1 = dynamic_cast<Linear_Bayes*>(modules[i])) {
-			d1->reUpdateParameters(accept);
+			d1->updateParameters(learningRateForRd, learningRateForParas, last);
 		}
 	}
 }

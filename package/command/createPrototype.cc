@@ -108,7 +108,7 @@ main(int argc, char *argv[])
       getHiddenCode(hiddenLayerSizeCode, hiddenLayerSizeArray);
       ioFile mIof;
       // Bayesian model
-      if (name == OVNB) {
+      /*if (name == OVNB) {
 		  NgramModel_Bayes* modelPrototypeBayes = new NgramModel_Bayes(name, contextVocFileName,
 				  predictVocFileName, mapIUnk, mapOUnk, BOS, blockSize, n,
 				  dimensionSize, nonLinearType, hiddenLayerSizeArray, codeWordFileName,
@@ -116,16 +116,16 @@ main(int argc, char *argv[])
 		  mIof.takeWriteFile(outputModelFileName);
 		  modelPrototypeBayes->write(&mIof);
 		  delete modelPrototypeBayes;
-      }
-      else {
-    	  modelPrototype = new NgramModel(name, contextVocFileName,
-    	      	            predictVocFileName, mapIUnk, mapOUnk, BOS, blockSize, n,
-    	      	            dimensionSize, nonLinearType, hiddenLayerSizeArray, codeWordFileName,
-    	      	            outputNetworkSizeFileName);
-		  mIof.takeWriteFile(outputModelFileName);
-		  modelPrototype->write(&mIof);
-		  delete modelPrototype;
-      }
+      }*/
+      //else {
+	  modelPrototype = new NgramModel(name, contextVocFileName,
+						predictVocFileName, mapIUnk, mapOUnk, BOS, blockSize, n,
+						dimensionSize, nonLinearType, hiddenLayerSizeArray, codeWordFileName,
+						outputNetworkSizeFileName);
+	  mIof.takeWriteFile(outputModelFileName);
+	  modelPrototype->write(&mIof, 1);
+	  delete modelPrototype;
+      //}
       return 0;
     }
 

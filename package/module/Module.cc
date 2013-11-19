@@ -9,7 +9,6 @@
 
 Module::Module()
 {
-
 }
 Module::~Module()
 {
@@ -19,6 +18,5 @@ Module::~Module()
 void
 Module::shareWeight(floatTensor& weight)
 {
-  this->weight.tieData(weight);
+	this->weight.tieData(weight);
 }
-

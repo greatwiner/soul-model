@@ -285,13 +285,13 @@ NgramRankModel::forwardProbability(intTensor& ngramTensor,
         {
           if (oBlockSize % 2 == 0) //Possitive
             {
-              probTensor(rBlockSize * blockSize + oBlockSize) = contextFeature(
+              probTensor(rBlockSize * blockSize + oBlockSize) = -contextFeature(
                   oBlockSize);
             }
           else//Negative
             {
               probTensor(rBlockSize * blockSize + oBlockSize)
-                  = -contextFeature(oBlockSize);
+                  = contextFeature(oBlockSize);
             }
         }
       rBlockSize++;
@@ -310,6 +310,9 @@ NgramRankModel::forwardProbability(intTensor& ngramTensor,
 #if PRINT_DEBUG
   cout << endl;
 #endif
+  // for test
+  //cout << "NgramRankModel::forwardProbability probTensor: " << endl;
+  //probTensor.write();
   return 1;
 }
 
@@ -375,7 +378,7 @@ NgramRankModel::read(ioFile* iof, int allocation, int blockSize)
 }
 
 void
-NgramRankModel::write(ioFile* iof)
+NgramRankModel::write(ioFile* iof, int closeFile)
 {
   iof->writeString(name);
   iof->writeString(iof->format);
@@ -393,6 +396,8 @@ NgramRankModel::write(ioFile* iof)
   baseNetwork->write(iof);
   inputVoc->write(iof);
   outputVoc->write(iof);
-  iof->freeWriteFile();
+  if (closeFile) {
+	  iof->freeWriteFile();
+  }
 }
 

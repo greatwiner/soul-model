@@ -31,9 +31,9 @@ public:
   calculeH();
 
   void
-  reUpdateParameters(int accept);
+  updateRandomness(float learningRate);
 
   void
-  updateRandomness(float learningRate, float RATE);
+  updateParameters(float learningRateForRd, float learningRateForParas, int last);
 };
 

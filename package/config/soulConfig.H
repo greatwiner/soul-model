@@ -40,11 +40,19 @@ using namespace std;
 #define UNK "<UNK>"
 
 // Maximal ngram number  while resampling
-#define RESAMPLING_NGRAM_NUMBER      20000000
+#define RESAMPLING_NGRAM_NUMBER      60000000
 // For context grouping, read how many n-grams for each block
 #define BLOCK_NGRAM_NUMBER           10000000
 // Maximal example number for function model
 #define FUNC_NGRAM_NUMBER              500000
+// define if prediction.exe allocate memory for each model
+#define PREDICTION_ALLO                 1
+// acceleration rate: when perplexity decreases after one epoch, we multiply the learning rate with this rate. Attention: that is used only with LEARNINGRATE_ADJUST method
+#define ACC_RATE                        1.1
+// UNDO: if UNDO = 1, and LEARNINGRATE_TYPE = ADJUST, we back to the precedent model if the perplexity is not improved
+#define UNDO                            1
+// transfer from the old version without shareW in modules to the new version with shareW variable
+#define READ_SHARE_W                    1
 
 /*******************************************************************
  Normally, you should not modify these parameters below unless you
@@ -79,6 +87,7 @@ using namespace std;
 #define CN  "cn" // classical n-gram (of Bengio, Schwenk)
 #define OVN  "ovn" // one vector n-gram
 #define OVNB "ovnb" // one vector n-gram with Bayesian inference
+#define OVN_AG "ovn_ag" // ovn with adaGrad
 // Two names below for translation models are kepth to work with old
 // models
 // dwt: discriminative word tuple => word translation model
@@ -94,6 +103,7 @@ using namespace std;
 #define COVR  "covr" // continuous one vector recurrent, take
 // into account words of the previous sentences
 #define RANKCN  "rankcn" // ranking classical n-gram
+#define JWTOVN "jwtovn" // joint word translation one vector n-gram
 
 // Activation type
 #define TANH   "t"
@@ -114,6 +124,10 @@ using namespace std;
 // If entropy increases more than MUL_LOGLKLHOOD (1.002) after one epoch,
 // learningRate = learningRate / learningRateDecay
 #define LEARNINGRATE_DOWN   "d"
+
+// (3) ADJUST, when perplexity increases, we divise learning rate by 2, if no, we multiply learning rate with 1.1
+#define LEARNINGRATE_ADJUST "ad"
+
 #define MUL_LOGLKLHOOD 1.002
 // Stop training after dividing MAX_DIVIDE times
 // MAX_DIVIDE = 100: Never stopping
@@ -149,6 +163,13 @@ using namespace std;
 // Print when CONSTPRINT parts of data were done
 #define CONSTPRINT    0.05
 // Print when NLINEPRINT lines of data were done
-#define NLINEPRINT 1000000
+#define NLINEPRINT 500000
+// initial value of cumulGradWeight and cumulGradBias for AdaGrad
+#define INIT_VALUE_ADAG  1
+// Tau of Hamiltonian algorithm
+#define TAU  1
+
+#define DWTOVN "dwtovn"
+#define DWTMAXOVN "dwtmaxovn"
 
 #endif /* SOULCONFIG_H_ */

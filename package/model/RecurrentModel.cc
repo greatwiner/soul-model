@@ -94,7 +94,7 @@ RecurrentModel::allocation()
     }
   probabilityOne.resize(blockSize, 1);
   int outputNetworkNumber = outputNetworkSize.size[0];
-  outputNetwork = new LinearSoftmax*[outputNetworkNumber];
+  outputNetwork = new Module*[outputNetworkNumber];
   LinearSoftmax* sl = new LinearSoftmax(hiddenLayerSize, outputNetworkSize(0),
       blockSize, otl);
   outputNetwork[0] = sl;
@@ -128,6 +128,8 @@ RecurrentModel::RecurrentModel(string name, char* inputVocFileString,
     string nonLinearType, intTensor& hiddenLayerSizeArray,
     char* codeWordFileString, char* outputNetworkSizeFileString)
 {
+	//for test
+	cout << "RecurrentModel::RecurrentModel first method" << endl;
   this->name = name;
   inputVoc = new SoulVocab(inputVocFileString);
   outputVoc = new SoulVocab(outputVocFileString);
@@ -175,6 +177,8 @@ RecurrentModel::RecurrentModel(string name, int inputSize, int outputSize,
     intTensor& hiddenLayerSizeArray, intTensor& codeWord,
     intTensor& outputNetworkSize)
 {
+	//for test
+	cout << "RecurrentModel::RecurrentModel second method" << endl;
   this->name = name;
   inputVoc = new SoulVocab();
   outputVoc = new SoulVocab();
@@ -368,6 +372,8 @@ int
 RecurrentModel::forwardProbability(intTensor& ngramTensor,
     floatTensor& probTensor)
 {
+	// for test
+	//cout << "RecurrentModel::forwardProbability here" << endl;
   int bkBlockSize = blockSize;
   if (cont && recurrent)
     {
@@ -472,16 +478,44 @@ RecurrentModel::forwardProbability(intTensor& ngramTensor,
   return 1;
 }
 
+float
+RecurrentModel::distance2(RecurrentModel& anotherModel) {
+    float distSquared = 0;
+    distSquared += baseNetwork->lkt->distance2(*(anotherModel.baseNetwork->lkt));
+    for (int i = 0; i < hiddenLayerSizeArray.size[0]; i++) {
+    	if (RRLinear* modules_casted=dynamic_cast<RRLinear*>(baseNetwork->modules[i])) {
+    		RRLinear* another_modules_casted=dynamic_cast<RRLinear*>(anotherModel.baseNetwork->modules[i]);
+    		distSquared+=modules_casted->distance2(*another_modules_casted);
+    	}
+    	if (Linear* modules_casted1=dynamic_cast<Linear*>(baseNetwork->modules[i])) {
+			Linear* another_modules_casted1=dynamic_cast<Linear*>(anotherModel.baseNetwork->modules[i]);
+			distSquared+=modules_casted1->distance2(*another_modules_casted1);
+		}
+    }
+    for (int i = 0; i < outputNetworkNumber; i++) {
+    	distSquared+=dynamic_cast<LinearSoftmax*>(outputNetwork[i])->distance2(*dynamic_cast<LinearSoftmax*>(anotherModel.outputNetwork[i]));
+    }
+    return distSquared;
+}
+
 void
 RecurrentModel::read(ioFile* iof, int allocation, int blockSize)
 {
+	// for test
+	//cout << "RecurrentModel::read here 10" << endl;
   string readFormat;
   iof->readString(name);
   iof->readString(readFormat);
+  // for test
+  //cout << "RecurrentModel::read here" << endl;
   inputVoc = new SoulVocab();
   outputVoc = new SoulVocab();
+  // for test
+  //cout << "RecurrentModel::read here 1" << endl;
   iof->readInt(inputVoc->wordNumber);
   iof->readInt(outputVoc->wordNumber);
+  // for test
+  //cout << "RecurrentModel::read here 2" << endl;
   if (blockSize != 0)
     {
       this->blockSize = blockSize;
@@ -496,6 +530,8 @@ RecurrentModel::read(ioFile* iof, int allocation, int blockSize)
   iof->readString(nonLinearType);
   iof->readInt(maxCodeWordLength);
   iof->readInt(outputNetworkNumber);
+  // for test
+  cout << "RecurrentModel::read here 3" << endl;
   codeWord.resize(outputVoc->wordNumber, maxCodeWordLength);
   outputNetworkSize.resize(outputNetworkNumber, 1);
   codeWord.read(iof);
@@ -503,21 +539,33 @@ RecurrentModel::read(ioFile* iof, int allocation, int blockSize)
   hiddenLayerSizeArray.resize(hiddenNumber, 1);
   hiddenLayerSizeArray.read(iof);
   hiddenLayerSize = hiddenLayerSizeArray(hiddenLayerSizeArray.length - 1);
+  // for test
+  //cout << "RecurrentModel::read here 4" << endl;
   if (allocation)
     {
+	  // for test
+	  //cout << "RecurrentModel::read here 5" << endl;
       this->allocation();
     }
+  // for test
+  //cout << "RecurrentModel::read here 6" << endl;
   baseNetwork->read(iof);
   int i;
+  // for test
+  //cout << "RecurrentModel::read here 7" << endl;
   for (i = 0; i < outputNetworkSize.size[0]; i++)
     {
       outputNetwork[i]->read(iof);
     }
+  // for test
+  //cout << "RecurrentModel::read here 8" << endl;
   inputVoc->read(iof);
+  // for test
+  //cout << "RecurrentModel::read here 9" << endl;
   outputVoc->read(iof);
 }
 void
-RecurrentModel::write(ioFile* iof)
+RecurrentModel::write(ioFile* iof, int closeFile)
 {
   iof->writeString(name);
   iof->writeString(iof->format);
@@ -540,5 +588,8 @@ RecurrentModel::write(ioFile* iof)
     }
   inputVoc->write(iof);
   outputVoc->write(iof);
+  if (closeFile == 1) {
+	  iof->freeWriteFile();
+  }
 }
 

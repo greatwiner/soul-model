@@ -403,12 +403,6 @@ NgramNCEDataSet::createTensor()
 	// Because each ngram corresponds to a coefficient at position n + 3, we do not need to process in a fix order
 	if (groupContext) {
 		sortNgram();
-		float* newCoef = new float[ngramNumber];
-		for (int ngramId = 0; ngramId < ngramNumber; ngramId ++) {
-			newCoef[ngramId] = coef[data[ngramId * lengthPerNgram + n + 1]];
-		}
-		delete [] coef;
-		coef = newCoef;
 	}
 	// for test
 	//cout << "NgramDataSet::createTensor dataTensor after sorting: " << endl;
@@ -471,7 +465,6 @@ NgramNCEDataSet::readTextNgram(ioFile* iof) {
 	return ngramNumber;
 }
 
-// phai sua chu chua the dung duoc dau
 int
 NgramNCEDataSet::readCoBiNgram(ioFile* iof) {
 	int readLineNumber = 0;
@@ -512,4 +505,81 @@ NgramNCEDataSet::readCoBiNgram(ioFile* iof) {
 	cout << endl;
 #endif
 	return ngramNumber;
+}
+
+void
+NgramNCEDataSet::writeReBiNgram(ioFile* iof) {
+	iof->writeInt(ngramNumber);
+	iof->writeInt(n);
+	int ngramId = 0;
+	for (ngramId = 0; ngramId < ngramNumber; ngramId++) {
+		iof->writeIntArray(data + ngramId * lengthPerNgram, n);
+		iof->writeFloat(coef[data[ngramId * lengthPerNgram + n + 1]]);
+    }
+}
+
+string
+NgramNCEDataSet::inverse(string line) {
+	istringstream streamLine(line);
+	string word;
+	string newLine = "";
+	while (streamLine >> word) {
+		newLine = word + " " + newLine;
+    }
+	return newLine;
+}
+
+void
+NgramNCEDataSet::sortNgram()
+{
+  qsort((void*) data, (size_t) ngramNumber, lengthPerNgram * sizeof(unsigned int),
+      compare);
+
+}
+
+void
+NgramNCEDataSet::shuffle(int times) {
+	int *tg = new int[lengthPerNgram * sizeof(int)];
+	int i;
+	int p1, p2;
+	float tmp;
+	for (i = 0; i < times * ngramNumber; i++) {
+		p1 = (int) (ngramNumber * drand48());
+		p2 = (int) (ngramNumber * drand48());
+		memcpy(tg, data + p1 * lengthPerNgram, lengthPerNgram * sizeof(int));
+		memcpy(data + p1 * lengthPerNgram, data + p2 * lengthPerNgram, lengthPerNgram * sizeof(int));
+		memcpy(data + p2 * lengthPerNgram, tg, lengthPerNgram * sizeof(int));
+	}
+}
+
+int
+NgramNCEDataSet::writeReBiNgram() {
+
+	int i;
+	int ngramId = 0;
+	for (ngramId = 0; ngramId < ngramNumber; ngramId++) {
+		for (i = 0; i < lengthPerNgram; i++) {
+			cout << data[ngramId * lengthPerNgram + i] << " ";
+        }
+		cout << coef[data[ngramId * lengthPerNgram + n + 1]] << endl;
+    }
+	return 1;
+}
+
+float
+NgramNCEDataSet::computePerplexity() {
+	perplexity = 0;
+	for (int i = 0; i < probTensor.length; i++) {
+		perplexity += coef[data[i * lengthPerNgram + n + 1]]*probTensor(i);
+    }
+	perplexity = perplexity / ngramNumber;
+	return perplexity;
+}
+
+int
+NgramNCEDataSet::addLine(ioFile* iof) {
+	string line;
+	iof->getLine(line);
+	addLine(line);
+	return 1;
 }

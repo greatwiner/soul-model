@@ -1,0 +1,515 @@
+#include "text.H"
+
+NgramNCEDataSet::NgramNCEDataSet(int type, int n, int BOS,
+    SoulVocab* inputVoc, SoulVocab* outputVoc, int mapIUnk, int mapOUnk,
+    int maxNgramNumber) {
+	srand48(time(NULL));
+	srand(time(NULL));
+	this->type = type;
+	this->n = n;
+
+	// instead of having n + 3 numbers for each ngram, we have n + 4
+	// the additional one indicates its coefficient
+	this->lengthPerNgram = n + 3;
+	this->groupContext = 1;
+	this->BOS = BOS;
+	if (this->BOS > n - 1) {
+		this->BOS = this->n - 1;
+	}
+	this->inputVoc = inputVoc;
+	this->outputVoc = outputVoc;
+	this->mapIUnk = mapIUnk;
+	this->mapOUnk = mapOUnk;
+	data = NULL;
+	ngramNumber = 0;
+	this->maxNgramNumber = maxNgramNumber;
+	dataTensor.resize(1, 1);
+	try {
+		data = new int[maxNgramNumber * this->lengthPerNgram];
+		coef = new float[maxNgramNumber];
+	}
+	catch (bad_alloc& ba) {
+		cerr << "bad_alloc caught: " << ba.what() << endl;
+		exit(1);
+	}
+}
+
+int
+NgramNCEDataSet::addLineWithCoef(string line, float coefficient) {
+	int j;
+	int inputIndex[MAX_WORD_PER_SENTENCE];
+	int outputIndex[MAX_WORD_PER_SENTENCE];
+	istringstream streamLine(line);
+	string word;
+	int i = 0;
+	int length = 0;
+	int use;
+	while (streamLine >> word) {
+		inputIndex[length] = inputVoc->index(word);
+		outputIndex[length] = outputVoc->index(word);
+		if (mapIUnk && inputIndex[length] == ID_UNK) {
+			inputIndex[length] = inputVoc->unk;
+        }
+		if (mapOUnk && outputIndex[length] == ID_UNK) {
+			outputIndex[length] = outputVoc->unk;
+        }
+		length++;
+		// Line is too long
+		if (length > MAX_WORD_PER_SENTENCE) {
+			return 0;
+        }
+    }
+	// Line has no ngram, don't do anything
+	if (length == BOS - 1) {
+		return 0;
+    }
+	for (i = 0; i <= length - n; i++) {
+		use = 1;
+		if (type == 0 || type == 1) {
+			for (j = 0; j < n - 1; j++) {
+				if (inputIndex[i + j] < 0) {
+					use = 0;
+					break;
+                }
+				data[ngramNumber * lengthPerNgram + j] = inputIndex[i + j];
+            }
+			if (outputIndex[i + n - 1] < 0) {
+				use = 0;
+            }
+			else {
+				data[ngramNumber * lengthPerNgram + n - 1] = outputIndex[i + n - 1];
+            }
+        }
+		else {
+			for (j = 0; j < n; j++) {
+				if (inputIndex[i + j] < 0 && j != (n - 1) / 2) {
+					use = 0;
+					break;
+                }
+				if (j < (n - 1) / 2) {
+					data[ngramNumber * lengthPerNgram + j] = inputIndex[i + j];
+                }
+				else if (j > (n - 1) / 2) {
+					data[ngramNumber * lengthPerNgram + j - 1] = inputIndex[i + j];
+                }
+            }
+			if (outputIndex[i + (n - 1) / 2] < 0) {
+				use = 0;
+            }
+			else {
+				data[ngramNumber * lengthPerNgram + n - 1] = outputIndex[i + (n - 1) / 2];
+            }
+        }
+		if (use) {
+			data[ngramNumber * lengthPerNgram + n] = ID_END_NGRAM;
+			data[ngramNumber * lengthPerNgram + n + 1] = ngramNumber;
+			data[ngramNumber * lengthPerNgram + n + 2] = 0;
+
+			// coefficient indicating if the added ngrams are positive or negative, or how much they are positive or negative
+			coef[ngramNumber] = coefficient;
+			ngramNumber++;
+			//Add negative example, copy context and random uniform predicted word
+			/*this->setCoefficient(-1);
+          for (j = 0; j < n - 1; j++)
+            {
+              data[ngramNumber * (n + 3) + j] = data[(ngramNumber - 1)
+                  * (n + 3) + j];
+            }
+          do
+            {
+              data[ngramNumber * (n + 3) + n - 1]
+                  = (int) (outputVoc->wordNumber * drand48());
+            }
+          while (data[ngramNumber * (n + 3) + n - 1] == data[(ngramNumber - 1)
+              * (n + 3) + n - 1]);
+          data[ngramNumber * (n + 3) + n] = ID_END_NGRAM;
+          data[ngramNumber * (n + 3) + n + 1] = ngramNumber;
+          data[ngramNumber * (n + 3) + n + 2] = 0;
+          ngramNumber++;*/
+		}
+    }
+	return 1;
+}
+
+int
+NgramNCEDataSet::addLine(string line) {
+	int j;
+	int inputIndex[MAX_WORD_PER_SENTENCE];
+	int outputIndex[MAX_WORD_PER_SENTENCE];
+	istringstream streamLine(line);
+	string word;
+	int i = 0;
+	int length = 0;
+	int use;
+	while (streamLine >> word) {
+		inputIndex[length] = inputVoc->index(word);
+		outputIndex[length] = outputVoc->index(word);
+		if (mapIUnk && inputIndex[length] == ID_UNK) {
+			inputIndex[length] = inputVoc->unk;
+		}
+		if (mapOUnk && outputIndex[length] == ID_UNK) {
+			outputIndex[length] = outputVoc->unk;
+		}
+		length++;
+		// Line is too long
+		if (length > MAX_WORD_PER_SENTENCE) {
+			return 0;
+		}
+	}
+	// Line has no ngram, don't do anything
+	if (length == BOS - 1) {
+		return 0;
+	}
+	for (i = 0; i <= length - n; i++) {
+		use = 1;
+		if (type == 0 || type == 1) {
+			for (j = 0; j < n - 1; j++) {
+				if (inputIndex[i + j] < 0) {
+					use = 0;
+					break;
+				}
+				data[ngramNumber * lengthPerNgram + j] = inputIndex[i + j];
+			}
+			if (outputIndex[i + n - 1] < 0) {
+				use = 0;
+			}
+			else {
+				data[ngramNumber * lengthPerNgram + n - 1] = outputIndex[i + n - 1];
+			}
+		}
+		else {
+			for (j = 0; j < n; j++) {
+				if (inputIndex[i + j] < 0 && j != (n - 1) / 2) {
+					use = 0;
+					break;
+				}
+				if (j < (n - 1) / 2) {
+					data[ngramNumber * lengthPerNgram + j] = inputIndex[i + j];
+				}
+				else if (j > (n - 1) / 2) {
+					data[ngramNumber * lengthPerNgram + j - 1] = inputIndex[i + j];
+				}
+			}
+			if (outputIndex[i + (n - 1) / 2] < 0) {
+				use = 0;
+			}
+			else {
+				data[ngramNumber * lengthPerNgram + n - 1] = outputIndex[i + (n - 1) / 2];
+			}
+		}
+		if (use) {
+			data[ngramNumber * lengthPerNgram + n] = ID_END_NGRAM;
+			data[ngramNumber * lengthPerNgram + n + 1] = ngramNumber;
+			data[ngramNumber * lengthPerNgram + n + 2] = 0;
+
+			// positive example
+			coef[ngramNumber] = 1;
+			ngramNumber++;
+			//Add negative example, copy context and random uniform predicted word
+			for (j = 0; j < n - 1; j++) {
+				data[ngramNumber * lengthPerNgram + j] = data[(ngramNumber - 1)
+	                  * lengthPerNgram + j];
+			}
+			do {
+				data[ngramNumber * lengthPerNgram + n - 1] = (int) (outputVoc->wordNumber * drand48());
+			}
+			while (data[ngramNumber * lengthPerNgram + n - 1] == data[(ngramNumber - 1)
+	              * lengthPerNgram + n - 1]);
+			data[ngramNumber * lengthPerNgram + n] = ID_END_NGRAM;
+			data[ngramNumber * lengthPerNgram + n + 1] = ngramNumber;
+			data[ngramNumber * lengthPerNgram + n + 2] = 0;
+
+			// negative example
+			coef[ngramNumber] = -1;
+			ngramNumber++;
+		}
+	}
+	return 1;
+}
+
+int
+NgramNCEDataSet::resamplingSentence(int totalLineNumber,
+    int resamplingLineNumber, int* resamplingLineId) {
+	if (totalLineNumber == resamplingLineNumber) {
+		int i;
+		for (i = 0; i < totalLineNumber; i++) {
+			resamplingLineId[i] = i;
+        }
+		return 1;
+    }
+	else {
+		int* buff = new int[totalLineNumber];
+		int chosenPos;
+		int i;
+		for (i = 0; i < totalLineNumber; i++) {
+			buff[i] = i;
+        }
+		int pos = totalLineNumber;
+		for (i = 0; i < resamplingLineNumber; i++) {
+			chosenPos = rand() % pos;
+			resamplingLineId[i] = buff[chosenPos];
+			buff[chosenPos] = buff[pos - 1];
+			pos--;
+        }
+		delete[] buff;
+		sort(resamplingLineId, resamplingLineId + resamplingLineNumber);
+		return 1;
+    }
+}
+
+int
+NgramNCEDataSet::readText(ioFile* iof) {
+	int i = 0;
+	string line;
+	string headline;
+	string invLine;
+	string tailline;
+	headline = "";
+	tailline = "";
+	// Normal
+	if (type == 0) {
+		for (i = 0; i < BOS; i++) {
+			headline = headline + SS + " ";
+        }
+		tailline = tailline + " " + ES;
+    }
+	// Inverse
+	else if (type == 1) {
+		for (i = 0; i < BOS; i++) {
+			tailline = tailline + " " + ES;
+        }
+		headline = headline + SS + " ";
+    }
+	// Center
+	else if (type == 2) {
+		for (i = 0; i < BOS / 2; i++) {
+			tailline = tailline + " " + ES;
+			headline = headline + SS + " ";
+        }
+    }
+	int readLineNumber = 0;
+	while (!iof->getEOF()) {
+		if (iof->getLine(line)) {
+			if (!checkBlankString(line)) {
+				line = headline + line + tailline;
+				if (type == 0 || type == 2) {
+					addLine(line);
+                }
+				else if (type == 1) {
+					invLine = inverse(line);
+					addLine(invLine);
+                }
+            }
+        }
+		readLineNumber++;
+#if PRINT_DEBUG
+		if (readLineNumber % NLINEPRINT == 0) {
+			cout << readLineNumber << " ... " << flush;
+        }
+#endif
+    }
+#if PRINT_DEBUG
+	cout << endl;
+#endif
+	return 1;
+}
+
+int
+NgramNCEDataSet::resamplingText(ioFile* iof, int totalLineNumber,
+    int resamplingLineNumber) {
+	int* resamplingLineId = new int[resamplingLineNumber];
+	resamplingSentence(totalLineNumber, resamplingLineNumber, resamplingLineId);
+
+	int i = 0;
+	string line;
+	string headline;
+	string invLine;
+	string tailline;
+	headline = "";
+	tailline = "";
+	// Normal
+	if (type == 0) {
+		for (i = 0; i < BOS; i++) {
+			headline = headline + SS + " ";
+        }
+		tailline = tailline + " " + ES;
+    }
+	// Inverse
+	else if (type == 1) {
+		for (i = 0; i < BOS; i++) {
+			tailline = tailline + " " + ES;
+        }
+		headline = headline + SS + " ";
+    }
+	// Center
+	else if (type == 2) {
+		for (i = 0; i < BOS / 2; i++) {
+			tailline = tailline + " " + ES;
+			headline = headline + SS + " ";
+        }
+    }
+	int readLineNumber = 0;
+	int currentId = 0;
+	while (!iof->getEOF()) {
+		if (iof->getLine(line)) {
+    	  // for test
+    	  //cout << "NgramRankDataSet::resamplingText line: " << line << endl;
+			if (readLineNumber == resamplingLineId[currentId]) {
+				if (!checkBlankString(line)) {
+					line = headline + line + tailline;
+					if (type == 0 || type == 2) {
+						addLine(line);
+                    }
+					else if (type == 1) {
+						invLine = inverse(line);
+						addLine(invLine);
+                    }
+                }
+				currentId++;
+            }
+			if (currentId == resamplingLineNumber) {
+				break;
+            }
+        }
+
+		readLineNumber++;
+#if PRINT_DEBUG
+		if (readLineNumber % NLINEPRINT == 0) {
+			cout << readLineNumber << " ... " << flush;
+        }
+#endif
+    }
+#if PRINT_DEBUG
+	cout << endl;
+#endif
+	delete[] resamplingLineId;
+	return ngramNumber;
+}
+
+intTensor&
+NgramNCEDataSet::createTensor()
+{
+	dataTensor.haveMemory = 0;
+	dataTensor.size[0] = ngramNumber;
+	dataTensor.size[1] = lengthPerNgram;
+	dataTensor.stride[0] = lengthPerNgram;
+	dataTensor.stride[1] = 1;
+	// dataTensor is a pointer, doesn't have data
+	if (dataTensor.data != data) {
+		delete[] dataTensor.data;
+		dataTensor.data = data;
+	}
+	// Sort using quicksort
+	// Because each ngram corresponds to a coefficient at position n + 3, we do not need to process in a fix order
+	if (groupContext) {
+		sortNgram();
+		float* newCoef = new float[ngramNumber];
+		for (int ngramId = 0; ngramId < ngramNumber; ngramId ++) {
+			newCoef[ngramId] = coef[data[ngramId * lengthPerNgram + n + 1]];
+		}
+		delete [] coef;
+		coef = newCoef;
+	}
+	// for test
+	//cout << "NgramDataSet::createTensor dataTensor after sorting: " << endl;
+	//dataTensor.write();
+	// Edit info integer to keep the info for the first next n-gram
+	// which has a different context
+	int ngramId;
+	int preNgramId = 0;
+	int i;
+	int equal = 1;
+	for (ngramId = 0; ngramId < ngramNumber - 1; ngramId++) {
+		equal = 1;
+		for (i = 0; i < n - 1; i++) {
+
+			if (data[ngramId * lengthPerNgram + i] != data[(ngramId + 1) * lengthPerNgram + i]) {
+				equal = 0;
+				break;
+			}
+		}
+		if (equal == 0 || !groupContext) {
+			data[preNgramId * lengthPerNgram + n + 2] = ngramId + 1;
+			preNgramId = ngramId + 1;
+		}
+	}
+	if (equal == 1) {
+		data[preNgramId * lengthPerNgram + n + 2] = ngramNumber;
+	}
+	data[ngramNumber * lengthPerNgram - 1] = ngramNumber;
+	probTensor.resize(ngramNumber, 1);
+	return dataTensor;
+}
+
+int
+NgramNCEDataSet::readTextNgram(ioFile* iof) {
+	string line;
+	string invLine;
+	int readLineNumber = 0;
+	while (!iof->getEOF()) {
+		if (iof->getLine(line)) {
+			if (!checkBlankString(line)) {
+				if (type == 0 || type == 2) {
+					addLine(line);
+				}
+				else if (type == 1) {
+					invLine = inverse(line);
+					addLine(invLine);
+				}
+			}
+		}
+		readLineNumber++;
+#if PRINT_DEBUG
+		if (readLineNumber % NLINEPRINT == 0) {
+			cout << readLineNumber << " ... " << flush;
+		}
+#endif
+    }
+#if PRINT_DEBUG
+	cout << endl;
+#endif
+	return ngramNumber;
+}
+
+// phai sua chu chua the dung duoc dau
+int
+NgramNCEDataSet::readCoBiNgram(ioFile* iof) {
+	int readLineNumber = 0;
+	int i;
+	int N;
+	int ngramNumberInFile;
+	iof->readInt(ngramNumberInFile);
+	iof->readInt(N);
+	int readTextNgram[N];
+	int offset = N - n;
+	if (offset < 0) {
+		cerr << "ERROR: order in id file is too small:" << N << " < " << n
+				<< endl;
+		exit(1);
+    }
+	while (!iof->getEOF()) {
+		iof->readIntArray(readTextNgram, N);
+		// read coefficient for each ngram
+		iof->readFloat(coef[ngramNumber]);
+		if (iof->getEOF()) {
+			break;
+        }
+		for (i = 0; i < n; i++) {
+			data[ngramNumber * (n + 3) + i] = readTextNgram[offset + i];
+        }
+		data[ngramNumber * (n + 3) + n] = ID_END_NGRAM;
+		data[ngramNumber * (n + 3) + n + 1] = ngramNumber;
+		data[ngramNumber * (n + 3) + n + 2] = 0;
+		ngramNumber++;
+		readLineNumber++;
+#if PRINT_DEBUG
+		if (readLineNumber % NLINEPRINT == 0) {
+			cout << readLineNumber << " ... " << flush;
+        }
+#endif
+    }
+#if PRINT_DEBUG
+	cout << endl;
+#endif
+	return ngramNumber;
+}

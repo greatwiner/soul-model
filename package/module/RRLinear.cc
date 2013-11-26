@@ -300,7 +300,7 @@ RRLinear::updateParameters(float learningRate)
     }
 }
 float
-RRLinear::distance2(RRLinear& anotherRRLinear) {
+RRLinear::distance2(Module& anotherRRLinear) {
 	floatTensor distMatrix;
 	distMatrix.copy(this->vectorInput);
 	distMatrix.axpy(anotherRRLinear.vectorInput, -1);

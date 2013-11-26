@@ -83,3 +83,7 @@ Sigmoid::write(ioFile* iof)
   iof->writeString((char*) "Sigmoid");
 }
 
+float
+Sigmoid::distance2(Module& anotherModule) {
+	return 0;
+}

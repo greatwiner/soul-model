@@ -50,7 +50,7 @@ public:
   // LookupTable -> Linear -> ... -> First hidden layer
   Sequential* baseNetwork;
   // Layers of softmax for output tree
-  Module** outputNetwork;
+  ProbOutput** outputNetwork;
 
   // Code of words in the tree
   intTensor codeWord;
@@ -176,16 +176,16 @@ public:
   // trainOne: Train with one example or one block of examples
   // shared with all sub-classes
   void
-  trainOne(intTensor& context, intTensor& word, float learningRate);
+  trainOne(intTensor& context, intTensor& word, floatTensor& coefTensor, float learningRate);
   void
-  trainOne(intTensor& context, intTensor& word, float learningRate,
+  trainOne(intTensor& context, intTensor& word, floatTensor& coefTensor, float learningRate,
       int subBlockSize);
 
   // Only for test and debugging with artificial data
   int
   trainTest(int maxExampleNumber, float weightDecay, string learningRateType,
       float learningRate, float learningRateDecay, intTensor& gcontext,
-      intTensor& gword);
+      intTensor& gword, floatTensor& coefTensor);
 
   // train: Train with one n-gram file (1 epoch)
   virtual int
@@ -210,5 +210,17 @@ public:
   read(ioFile* iof, int allocation, int blockSize) = 0;
   virtual void
   write(ioFile* iof, int closeFile) = 0;
+
+  virtual float
+  distance2(NeuralModel& anotherModel) = 0;
+
+  // read a mini-batch from a data file, with its corresponding coefficient set
+  void
+  readStripInt(ioFile& iof, intTensor& readTensor, floatTensor& coefTensor);
+  void
+  readStripFloat(ioFile& iof, floatTensor& readTensor, floatTensor& coefTensor);
+
+  float
+  takeCurrentLearningRate(float learningRate, string learningRateType, int nstep, float learningRateDecay);
 };
 

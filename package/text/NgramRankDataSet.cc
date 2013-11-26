@@ -500,34 +500,29 @@ NgramRankDataSet::inverse(string line)
 }
 
 int
-rankCompare(const void *ngram1, const void *ngram2)
-{
+rankCompare(const void *ngram1, const void *ngram2) {
 
-  int i;
-  int *pNgram1;
-  int *pNgram2;
+	int i;
+	int *pNgram1;
+	int *pNgram2;
 
-  pNgram1 = (int *) ngram1;
-  pNgram2 = (int *) ngram2;
-  i = 0;
-  do
-    {
+	pNgram1 = (int *) ngram1;
+	pNgram2 = (int *) ngram2;
+	i = 0;
+	do {
 
-      if (pNgram1[i] < pNgram2[i])
-        {
-          return -1;
+		if (pNgram1[i] < pNgram2[i]) {
+			return -1;
         }
-      else
-        {
-          if (pNgram1[i] > pNgram2[i])
-            {
-              return 1;
+		else {
+			if (pNgram1[i] > pNgram2[i]) {
+				return 1;
             }
         }
-      i++;
+		i++;
     }
-  while (pNgram1[i] != ID_END_NGRAM);
-  return 0;
+	while (pNgram1[i] != ID_END_NGRAM);
+	return 0;
 
 }
 
@@ -538,6 +533,7 @@ NgramRankDataSet::sortNgram()
       rankCompare);
 
 }
+
 void
 NgramRankDataSet::shuffle(int times)
 {

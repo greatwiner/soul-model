@@ -96,7 +96,7 @@ NgramWordTranslationModel::allocation()
     }
   probabilityOne.resize(blockSize, 1);
   int outputNetworkNumber = outputNetworkSize.size[0];
-  outputNetwork = new Module*[outputNetworkNumber];
+  outputNetwork = new ProbOutput*[outputNetworkNumber];
   LinearSoftmax* sl = new LinearSoftmax(hiddenLayerSize, outputNetworkSize(0),
       blockSize, otl);
   outputNetwork[0] = sl;
@@ -251,6 +251,7 @@ NgramWordTranslationModel::train(char* dataFileString, int maxExampleNumber,
   intTensor readTensor(blockSize, N);
   intTensor context;
   intTensor word;
+  floatTensor coefTensor(blockSize, 1);
   context.sub(readTensor, 0, blockSize - 1, N - nm, N - 2);
   context.t();
   word.select(readTensor, 1, N - 1);
@@ -265,7 +266,7 @@ NgramWordTranslationModel::train(char* dataFileString, int maxExampleNumber,
   for (i = 0; i < blockNumber; i++)
     {
       //Read one line and then train
-      readTensor.readStrip(&dataIof); // read file n gram for word and context
+      this->readStripInt(dataIof, readTensor, coefTensor); // read file n gram for word and context
       if (dataIof.getEOF())
         {
           break;
@@ -279,7 +280,7 @@ NgramWordTranslationModel::train(char* dataFileString, int maxExampleNumber,
         {
           currentLearningRate = learningRate;
         }
-      trainOne(context, word, currentLearningRate, blockSize);
+      trainOne(context, word, coefTensor, currentLearningRate, blockSize);
       nstep += blockSize;
 #if PRINT_DEBUG
       if (currentExampleNumber > iPercent)
@@ -297,6 +298,7 @@ NgramWordTranslationModel::train(char* dataFileString, int maxExampleNumber,
       word = SIGN_NOT_WORD;
       intTensor lastReadTensor(remainingNumber, N);
       lastReadTensor.readStrip(&dataIof);
+      this->readStripInt(dataIof, lastReadTensor, coefTensor);
       intTensor subReadTensor;
       subReadTensor.sub(readTensor, 0, remainingNumber - 1, 0, N - 1);
       subReadTensor.copy(lastReadTensor);
@@ -311,7 +313,7 @@ NgramWordTranslationModel::train(char* dataFileString, int maxExampleNumber,
             {
               currentLearningRate = learningRate;
             }
-          trainOne(context, word, currentLearningRate, remainingNumber);
+          trainOne(context, word, coefTensor, currentLearningRate, remainingNumber);
         }
     }
 #if PRINT_DEBUG
@@ -578,3 +580,8 @@ NgramWordTranslationModel::write(ioFile* iof, int closeFile)
   }
 }
 
+float
+NgramWordTranslationModel::distance2(NeuralModel& anotherModel) {
+	// TODO
+	return 0;
+}

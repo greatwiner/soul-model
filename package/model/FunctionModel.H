@@ -36,7 +36,7 @@ public:
       intTensor& hiddenLayerSizeArray); // for test only
 
   void
-  trainOne(floatTensor& readData, float learningRate, int subBlockSize);
+  trainOne(floatTensor& readData, floatTensor& coefTensor, float learningRate, int subBlockSize);
 
   int
   train(char* dataFileName, int maxExampleNumber, int iteration,
@@ -64,5 +64,14 @@ public:
   void
   write(ioFile* iof);
 
+  // read a mini-batch from a data file, with its corresponding coefficient set
+  void
+  readStripInt(ioFile& iof, intTensor& readTensor, floatTensor& coefTensor);
+  void
+  readStripFloat(ioFile& iof, floatTensor& readTensor, floatTensor& coefTensor);
+
+  // adaptive learning rate methods
+  float
+  takeCurrentLearningRate(float learningRate, string learningRateType, int nstep, float learningRateDecay);
 };
 

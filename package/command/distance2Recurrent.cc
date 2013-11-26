@@ -12,18 +12,20 @@ main(int argc, char *argv[]) {
 	modelFile2.takeReadFile(fileName2);
 	// for test
 	//cout << "distance2Recurrent::main here 1" << endl;
-	RecurrentModel* model1 = new RecurrentModel();
-	RecurrentModel* model2 = new RecurrentModel();
+	/*RecurrentModel* model1 = new RecurrentModel();
+	RecurrentModel* model2 = new RecurrentModel();*/
+	NgramModel* model1 = new NgramModel();
+	NgramModel* model2 = new NgramModel();
 	int blockSize = 1; // by default
 	// for test
 	//cout << "distance2Recurrent::main here 4" << endl;
-	dynamic_cast<RecurrentModel*>(model1)->read(&modelFile1, 1, blockSize);
+	model1->read(&modelFile1, 1, blockSize);
 	// for test
 	//cout << "distance2Recurrent::main here 2" << endl;
-	dynamic_cast<RecurrentModel*>(model2)->read(&modelFile2, 1, blockSize);
+	model2->read(&modelFile2, 1, blockSize);
 	// for test
 	//cout << "distance2Recurrent::main here 3" << endl;
-	cout << "distance2Recurrent::main dist: " << dynamic_cast<RecurrentModel*>(model1)->distance2(*(dynamic_cast<RecurrentModel*>(model2))) << endl;
+	cout << "distance2Recurrent::main dist: " << model1->distance2(*model2) << endl;
 	delete model1;
 	delete model2;
 }

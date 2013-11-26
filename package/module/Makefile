@@ -7,7 +7,7 @@ all: copy $(CLIB_PATH)libmodule.a
 copy:
 		cp *.H $(CINCLUDE_PATH)
 
-$(CLIB_PATH)libmodule.a: $(CLIB_PATH)Module.o $(CLIB_PATH)Linear.o $(CLIB_PATH)Linear_AG.o $(CLIB_PATH)MaxLinear.o $(CLIB_PATH)BLinear.o $(CLIB_PATH)RLinear.o $(CLIB_PATH)RRLinear.o $(CLIB_PATH)Embeddings.o $(CLIB_PATH)LookupTable.o $(CLIB_PATH)LookupTable_AG.o $(CLIB_PATH)Tanh.o $(CLIB_PATH)Sigmoid.o $(CLIB_PATH)Sequential.o $(CLIB_PATH)LinearSoftmax.o $(CLIB_PATH)LinearSoftmax_AG.o $(CLIB_PATH)FunctionSequential.o
+$(CLIB_PATH)libmodule.a: $(CLIB_PATH)Module.o $(CLIB_PATH)Linear.o $(CLIB_PATH)Linear_AG.o $(CLIB_PATH)MaxLinear.o $(CLIB_PATH)BLinear.o $(CLIB_PATH)RLinear.o $(CLIB_PATH)RRLinear.o $(CLIB_PATH)Embeddings.o $(CLIB_PATH)LookupTable.o $(CLIB_PATH)LookupTable_AG.o $(CLIB_PATH)Tanh.o $(CLIB_PATH)Sigmoid.o $(CLIB_PATH)Sequential.o $(CLIB_PATH)ProbOutput.o $(CLIB_PATH)LinearSoftmax.o $(CLIB_PATH)LinearSoftmax_AG.o $(CLIB_PATH)LinearSoftmax_NCE.o $(CLIB_PATH)FunctionSequential.o
 		$(ARCH) $(ARCHFLAGS)  $(CLIB_PATH)libmodule.a $(alev)
 	
 $(CLIB_PATH)Module.o: Module.cc
@@ -58,6 +58,9 @@ $(CLIB_PATH)Sequential.o: Sequential.cc
 #$(CLIB_PATH)Sequential_Bayes.o: Sequential_Bayes.cc
 #		$(CC) $(CFLAGS_OBJECT) $(CLIB_INCLUDE) Sequential_Bayes.cc -o $(CLIB_PATH)Sequential_Bayes.o
 		
+$(CLIB_PATH)ProbOutput.o: ProbOutput.cc
+		$(CC) $(CFLAGS_OBJECT) $(CLIB_INCLUDE) ProbOutput.cc -o $(CLIB_PATH)ProbOutput.o
+		
 $(CLIB_PATH)LinearSoftmax.o: LinearSoftmax.cc
 		$(CC) $(CFLAGS_OBJECT) $(CLIB_INCLUDE) LinearSoftmax.cc -o $(CLIB_PATH)LinearSoftmax.o
 		
@@ -66,6 +69,9 @@ $(CLIB_PATH)LinearSoftmax.o: LinearSoftmax.cc
 		
 $(CLIB_PATH)LinearSoftmax_AG.o: LinearSoftmax_AG.cc
 		$(CC) $(CFLAGS_OBJECT) $(CLIB_INCLUDE) LinearSoftmax_AG.cc -o $(CLIB_PATH)LinearSoftmax_AG.o
+		
+$(CLIB_PATH)LinearSoftmax_NCE.o: LinearSoftmax_NCE.cc
+		$(CC) $(CFLAGS_OBJECT) $(CLIB_INCLUDE) LinearSoftmax_NCE.cc -o $(CLIB_PATH)LinearSoftmax_NCE.o
 		
 $(CLIB_PATH)FunctionSequential.o: FunctionSequential.cc
 		$(CC) $(CFLAGS_OBJECT) $(CLIB_INCLUDE) FunctionSequential.cc -o $(CLIB_PATH)FunctionSequential.o

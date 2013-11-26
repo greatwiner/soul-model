@@ -1,4 +1,4 @@
-class Linear_AG : public Linear {
+class Linear_AG : public Module {
 public:
 	// Pointer for the output of the previous layer, used for updateParameters
 	floatTensor input;
@@ -37,7 +37,7 @@ public:
 	updateParameters(float learningRate);
 
 	float
-	distance2(Linear_AG& anotherLinear);
+	distance2(Module& anotherLinear);
 
 	void
 	read(ioFile *iof);

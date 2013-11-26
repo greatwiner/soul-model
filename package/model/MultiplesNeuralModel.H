@@ -68,16 +68,15 @@ public:
 	// trainOne: Train with one example or one block of examples
 	// shared with all sub-classes
 	void
-	trainOne(int modelIndex, intTensor& context, intTensor& word, float learningRate);
+	trainOne(int modelIndex, intTensor& context, intTensor& word, floatTensor& coefTensor, float learningRate);
 	void
-	trainOne(int modelIndex, intTensor& context, intTensor& word, float learningRate,
-			int subBlockSize);
+	trainOne(int modelIndex, intTensor& context, intTensor& word, floatTensor& coefTensor, float learningRate, int subBlockSize);
 
 	// Only for test and debugging with artificial data
 	int
 	trainTest(int modelIndex, int maxExampleNumber, float weightDecay, string learningRateType,
 	      float learningRate, float learningRateDecay, intTensor& gcontext,
-	      intTensor& gword);
+	      intTensor& gword, floatTensor& coefTensor);
 
 	// train: Train with one n-gram file (1 epoch)
 	int

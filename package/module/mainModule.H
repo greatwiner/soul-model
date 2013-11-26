@@ -17,9 +17,11 @@
 #include "Sigmoid.H"
 #include "Sequential.H"
 //#include "Sequential_Bayes.H"
+#include "ProbOutput.H"
 #include "LinearSoftmax.H"
 //#include "LinearSoftmax_Bayes.H"
 #include "LinearSoftmax_AG.H"
+#include "LinearSoftmax_NCE.H"
 #include "FunctionSequential.H"
 
 #endif

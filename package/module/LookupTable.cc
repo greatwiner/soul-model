@@ -88,8 +88,6 @@ void
 LookupTable::write(ioFile* iof)
 {
   iof->writeString(name);
-  // for test
-  cout << "LookupTable::write name: " << name << endl;
   weight.write(iof);
   if (name == "LookupTable_AG") {
 	  // for test

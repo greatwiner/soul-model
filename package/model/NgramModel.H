@@ -62,5 +62,8 @@ public:
   void
   write(ioFile* iof, int closeFile);
 
+  float
+  distance2(NeuralModel& anotherModel);
+
 };
 

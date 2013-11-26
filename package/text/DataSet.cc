@@ -35,6 +35,36 @@ DataSet::checkBlankString(string line)
   return 1;
 }
 
+float
+DataSet::getCoefFromString(string& line) {
+	string newLine = "";
+	string word;
+	string preWord;
+	float currentCoef;
+	istringstream streamLine(line);
+	streamLine >> preWord;
+	if (streamLine >> word) {
+		do {
+			if (atof(word.c_str())) {
+				currentCoef = (float)atof(word.c_str());
+			}
+			newLine = newLine + " " + preWord;
+			preWord = word;
+		} while (streamLine >> word);
+	}
+	else {
+		if (atof(preWord.c_str())) {
+			currentCoef = (float)atof(preWord.c_str());
+		}
+		else {
+			cout << "DataSet::getCoefFromString line is not correctly formated with coef" << endl;
+			exit(0);
+		}
+	}
+	line = newLine;
+	return currentCoef;
+}
+
 int
 DataSet::resamplingDataDes(char* dataDesFileName, int type)
 {

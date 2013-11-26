@@ -53,6 +53,9 @@ public:
   int blockSize;
   int cont;
 
+  // telling if data has been sorted
+  int sorted;
+
   // BOS: Begin of sentence, considering n-grams with how many <s> at
   // the beginning. BOS: max number of <s>
   // n = 4, BOS = 2 => Considering <s> <s> x y, <s> x y z, x y z t
@@ -73,6 +76,9 @@ public:
   // If line is all space?
   int
   checkBlankString(string line);
+  // check if a string is all space (except a float indicating coefficient), then remove coefficient from string and return it
+  float
+  getCoefFromString(string& line);
 
   // Some functions are virtual (see sub-classes for actual implementation)
 

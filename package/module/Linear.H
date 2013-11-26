@@ -44,7 +44,7 @@ public:
   void
   updateParameters(float learningRate);
   float
-  distance2(Linear& anotherLinear);
+  distance2(Module& anotherLinear);
 
   void
   read(ioFile *iof);

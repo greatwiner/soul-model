@@ -117,202 +117,110 @@ NeuralModel::changeBlockSize(int blockSize)
 }
 
 void
-NeuralModel::trainOne(intTensor& context, intTensor& word, float learningRate)
-{
-  trainOne(context, word, learningRate, blockSize);
+NeuralModel::trainOne(intTensor& context, intTensor& word, floatTensor& coefTensor, float learningRate) {
+	trainOne(context, word, coefTensor, learningRate, blockSize);
 }
 
 void
-NeuralModel::trainOne(intTensor& context, intTensor& word, float learningRate,
-    int subBlockSize)
-{
-	float learningRateAdaG;
+NeuralModel::trainOne(intTensor& context, intTensor& word, floatTensor& coefTensor, float learningRate, int subBlockSize) {
 	time_t start, end;
-  intTensor localWord;
-  intTensor idLocalWord(1, 1);
-  int idParent;
-  int i;
-  // Copy codeWord of predicted words into localCodeWord
-  decodeWord(word, subBlockSize);
+	intTensor localWord;
+	intTensor idLocalWord(1, 1);
+	int idParent;
+	int i;
+	// Copy codeWord of predicted words into localCodeWord
+	decodeWord(word, subBlockSize);
 
-  // for test
-  //cout << "NeuralModel::trainOne here " << endl;
+	// firstTime is required only for recurrent models, see RRLinear
+	firstTime(context);
 
-  // firstTime is required only for recurrent models, see RRLinear
-  firstTime(context);
-  // for test
-  //cout << "NeuralModel::trainOne here 1" << endl;
+	// Forward from lkt to the last hidden layer
+	baseNetwork->forward(context);
 
-  // scale learning rate
-  if (name == OVN_AG) {
-	  // for Down-Bloc-Adag
-  	  learningRateAdaG = learningRate*sqrt(dynamic_cast<LinearSoftmax_AG*>(outputNetwork[0])->cumulGradWeight);
+	// Initialize the gradient for the last hidden layer
+	gradContextFeature = 0;
+	int rBlockSize;
+	// Forward for the main softmax layer outputNetwork[0]
+	// localWord is the indices of top classes of prediced words,
+	// the second line of localCodeWord
+	localWord.select(localCodeWord, 1, 1);
+	outputNetwork[0]->forward(contextFeature);
 
-  	  // for Bloc-Adag
-	  //learningRateAdaG = learningRate;
-  }
+	// gradInput is the gradient from the main softmax layer
+	gradInput = outputNetwork[0]->backward(localWord, coefTensor);
 
-  // Forward from lkt to the last hidden layer
-  // for test
-  //cout << "NeuralModel::trainOne here 3" << endl;
-  baseNetwork->forward(context);
+	// gradContextFeature = gradInput
+	gradContextFeature.axpy(gradInput, 1);
 
-  // Initialize the gradient for the last hidden layer
-  gradContextFeature = 0;
-  int rBlockSize;
-  // Forward for the main softmax layer outputNetwork[0]
-  // localWord is the indices of top classes of prediced words,
-  // the second line of localCodeWord
-  localWord.select(localCodeWord, 1, 1);
-  // for test
-  //cout << "NeuralModel::trainOne here 4" << endl;
-  outputNetwork[0]->forward(contextFeature);
-
-  // for test
-  //cout << "NeuralModel::trainOne here 5" << endl;
-  // gradInput is the gradient from the main softmax layer
-  if (name == OVN_AG) {
-	  gradInput = dynamic_cast<LinearSoftmax_AG*>(outputNetwork[0])->backward(localWord);
-  }
-  else {
-	  gradInput = dynamic_cast<LinearSoftmax*>(outputNetwork[0])->backward(localWord);
-  }
-
-  // gradContextFeature = gradInput
-  gradContextFeature.axpy(gradInput, 1);
-
-  // For each predicted word, forward, backward and update other softmax layers
-  intTensor oneLocalCodeWord;
-  for (rBlockSize = 0; rBlockSize < subBlockSize; rBlockSize++)
-    {
-	  // for test
-	  //cout << "NeuralModel::trainOne here 6" << endl;
-      // Select the columns for each example in the block
-      selectContextFeature.select(contextFeature, 1, rBlockSize);
-      selectGradContextFeature.select(gradContextFeature, 1, rBlockSize);
-      oneLocalCodeWord.select(localCodeWord, 0, rBlockSize);
-      for (i = 2; i < maxCodeWordLength; i += 2)
-        {
-          if (oneLocalCodeWord(i) == SIGN_NOT_WORD)
-            {
-              break;
+	// For each predicted word, forward, backward and update other softmax layers
+	intTensor oneLocalCodeWord;
+	floatTensor oneLocalCoef(1, 1);
+	for (rBlockSize = 0; rBlockSize < subBlockSize; rBlockSize++) {
+		// Select the corresponding contextFeature for each example
+		selectContextFeature.select(contextFeature, 1, rBlockSize);
+		selectGradContextFeature.select(gradContextFeature, 1, rBlockSize);
+		oneLocalCodeWord.select(localCodeWord, 0, rBlockSize);
+		oneLocalCoef(0) = coefTensor(rBlockSize);
+		for (i = 2; i < maxCodeWordLength; i += 2) {
+			if (oneLocalCodeWord(i) == SIGN_NOT_WORD) {
+				break;
             }
-          idLocalWord = oneLocalCodeWord(i + 1);
-          idParent = oneLocalCodeWord(i);
-          outputNetwork[idParent]->forward(selectContextFeature);
-          // for test
-          //cout << "NeuralModel::trainOne here 7" << endl;
-          if (name == OVN_AG) {
-          	  gradInput = dynamic_cast<LinearSoftmax_AG*>(outputNetwork[idParent])->backward(idLocalWord);
-          }
-          else {
-          	  gradInput = dynamic_cast<LinearSoftmax*>(outputNetwork[idParent])->backward(idLocalWord);
-          }
-          if (name == OVN_AG) {
-        	  // for test
-        	  //cout << "NeuralModel::trainOne update ovn_ag i: " << i << endl;
-        	  outputNetwork[idParent]->updateParameters(learningRateAdaG);
-          }
-          else {
-        	  outputNetwork[idParent]->updateParameters(learningRate);
-          }
-          selectGradContextFeature.axpy(gradInput, 1);
+			idLocalWord = oneLocalCodeWord(i + 1);
+			idParent = oneLocalCodeWord(i);
+			outputNetwork[idParent]->forward(selectContextFeature);
+			gradInput = outputNetwork[idParent]->backward(idLocalWord, oneLocalCoef);
+			outputNetwork[idParent]->updateParameters(learningRate);
+			selectGradContextFeature.axpy(gradInput, 1);
         }
     }
-  // for test
-  //cout << "NeuralModel::sequenceTrain here 8" << endl;
-  // Now gradContextFeature = sum of gradients of outputNetworks
-  baseNetwork->backward(gradContextFeature);
-  // for test
-  //cout << "NeuralModel::sequenceTrain here 9" << endl;
-  if (name == OVN_AG) {
-	  // for test
-	  //cout << "NeuralModel::trainOne update ovn_ag 0" << endl;
-	  outputNetwork[0]->updateParameters(learningRateAdaG);
-	  // for test
-	  //cout << "NeuralModel::sequenceTrain here 11" << endl;
-  }
-  else {
-	  // for test
-	  //cout << "NeuralModel::sequenceTrain here 12" << endl;
-	  outputNetwork[0]->updateParameters(learningRate);
-	  // for test
-	  //cout << "NeuralModel::sequenceTrain here 13" << endl;
-  }
-  if (name == OVN_AG) {
-	  // for test
-	  //cout << "NeuralModel::sequenceTrain here 13.1" << endl;
-	  baseNetwork->updateParameters(learningRateAdaG);
-	  // for test
-	  //cout << "NeuralModel::sequenceTrain here 13.2" << endl;
-  }
-  else {
-	  baseNetwork->updateParameters(learningRate);
-  }
-  // for test
-  //cout << "NeuralModel::sequenceTrain here 14" << endl;
+	// Now gradContextFeature = sum of gradients of outputNetworks
+	baseNetwork->backward(gradContextFeature);
+	outputNetwork[0]->updateParameters(learningRate);
+	baseNetwork->updateParameters(learningRate);
 }
 int
 NeuralModel::trainTest(int maxExampleNumber, float weightDecay,
     string learningRateType, float learningRate, float learningRateDecay,
-    intTensor& gcontext, intTensor& gword)
-{
-  firstTime();
-  intTensor context;
-  intTensor word;
-  context.resize(gcontext);
-  context.copy(gcontext);
-  word.resize(gword);
-  word.copy(gword);
-  float currentLearningRate;
-  int nstep;
-  nstep = 0;
-  int currentExampleNumber = 0;
-  int subBlockSize = blockSize;
-  int percent = 1;
-  float aPercent = maxExampleNumber * CONSTPRINT;
-  float iPercent = aPercent * percent;
+    intTensor& gcontext, intTensor& gword, floatTensor& coefTensor) {
+	firstTime();
+	intTensor context;
+	intTensor word;
+	context.resize(gcontext);
+	context.copy(gcontext);
+	word.resize(gword);
+	word.copy(gword);
+	float currentLearningRate;
+	int nstep;
+	nstep = 0;
+	int currentExampleNumber = 0;
+	int subBlockSize = blockSize;
+	int percent = 1;
+	float aPercent = maxExampleNumber * CONSTPRINT;
+	float iPercent = aPercent * percent;
 
-  int blockNumber = maxExampleNumber / blockSize;
-  int remainingNumber = maxExampleNumber - blockSize * blockNumber;
-  int i;
-  setWeightDecay(weightDecay);
-  for (i = 0; i < blockNumber; i++)
-    {
-      //Read one line and then train
-      currentExampleNumber += blockSize;
-      if (learningRateType == LEARNINGRATE_NORMAL)
-        {
-          currentLearningRate = learningRate / (1 + nstep * learningRateDecay);
-        }
-      else if (learningRateType == LEARNINGRATE_DOWN)
-        {
-          currentLearningRate = learningRate;
-        }
-      trainOne(context, word, currentLearningRate, subBlockSize);
-      nstep += subBlockSize;
-      if (currentExampleNumber > iPercent)
-        {
-          percent++;
-          iPercent = aPercent * percent;
-          cout << (float) currentExampleNumber / maxExampleNumber << " ... "
-              << flush;
+	int blockNumber = maxExampleNumber / blockSize;
+	int remainingNumber = maxExampleNumber - blockSize * blockNumber;
+	int i;
+	setWeightDecay(weightDecay);
+	for (i = 0; i < blockNumber; i++) {
+		//Read one line and then train
+		currentExampleNumber += blockSize;
+		currentLearningRate = this->takeCurrentLearningRate(learningRate, learningRateType, nstep, learningRateDecay);
+		trainOne(context, word, coefTensor, currentLearningRate, subBlockSize);
+		nstep += subBlockSize;
+		if (currentExampleNumber > iPercent) {
+			percent++;
+			iPercent = aPercent * percent;
+			cout << (float) currentExampleNumber / maxExampleNumber << " ... "
+				 << flush;
         }
     }
-  if (remainingNumber != 0)
-    {
-      if (learningRateType == LEARNINGRATE_NORMAL)
-        {
-          currentLearningRate = learningRate / (1 + nstep * learningRateDecay);
-        }
-      else if (learningRateType == LEARNINGRATE_DOWN)
-        {
-          currentLearningRate = learningRate;
-        }
-      trainOne(context, word, currentLearningRate, remainingNumber);
+	if (remainingNumber != 0) {
+		currentLearningRate = this->takeCurrentLearningRate(learningRate, learningRateType, nstep, learningRateDecay);
+		trainOne(context, word, coefTensor, currentLearningRate, remainingNumber);
     }
-  cout << endl;
-  return 1;
+	cout << endl;
+	return 1;
 }
 
 floatTensor&
@@ -432,122 +340,98 @@ NeuralModel::computePerplexity()
 int
 NeuralModel::sequenceTrain(char* prefixModel, int gz, char* prefixData,
     int maxExampleNumber, char* trainingFileName, char* validationFileName, string validType,
-    string learningRateType, int minIteration, int maxIteration)
-{
-	// for test
-	//cout << "NeuralModel::sequenceTrain here 0.1" << endl;
-  float learningRateForRd;
-  float learningRateForParas;
-  float learningRateDecay;
-  float weightDecay;
-  int computeDevPer = 1;
-  float perplexity = 0;
-  float prePerplexity;
-  char dataFileName[260];
-  char outputModelFileName[260];
-  char convertStr[260];
-  ioFile iofC;
-  int dataC;
-  int modelC;
-  computeDevPer = iofC.check(validationFileName, 0);
-  time_t start, end;
-  int iteration;
-  int divide = 0;
-  ioFile parasIof;
-  floatTensor parasTensor(6, 1);
-  parasIof.format = TEXT;
-  ioFile modelIof;
-  int stop = 0;
-  // for test
-  //cout << "NeuralModel::sequenceTrain here 0.2" << endl;
+    string learningRateType, int minIteration, int maxIteration) {
+	float learningRateForRd;
+	float learningRateForParas;
+	float learningRateDecay;
+	float weightDecay;
+	int computeDevPer = 1;
+	float perplexity = 0;
+	float prePerplexity;
+	char dataFileName[260];
+	char outputModelFileName[260];
+	char convertStr[260];
+	ioFile iofC;
+	int dataC;
+	int modelC;
+	computeDevPer = iofC.check(validationFileName, 0);
+	time_t start, end;
+	int iteration;
+	int divide = 0;
+	ioFile parasIof;
+	floatTensor parasTensor(6, 1);
+	parasIof.format = TEXT;
+	ioFile modelIof;
+	int stop = 0;
 
-  // Read parameters (learningRate, weightDecay, blockSize...) in *.par
-  sprintf(convertStr, "%d", minIteration - 1);
-  strcpy(outputModelFileName, prefixModel);
-  strcat(outputModelFileName, convertStr);
-  strcat(outputModelFileName, ".par");
-  int paraC = iofC.check(outputModelFileName, 1);
-  if (!paraC)
-    {
-      return 0;
+	// Read parameters (learningRate, weightDecay, blockSize...) in *.par
+	sprintf(convertStr, "%d", minIteration - 1);
+	strcpy(outputModelFileName, prefixModel);
+	strcat(outputModelFileName, convertStr);
+	strcat(outputModelFileName, ".par");
+	int paraC = iofC.check(outputModelFileName, 1);
+	if (!paraC) {
+		return 0;
     }
-  parasIof.takeReadFile(outputModelFileName);
-  // for test
-  //cout << "NeuralModel::sequenceTrain here 0.3" << endl;
-  parasTensor.read(&parasIof);
-  // for test
-  //cout << "NeuralModel::sequenceTrain here 0.4" << endl;
-  learningRateForRd = parasTensor(0);
-  learningRateForParas = parasTensor(1);
-  learningRateDecay = parasTensor(2);
-  weightDecay = parasTensor(3);
-  changeBlockSize((int) parasTensor(4));
-  if (learningRateType == LEARNINGRATE_DOWN)
-    {
-      divide = (int) parasTensor(5);
-    }
-  // Now iteration is the number of first new model
+	parasIof.takeReadFile(outputModelFileName);
+	parasTensor.read(&parasIof);
+	learningRateForRd = parasTensor(0);
+	learningRateForParas = parasTensor(1);
+	learningRateDecay = parasTensor(2);
+	weightDecay = parasTensor(3);
+	changeBlockSize((int) parasTensor(4));
 
-  // for test
-  //cout << "NeuralModel::sequenceTrain here 0.5" << endl;
-  if (learningRateType == LEARNINGRATE_NORMAL)
-    {
-      cout << "Paras (normal): " << learningRateForRd << " " << learningRateForParas << " " << learningRateDecay
-          << " " << weightDecay << " " << blockSize << endl;
+	// if down or down-bloc-adagrad, take the initial value of divide from the parameter file
+	if (learningRateType == LEARNINGRATE_DOWN || learningRateType == LEARNINGRATE_DBAG) {
+		divide = (int) parasTensor(5);
     }
-  else if (learningRateType == LEARNINGRATE_DOWN)
-    {
-      cout << "Paras (down): " << learningRateForRd << " " << learningRateForParas << " " << learningRateDecay
-          << " " << weightDecay << " " << blockSize << " " << divide << endl;
-    }
+	// Now iteration is the number of first new model
 
-  setWeightDecay(weightDecay);
-  // Compute perplexity of dev data, for early stopping
-  if (computeDevPer)
-    {
+	if (learningRateType == LEARNINGRATE_NORMAL) {
+		cout << "Paras (normal): " << learningRateForRd << " " << learningRateForParas << " " << learningRateDecay
+             << " " << weightDecay << " " << blockSize << endl;
+    }
+	else if (learningRateType == LEARNINGRATE_DOWN) {
+		cout << "Paras (down): " << learningRateForRd << " " << learningRateForParas << " " << learningRateDecay
+			 << " " << weightDecay << " " << blockSize << " " << divide << endl;
+    }
+	else if (learningRateType == LEARNINGRATE_ADJUST) {
+		cout << "Paras (adjust): " << learningRateForRd << " " << learningRateForParas << " " << learningRateDecay
+			 << " " << weightDecay << " " << blockSize << endl;
+	}
+	else if (learningRateType == LEARNINGRATE_BAG) {
+		cout << "Paras (bag): " << learningRateForRd << " " << learningRateForParas << " " << learningRateDecay
+			 << " " << weightDecay << " " << blockSize << endl;
+	}
+	else if (learningRateType == LEARNINGRATE_DBAG) {
+		cout << "Paras (dbag): " << learningRateForRd << " " << learningRateForParas << " " << learningRateDecay
+			 << " " << weightDecay << " " << blockSize << " " << divide << endl;
+	}
+	else {
+		cout << "What is your adaptive learning rate method?" << endl;
+		exit(1);
+	}
+
+	setWeightDecay(weightDecay);
+	// Compute perplexity of dev data, for early stopping
+	if (computeDevPer) {
 	  	time(&start);
-	  	if (strcmp(trainingFileName, "xxx") != 0) {
-	  		cout << "Compute training perplexity:" << endl;
-
-	  		// compute perplexity in charging all the training file
-	  		computePerplexity(this->trainingDataSet, trainingFileName, validType);
-	  		cout << "With epoch " << minIteration - 1 << ", perplexity of "
-	  				<< trainingFileName << " is " << trainingDataSet->perplexity
-	  				<< " ("
-	  				<< trainingDataSet->ngramNumber << " ngrams)" << endl;
-	  	}
-
 		cout << "Compute validation perplexity:" << endl;
 
-		// compute perplexity in charging all the validation file
-		// for test
-		//cout << "NeuralModel::sequenceTrain here" << endl;
+		// first compute of perplexity in charging all the validation file
 		computePerplexity(this->dataSet, validationFileName, validType);
-		// for test
-		//cout << "NeuralModel::sequenceTrain here1" << endl;
+		// prePerplexity is the perplexity of the precedent iteration: after each iteration, we comparer the actual perplexity with the precedent one and see if there is any degradation in the system.
 		prePerplexity = this->dataSet->perplexity;
 		// for test
 		//cout << "NeuralModel::sequenceTrain here2" << endl;
 		time(&end);
 
 		cout << "With epoch " << minIteration - 1 << ", perplexity of "
-		<< validationFileName << " is " << dataSet->perplexity
-		<< " ("
-		<< dataSet->ngramNumber << " ngrams)" << endl;
+			 << validationFileName << " is " << dataSet->perplexity
+		     << " ("
+		     << dataSet->ngramNumber << " ngrams)" << endl;
 		cout << "Finish after " << difftime(end, start) << " seconds"
-	  			 << endl;
-
-
-      /*cout << "Compute validation perplexity:" << endl;
-      time(&start);
-      perplexity = computePerplexity(validationFileName, validType);
-      time(&end);
-      prePerplexity = perplexity;
-      cout << "With epoch " << minIteration - 1 << ", perplexity of "
-          << validationFileName << " is " << perplexity << " ("
-          << dataSet->ngramNumber << " ngrams)" << endl;
-      cout << "Finish after " << difftime(end, start) / 60 << " minutes"
-          << endl;*/
+	  		 << endl;
     }
 
     // the name of the file containing perplexities on validation set
@@ -558,15 +442,6 @@ NeuralModel::sequenceTrain(char* prefixModel, int gz, char* prefixData,
   	// the file containing perplexities on validation set
   	ofstream outputPerp;
   	outputPerp.open(outputPerplexity, ios_base::app);
-
-  	// the name of the file containing perplexities on training set
-  	char outputTrainingPerplexity[260];
-  	strcpy(outputTrainingPerplexity, prefixModel);
-  	strcat(outputTrainingPerplexity, "out.trainPer");
-
-  	// the file containing perplexities on training set
-  	ofstream outputTrainingPerp;
-  	outputTrainingPerp.open(outputTrainingPerplexity, ios_base::app);
 
   	// name of the file containing execution time
   	char outputTimeExeFileName[260];
@@ -579,234 +454,255 @@ NeuralModel::sequenceTrain(char* prefixModel, int gz, char* prefixData,
   	// execution time
   	float timeExe = 0;
 
-  // Now, train a model
-  for (iteration = minIteration; iteration < maxIteration + 1; iteration++)
-    {
-      cout << "Iteration: " << iteration << endl;
-      // for test
-      if (name == OVN_AG) {
-    	  cout << "NeuralModel::sequenceTrain lkt cumul: " << sqrt(dynamic_cast<LookupTable_AG*>(this->baseNetwork->lkt)->cumulGradWeight.averageSquareBig()) << endl;
-    	  //dynamic_cast<LookupTable_AG*>(this->baseNetwork->lkt)->cumulGradWeight = INIT_VALUE_ADAG;
-    	  cout << "NeuralModel::sequenceTrain linear cumulWeight: " << dynamic_cast<Linear_AG*>(this->baseNetwork->modules[0])->cumulGradWeight << endl;
-    	  //dynamic_cast<Linear_AG*>(this->baseNetwork->modules[0])->cumulGradWeight = INIT_VALUE_ADAG;
-    	  cout << "NeuralModel::sequenceTrain linear cumulBias: " << dynamic_cast<Linear_AG*>(this->baseNetwork->modules[0])->cumulGradBias << endl;
-    	  //dynamic_cast<Linear_AG*>(this->baseNetwork->modules[0])->cumulGradBias = INIT_VALUE_ADAG;
-		  cout << "NeuralModel::sequenceTrain linearsoftmax cumulWeight: " << dynamic_cast<LinearSoftmax_AG*>(this->outputNetwork[0])->cumulGradWeight << endl;
-		  //dynamic_cast<LinearSoftmax_AG*>(this->outputNetwork[0])->cumulGradWeight = INIT_VALUE_ADAG;
-		  cout << "NeuralModel::sequenceTrain linearsoftmax cumulBias: " << dynamic_cast<LinearSoftmax_AG*>(this->outputNetwork[0])->cumulGradBias << endl;
-		  //dynamic_cast<LinearSoftmax_AG*>(this->outputNetwork[0])->cumulGradBias = INIT_VALUE_ADAG;
-      }
-      sprintf(convertStr, "%d", iteration);
-      strcpy(dataFileName, prefixData);
-      strcat(dataFileName, convertStr);
-      dataC = iofC.check(dataFileName, 0);
-      if (!dataC)
-        {
-          strcat(dataFileName, ".gz");
-          dataC = iofC.check(dataFileName, 0);
-          if (!dataC)
-            {
-              cout << "Train data file " << convertStr << " does not exist"
-                  << endl;
-              return 0;
+  	// Now, train a model
+  	for (iteration = minIteration; iteration < maxIteration + 1; iteration++) {
+  		cout << "Iteration: " << iteration << endl;
+  		// for test
+  		if (name == OVN_AG) {
+  			cout << "NeuralModel::sequenceTrain lkt cumul: " << sqrt(dynamic_cast<LookupTable_AG*>(this->baseNetwork->lkt)->cumulGradWeight.averageSquareBig()) << endl;
+  			cout << "NeuralModel::sequenceTrain linear cumulWeight: " << dynamic_cast<Linear_AG*>(this->baseNetwork->modules[0])->cumulGradWeight << endl;
+  			cout << "NeuralModel::sequenceTrain linear cumulBias: " << dynamic_cast<Linear_AG*>(this->baseNetwork->modules[0])->cumulGradBias << endl;
+  			cout << "NeuralModel::sequenceTrain linearsoftmax cumulWeight: " << dynamic_cast<LinearSoftmax_AG*>(this->outputNetwork[0])->cumulGradWeight << endl;
+  			cout << "NeuralModel::sequenceTrain linearsoftmax cumulBias: " << dynamic_cast<LinearSoftmax_AG*>(this->outputNetwork[0])->cumulGradBias << endl;
+  		}
+  		sprintf(convertStr, "%d", iteration);
+  		strcpy(dataFileName, prefixData);
+  		strcat(dataFileName, convertStr);
+  		dataC = iofC.check(dataFileName, 0);
+  		if (!dataC) {
+  			strcat(dataFileName, ".gz");
+  			dataC = iofC.check(dataFileName, 0);
+  			if (!dataC) {
+  				cout << "Train data file " << convertStr << " does not exist"
+                     << endl;
+                return 0;
             }
         }
-      strcpy(outputModelFileName, prefixModel);
-      strcat(outputModelFileName, convertStr);
-      if (gz)
-        {
-          strcat(outputModelFileName, ".gz");
+  		strcpy(outputModelFileName, prefixModel);
+  		strcat(outputModelFileName, convertStr);
+  		if (gz) {
+  			strcat(outputModelFileName, ".gz");
         }
-      modelC = iofC.check(outputModelFileName, 0);
-      if (modelC)
-        {
-          cerr << "WARNING: Train model file " << convertStr << " exists"
-              << endl;
-          return 0;
+  		modelC = iofC.check(outputModelFileName, 0);
+  		if (modelC) {
+  			cerr << "WARNING: Train model file " << convertStr << " exists"
+                 << endl;
+  			return 0;
         }
-      time(&start);
-      if (learningRateType == LEARNINGRATE_NORMAL)
-        {
-          cout << "Paras (normal): " << learningRateForRd << " " << learningRateForParas << " "
-              << learningRateDecay << " " << weightDecay << " " << blockSize
-              << " , ";
+  		time(&start);
+  		if (learningRateType == LEARNINGRATE_NORMAL) {
+  			cout << "Paras (normal): " << learningRateForRd << " " << learningRateForParas << " "
+                 << learningRateDecay << " " << weightDecay << " " << blockSize
+                 << " , ";
         }
-      else if (learningRateType == LEARNINGRATE_DOWN)
-        {
-          cout << "Paras (down): " << learningRateForRd << " " << learningRateForParas << " " << learningRateDecay
-              << " " << weightDecay << " " << blockSize << " " << divide
-              << " , ";
-          if (divide)
-            {
-              learningRateForParas = learningRateForParas / learningRateDecay;
+  		else if (learningRateType == LEARNINGRATE_DOWN || learningRateType == LEARNINGRATE_DBAG) {
+  			if (learningRateType == LEARNINGRATE_DOWN) {
+  				cout << "Paras (down): " << learningRateForRd << " " << learningRateForParas << " " << learningRateDecay
+  					 << " " << weightDecay << " " << blockSize << " " << divide
+  					 << " , ";
+  			}
+  			else {
+  				cout << "Paras (dbag): " << learningRateForRd << " " << learningRateForParas << " " << learningRateDecay
+  					 << " " << weightDecay << " " << blockSize << " " << divide
+  					 << " , ";
+  			}
+  			if (divide) {
+  				learningRateForParas = learningRateForParas / learningRateDecay;
             }
         }
-      else if (learningRateType == LEARNINGRATE_ADJUST) {
-    	  cout << "Paras (adjust): " << learningRateForRd << " " << learningRateForParas << " " << learningRateDecay
-				<< " " << weightDecay << " " << blockSize
-				<< " , ";
-      }
-      int outTrain;
-      /*if (this->name == OVNB) {
-    	  outTrain = static_cast<NgramModel_Bayes*>(this)->train(dataFileName, maxExampleNumber, iteration,
-			  learningRateType, learningRateForRd, learningRateForParas, learningRateDecay);
-      }*/
-      //else {
-      // for test
-      //cout << "NeuralModel::sequenceTrain here 2.0" << endl;
-	  outTrain = train(dataFileName, maxExampleNumber, iteration,
+  		else if (learningRateType == LEARNINGRATE_ADJUST) {
+  			cout << "Paras (adjust): " << learningRateForRd << " " << learningRateForParas << " " << learningRateDecay
+				 << " " << weightDecay << " " << blockSize
+				 << " , ";
+  		}
+  		else if (learningRateType == LEARNINGRATE_BAG) {
+  			cout << "Paras (bag): " << learningRateForRd << " " << learningRateForParas << " " << learningRateDecay
+  				 << " " << weightDecay << " " << blockSize
+  				 << " , ";
+  		}
+  		int outTrain;
+  		outTrain = train(dataFileName, maxExampleNumber, iteration,
 			  learningRateType, learningRateForParas, learningRateDecay);
-      //}
-	  // for test
-	  //cout << "NeuralModel::sequenceTrain here 2.1" << endl;
-      if (outTrain == 0)
-        {
-          cerr << "ERROR: Can't finish training" << endl;
-          exit(1);
+  		if (outTrain == 0){
+  			cerr << "ERROR: Can't finish training" << endl;
+  			exit(1);
         }
-      time(&end);
-      cout << "Finish after " << difftime(end, start) / 60 << " minutes"
-          << endl;
-      // accumulate
-      timeExe += difftime(end, start);
+  		time(&end);
+  		cout << "Finish after " << difftime(end, start) / 60 << " minutes"
+             << endl;
+  		// accumulate
+  		timeExe += difftime(end, start);
 
-      int upDivide = 0;
-      if (computeDevPer)
-        {
+  		int upDivide = 0;
+  		if (computeDevPer) {
 		    // calculate execution time
-			time_t start, end;
 			time(&start);
-
-			if (strcmp(trainingFileName, "xxx") != 0) {
-				cout << "Compute training perplexity:" << endl;
-
-				forwardProbability(trainingDataSet->dataTensor, trainingDataSet->probTensor);
-				trainingDataSet->computePerplexity();
-				cout << "With epoch " << iteration << ", perplexity of "
-								 << trainingFileName << " is " << trainingDataSet->perplexity << " ("
-								 << trainingDataSet->ngramNumber << " ngrams)" << endl;
-				// write training perplexity on file
-				outputTrainingPerp << iteration << " " << trainingDataSet->perplexity << endl;
-			}
 
 			cout << "Compute validation perplexity:" << endl;
 			forwardProbability(dataSet->dataTensor, dataSet->probTensor);
+
+			// the perplexity of the precedent iteration
 			prePerplexity = dataSet->perplexity;
+
 			perplexity = dataSet->computePerplexity();
 
 			cout << "With epoch " << iteration << ", perplexity of "
-			   << validationFileName << " is " << dataSet->perplexity << " ("
-			   << dataSet->ngramNumber << " ngrams)" << endl;
+				 << validationFileName << " is " << dataSet->perplexity << " ("
+				 << dataSet->ngramNumber << " ngrams)" << endl;
 
 			time(&end);
 
 			cout << "Finish after " << difftime(end, start) / 60 << " minutes"
 				 << endl;
 
-          if (isnan(perplexity))
-            {
-              cout << "Perplexity is NaN" << endl;
-              stop = 1;
+			if (isnan(perplexity)) {
+				cout << "Perplexity is NaN" << endl;
+				stop = 1;
             }
-          else if (perplexity > prePerplexity)
-            {
-              cout << "WARNING: Perplexity increases" << endl;
-              upDivide = 1;
-              if (learningRateType == LEARNINGRATE_ADJUST) {
-            	  learningRateForParas = learningRateForParas / learningRateDecay;
-            	  if (UNDO == 1) {
-            		  cout << "Back to the precedent model" << endl;
-            		  char convertStrPre[260];
-            		  sprintf(convertStrPre, "%d", iteration-1);
-            		  char modelFileNamePre[260];
-            		  strcpy(modelFileNamePre, prefixModel);
-            		  strcat(modelFileNamePre, convertStrPre);
-            		  modelC = iofC.check(modelFileNamePre, 0);
-            		  if (!modelC) {
-            			  cerr << "WARNING: Train model file " << modelFileNamePre << " does not exists" << endl;
-            			  return 0;
-            		  }
-            		  modelIof.takeReadFile(modelFileNamePre);
-            		  read(&modelIof, 0, (int) parasTensor(4));
+			else if (perplexity > prePerplexity) {
+				cout << "WARNING: Perplexity increases" << endl;
 
-            		  // return perplexity to the precedent value
-            		  perplexity = prePerplexity;
-            		  dataSet->perplexity = prePerplexity;
-            	  }
-            	  else {
-            		  cout << "We do not back to the precedent model" << endl;
-            	  }
-              }
-            }
-          else
-            {
-        	  if (learningRateType == LEARNINGRATE_ADJUST) {
-     			  learningRateForParas = learningRateForParas*ACC_RATE;
-        	  }
-              if (learningRateType == LEARNINGRATE_DOWN)
-                {
-                  if (log(perplexity) * MUL_LOGLKLHOOD > log(prePerplexity))
-                    {
-                      upDivide = 1;
+				// upDivide is for Down and DBAG, takes effect later
+				upDivide = 1;
+
+				if (learningRateType == LEARNINGRATE_ADJUST) {
+					// firstly, divide the learning rate by learningRateDecay
+					learningRateForParas = learningRateForParas / learningRateDecay;
+					// if UNDO = 1, we undo this iteration
+					if (UNDO == 1) {
+						cout << "Back to the precedent model" << endl;
+						char convertStrPre[260];
+						sprintf(convertStrPre, "%d", iteration-1);
+						char modelFileNamePre[260];
+						strcpy(modelFileNamePre, prefixModel);
+						strcat(modelFileNamePre, convertStrPre);
+						modelC = iofC.check(modelFileNamePre, 0);
+						if (!modelC) {
+							cerr << "WARNING: Train model file " << modelFileNamePre << " does not exists" << endl;
+							return 0;
+						}
+						modelIof.takeReadFile(modelFileNamePre);
+						read(&modelIof, 0, (int) parasTensor(4));
+
+						// return perplexity to the precedent value
+						perplexity = prePerplexity;
+						dataSet->perplexity = prePerplexity;
+					}
+					else {
+						cout << "We do not back to the precedent model" << endl;
+					}
+				}
+			}
+			else {
+				if (learningRateType == LEARNINGRATE_ADJUST) {
+					// we multiply the learning rate with ACC_RATE = 1.1
+					learningRateForParas = learningRateForParas*ACC_RATE;
+				}
+				if (learningRateType == LEARNINGRATE_DOWN || learningRateType == LEARNINGRATE_DBAG) {
+					// in the case of Down and DBAG, we see if the perplexity go down enough
+					if (log(perplexity) * MUL_LOGLKLHOOD > log(prePerplexity)) {
+						upDivide = 1;
                     }
                 }
             }
-          // write validation perplexity on file
+			// write validation perplexity on file
 			outputPerp << iteration << " " << perplexity << endl;
         }
 
-      if (strcmp(prefixModel, "xxx")) {
-		  //cout << "NeuralModel::sequenceTrain write here" << endl;
-		  modelIof.takeWriteFile(outputModelFileName);
-		  write(&modelIof, 1);
-	  }
+  		if (strcmp(prefixModel, "xxx")) {
+  			modelIof.takeWriteFile(outputModelFileName);
+  			write(&modelIof, 1);
+  		}
 
-      if (divide == 0 && upDivide == 1)
-        {
-          divide = 1;
+  		// if divide > 0, we continue to increase it
+  		if (divide == 0 && upDivide == 1) {
+  			divide = 1;
         }
-      else if (divide >= 1)
-        {
-          divide++;
+  		else if (divide >= 1) {
+  			divide++;
         }
-      strcat(outputModelFileName, ".par");
-      parasTensor(0) = learningRateForRd;
-      parasTensor(1) = learningRateForParas;
-      parasTensor(2) = learningRateDecay;
-      parasTensor(3) = weightDecay;
-      parasTensor(4) = blockSize;
-      if (learningRateType == LEARNINGRATE_DOWN)
-        {
-          parasTensor(5) = divide;
+  		strcat(outputModelFileName, ".par");
+  		parasTensor(0) = learningRateForRd;
+  		parasTensor(1) = learningRateForParas;
+  		parasTensor(2) = learningRateDecay;
+  		parasTensor(3) = weightDecay;
+  		parasTensor(4) = blockSize;
+  		if (learningRateType == LEARNINGRATE_DOWN || learningRateType == LEARNINGRATE_DBAG) {
+  			parasTensor(5) = divide;
         }
-      if (strcmp(prefixModel, "xxx"))
-        {
-          parasIof.takeWriteFile(outputModelFileName);
-          parasTensor.write(&parasIof);
-          parasIof.freeWriteFile();
+  		if (strcmp(prefixModel, "xxx")) {
+  			parasIof.takeWriteFile(outputModelFileName);
+  			parasTensor.write(&parasIof);
+  			parasIof.freeWriteFile();
         }
 
-      if (divide >= MAX_DIVIDE && name != OVNB)
-        {
-          stop = 1;
+  		if (divide >= MAX_DIVIDE && name != OVNB) {
+  			stop = 1;
         }
-      if (stop == 1)
-        {
-          break;
+  		if (stop == 1) {
+  			break;
         }
-      outputTimeFile << iteration << " " << timeExe << endl;
+  		outputTimeFile << iteration << " " << timeExe << endl;
     }
     outputTimeFile.close();
 
   	outputPerp.close();
 
-  	outputTrainingPerp.close();
-
-  if (!strcmp(prefixModel, "xxx") && !isnan(perplexity) && (minIteration
-      != maxIteration))
-    {
-      modelIof.takeWriteFile(outputModelFileName);
-      write(&modelIof, 1);
+  	if (!strcmp(prefixModel, "xxx") && !isnan(perplexity) && (minIteration != maxIteration)) {
+  		modelIof.takeWriteFile(outputModelFileName);
+  		write(&modelIof, 1);
     }
-  return 1;
+  	return 1;
+}
+
+#define readStrip(Type, type) \
+void \
+NeuralModel::readStrip##Type(ioFile& iof, type##Tensor& readTensor, floatTensor& coefTensor) {\
+	for (int i = 0; i < readTensor.size[0]; i++) {\
+		for (int j = 0; j < readTensor.size[1]; j++) {\
+			iof.read##Type(readTensor.data[i * readTensor.stride[0] + j * readTensor.stride[1]]);\
+		}\
+		/* the data set for NCE has a coefficient after each n-gram vector*/\
+		if (name == OVN_NCE) {\
+			iof.readFloat(coefTensor(i));\
+		}\
+	}\
+}\
+
+readStrip(Int, int)
+readStrip(Float, float)
+
+float
+NeuralModel::takeCurrentLearningRate(float learningRate, string learningRateType, int nstep, float learningRateDecay) {
+	float currentLearningRate = 0;
+	if (learningRateType == LEARNINGRATE_NORMAL) {
+		currentLearningRate = learningRate / (1 + nstep * learningRateDecay);
+	}
+	else if (learningRateType == LEARNINGRATE_DOWN) {
+		currentLearningRate = learningRate;
+	}
+	else if (learningRateType == LEARNINGRATE_ADJUST) {
+		currentLearningRate = learningRate;
+	}
+	else {
+		if (name == OVN_AG) {
+			if (learningRateType == LEARNINGRATE_BAG) {
+				currentLearningRate = learningRate;
+			}
+			else if (learningRateType == LEARNINGRATE_DBAG) {
+				currentLearningRate = learningRate*sqrt(dynamic_cast<LinearSoftmax_AG*>(this->outputNetwork[0])->cumulGradWeight);
+			}
+			else {
+				cout << "NeuralModel::takeCurrentLearningRate learningRateType " << learningRateType << " does not match" << endl;
+				exit(1);
+			}
+		}
+		else {
+			cout << "NeuralModel::takeCurrentLearningRate what is your learning rate type?" << endl;
+			exit(1);
+		}
+	}
+	// for test
+	//cout << "NeuralModel::takeCurrentLearningRate currentLearningRate: " << currentLearningRate << endl;
+	return currentLearningRate;
 }

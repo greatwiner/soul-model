@@ -22,4 +22,7 @@ public:
   void
   write(ioFile * iof);
 
+  float
+  distance2(Module& anotherModule);
+
 };

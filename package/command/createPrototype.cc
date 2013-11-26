@@ -34,7 +34,7 @@ main(int argc, char *argv[])
           << " n dimensionSize nonLinearType"
           << " hiddenLayerSizeCode codeWordFileName outputNetworkSizeFileName outputModelFileName"
           << endl;
-      cout << "type = cn, ovn, ovnb, rovn, maxovn, lbl" << endl;
+      cout << "type = cn, ovn, ovnb, rovn, maxovn, lbl, ovn_ag, ovn_nce" << endl;
       cout << "nonLinearType = l (linear), s (sigmoid), t (tangent hyperbolic)"
           << endl;
       cout
@@ -49,7 +49,7 @@ main(int argc, char *argv[])
       NeuralModel* modelPrototype;
       string name = argv[1];
       if (name != CN && name != OVN && name != OVNB && name != MAXOVN && name != ROVN && name
-          != LBL)
+          != LBL && name != OVN_AG && name != OVN_NCE)
         {
           cerr << "Which model do you want?" << endl;
           return 1;

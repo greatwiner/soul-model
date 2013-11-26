@@ -88,6 +88,7 @@ using namespace std;
 #define OVN  "ovn" // one vector n-gram
 #define OVNB "ovnb" // one vector n-gram with Bayesian inference
 #define OVN_AG "ovn_ag" // ovn with adaGrad
+#define OVN_NCE "ovn_nce" // ovn trained with data with 1 coefficient for each n-gram
 // Two names below for translation models are kepth to work with old
 // models
 // dwt: discriminative word tuple => word translation model
@@ -127,6 +128,12 @@ using namespace std;
 
 // (3) ADJUST, when perplexity increases, we divise learning rate by 2, if no, we multiply learning rate with 1.1
 #define LEARNINGRATE_ADJUST "ad"
+
+// Bloc-AdaGrad
+#define LEARNINGRATE_BAG    "bag"
+
+// Down-Bloc-AdaGrad
+#define LEARNINGRATE_DBAG   "dbag"
 
 #define MUL_LOGLKLHOOD 1.002
 // Stop training after dividing MAX_DIVIDE times

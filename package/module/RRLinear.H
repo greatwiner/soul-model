@@ -47,7 +47,7 @@ public:
   void
   updateParameters(float learningRate);
   float
-  distance2(RRLinear& anotherRRLinear);
+  distance2(Module& anotherRRLinear);
   void
   read(ioFile *iof);
   void

@@ -1,19 +1,5 @@
-class LinearSoftmax_AG : public Module {
+class LinearSoftmax_AG : public ProbOutput {
 public:
-	/*same as Linear */
-	floatTensor gradOutput;
-	floatTensor input;
-	floatTensor softmaxVCol;
-	floatTensor V1col;
-	floatTensor softmaxV1row;
-
-	/* Specific, only used for bunch mode computation*/
-	floatTensor selectGradOutput;
-	floatTensor preOutput;
-	floatTensor selectOutput;
-	floatTensor selectPreOutput;
-	outils* otl;
-
 	// specific for AdaGrad method
 	float cumulGradWeight;
 	float cumulGradBias;
@@ -29,23 +15,11 @@ public:
 	void
 	reset();
 
-	void
-	changeBlockSize(int blockSize);
-
 	floatTensor&
-	forward(floatTensor& input);
-
-	floatTensor&
-	backward(floatTensor& word);
-
-	floatTensor&
-	backward(intTensor& word);
+	backward(intTensor& word, floatTensor& coefTensor);
 
 	void
 	updateParameters(float learningRate);
-
-	float
-	distance2(LinearSoftmax& anotherOutput);
 
 	void
 	read(ioFile *iof);

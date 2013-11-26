@@ -80,7 +80,7 @@ NgramPhraseTranslationModel::allocation()
     }
   probabilityOne.resize(blockSize, 1);
   int outputNetworkNumber = outputNetworkSize.size[0];
-  outputNetwork = new Module*[outputNetworkNumber];
+  outputNetwork = new ProbOutput*[outputNetworkNumber];
   LinearSoftmax* sl = new LinearSoftmax(hiddenLayerSize, outputNetworkSize(0),
       blockSize, otl);
   outputNetwork[0] = sl;
@@ -247,6 +247,7 @@ NgramPhraseTranslationModel::train(char* dataFileString, int maxExampleNumber,
   intTensor readTensor(blockSize, N);
   intTensor context;
   intTensor word;
+  floatTensor coefTensor(blockSize, 1);
   context.sub(readTensor, 0, blockSize - 1, N - nm, N - 2);
   context.t();
   word.select(readTensor, 1, N - 1);
@@ -261,21 +262,14 @@ NgramPhraseTranslationModel::train(char* dataFileString, int maxExampleNumber,
   for (i = 0; i < blockNumber; i++)
     {
       //Read one line and then train
-      readTensor.readStrip(&dataIof); // read file n gram for word and context
+      this->readStripInt(dataIof, readTensor, coefTensor); // read file n gram for word and context
       if (dataIof.getEOF())
         {
           break;
         }
       currentExampleNumber += blockSize;
-      if (learningRateType == LEARNINGRATE_NORMAL)
-        {
-          currentLearningRate = learningRate / (1 + nstep * learningRateDecay);
-        }
-      else if (learningRateType == LEARNINGRATE_DOWN)
-        {
-          currentLearningRate = learningRate;
-        }
-      trainOne(context, word, currentLearningRate, blockSize);
+      currentLearningRate = this->takeCurrentLearningRate(learningRate, learningRateType, nstep, learningRateDecay);
+      trainOne(context, word, coefTensor, currentLearningRate, blockSize);
       nstep += blockSize;
 #if PRINT_DEBUG
       if (currentExampleNumber > iPercent)
@@ -292,22 +286,14 @@ NgramPhraseTranslationModel::train(char* dataFileString, int maxExampleNumber,
       context = 0;
       word = SIGN_NOT_WORD;
       intTensor lastReadTensor(remainingNumber, N);
-      lastReadTensor.readStrip(&dataIof);
+      this->readStripInt(dataIof, lastReadTensor, coefTensor);
       intTensor subReadTensor;
       subReadTensor.sub(readTensor, 0, remainingNumber - 1, 0, N - 1);
       subReadTensor.copy(lastReadTensor);
       if (!dataIof.getEOF())
         {
-          if (learningRateType == LEARNINGRATE_NORMAL)
-            {
-              currentLearningRate = learningRate / (1 + nstep
-                  * learningRateDecay);
-            }
-          else if (learningRateType == LEARNINGRATE_DOWN)
-            {
-              currentLearningRate = learningRate;
-            }
-          trainOne(context, word, currentLearningRate, remainingNumber);
+          currentLearningRate = this->takeCurrentLearningRate(learningRate, learningRateType, nstep, learningRateDecay);
+          trainOne(context, word, coefTensor, currentLearningRate, remainingNumber);
         }
     }
 #if PRINT_DEBUG
@@ -522,3 +508,8 @@ NgramPhraseTranslationModel::write(ioFile* iof, int closeFile)
   }
 }
 
+float
+NgramPhraseTranslationModel::distance2(NeuralModel& anotherModel) {
+	// TODO
+	return 0;
+}

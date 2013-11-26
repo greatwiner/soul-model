@@ -32,6 +32,7 @@ NgramNCEDataSet::NgramNCEDataSet(int type, int n, int BOS,
 		cerr << "bad_alloc caught: " << ba.what() << endl;
 		exit(1);
 	}
+	sorted = 0;
 }
 
 int
@@ -258,7 +259,7 @@ NgramNCEDataSet::resamplingSentence(int totalLineNumber,
 }
 
 int
-NgramNCEDataSet::readText(ioFile* iof) {
+NgramNCEDataSet::readTextNoCoef(ioFile* iof) {
 	int i = 0;
 	string line;
 	string headline;
@@ -315,7 +316,78 @@ NgramNCEDataSet::readText(ioFile* iof) {
 }
 
 int
-NgramNCEDataSet::resamplingText(ioFile* iof, int totalLineNumber,
+NgramNCEDataSet::readText(ioFile* iof) {
+	int i = 0;
+	string line;
+	string headline;
+	string invLine;
+	string tailline;
+	headline = "";
+	tailline = "";
+	// Normal
+	if (type == 0) {
+		for (i = 0; i < BOS; i++) {
+			headline = headline + SS + " ";
+        }
+		tailline = tailline + " " + ES;
+    }
+	// Inverse
+	else if (type == 1) {
+		for (i = 0; i < BOS; i++) {
+			tailline = tailline + " " + ES;
+        }
+		headline = headline + SS + " ";
+    }
+	// Center
+	else if (type == 2) {
+		for (i = 0; i < BOS / 2; i++) {
+			tailline = tailline + " " + ES;
+			headline = headline + SS + " ";
+        }
+    }
+	int readLineNumber = 0;
+	float currentCoef;
+	while (!iof->getEOF()) {
+		if (iof->getLine(line)) {
+			if (!checkBlankString(line)) {
+				currentCoef = getCoefFromString(line);
+				// line has been modified
+				if (!checkBlankString(line)) {
+					line = headline + line + tailline;
+					if (type == 0 || type == 2) {
+						addLineWithCoef(line, currentCoef);
+					}
+					else if (type == 1) {
+						invLine = inverse(line);
+						addLineWithCoef(invLine, currentCoef);
+					}
+				}
+            }
+        }
+		readLineNumber++;
+#if PRINT_DEBUG
+		if (readLineNumber % NLINEPRINT == 0) {
+			cout << readLineNumber << " ... " << flush;
+        }
+#endif
+    }
+#if PRINT_DEBUG
+	cout << endl;
+#endif
+	// for test
+	/*cout << "NgramNCEDataSet::readText data: " << endl;
+	for (int i = 0; i < ngramNumber; i ++) {
+		for (int j = 0; j < n + 3; j ++) {
+			cout << data[i * (n + 3) + j] << " ";
+		}
+		cout << coef[i];
+		cout << endl;
+	}*/
+	return 1;
+}
+
+int
+NgramNCEDataSet::resamplingTextNoCoef(ioFile* iof, int totalLineNumber,
     int resamplingLineNumber) {
 	int* resamplingLineId = new int[resamplingLineNumber];
 	resamplingSentence(totalLineNumber, resamplingLineNumber, resamplingLineId);
@@ -386,9 +458,85 @@ NgramNCEDataSet::resamplingText(ioFile* iof, int totalLineNumber,
 	return ngramNumber;
 }
 
+int
+NgramNCEDataSet::resamplingText(ioFile* iof, int totalLineNumber,
+    int resamplingLineNumber) {
+	int* resamplingLineId = new int[resamplingLineNumber];
+	resamplingSentence(totalLineNumber, resamplingLineNumber, resamplingLineId);
+
+	int i = 0;
+	string line;
+	string headline;
+	string invLine;
+	string tailline;
+	headline = "";
+	tailline = "";
+	// Normal
+	if (type == 0) {
+		for (i = 0; i < BOS; i++) {
+			headline = headline + SS + " ";
+        }
+		tailline = tailline + " " + ES;
+    }
+	// Inverse
+	else if (type == 1) {
+		for (i = 0; i < BOS; i++) {
+			tailline = tailline + " " + ES;
+        }
+		headline = headline + SS + " ";
+    }
+	// Center
+	else if (type == 2) {
+		for (i = 0; i < BOS / 2; i++) {
+			tailline = tailline + " " + ES;
+			headline = headline + SS + " ";
+        }
+    }
+	int readLineNumber = 0;
+	int currentId = 0;
+	float currentCoef;
+	while (!iof->getEOF()) {
+		if (iof->getLine(line)) {
+    	  // for test
+    	  //cout << "NgramRankDataSet::resamplingText line: " << line << endl;
+			if (readLineNumber == resamplingLineId[currentId]) {
+				if (!checkBlankString(line)) {
+					currentCoef = getCoefFromString(line);
+					// line has been modified
+					if (!checkBlankString(line)) {
+						line = headline + line + tailline;
+						if (type == 0 || type == 2) {
+							addLineWithCoef(line, currentCoef);
+						}
+						else if (type == 1) {
+							invLine = inverse(line);
+							addLineWithCoef(invLine, currentCoef);
+						}
+					}
+                }
+				currentId++;
+            }
+			if (currentId == resamplingLineNumber) {
+				break;
+            }
+        }
+
+		readLineNumber++;
+#if PRINT_DEBUG
+		if (readLineNumber % NLINEPRINT == 0) {
+			cout << readLineNumber << " ... " << flush;
+        }
+#endif
+    }
+#if PRINT_DEBUG
+	cout << endl;
+#endif
+	delete[] resamplingLineId;
+	return ngramNumber;
+}
+
 intTensor&
-NgramNCEDataSet::createTensor()
-{
+NgramNCEDataSet::createTensor() {
 	dataTensor.haveMemory = 0;
 	dataTensor.size[0] = ngramNumber;
 	dataTensor.size[1] = lengthPerNgram;
@@ -432,6 +580,11 @@ NgramNCEDataSet::createTensor()
 	}
 	data[ngramNumber * lengthPerNgram - 1] = ngramNumber;
 	probTensor.resize(ngramNumber, 1);
+	// for test
+	//cout << "NgramNCEDataSet::createTensor dataTensor: " << endl;
+	//dataTensor.write();
+	//cout << "NgramNCEDataSet::createTensor probTensor: " << endl;
+	//probTensor.info();
 	return dataTensor;
 }
 
@@ -449,6 +602,40 @@ NgramNCEDataSet::readTextNgram(ioFile* iof) {
 				else if (type == 1) {
 					invLine = inverse(line);
 					addLine(invLine);
+				}
+			}
+		}
+		readLineNumber++;
+#if PRINT_DEBUG
+		if (readLineNumber % NLINEPRINT == 0) {
+			cout << readLineNumber << " ... " << flush;
+		}
+#endif
+    }
+#if PRINT_DEBUG
+	cout << endl;
+#endif
+	return ngramNumber;
+}
+
+int
+NgramNCEDataSet::readTextNgramWithCoef(ioFile* iof) {
+	string line;
+	string invLine;
+	int readLineNumber = 0;
+	float currentCoef;
+	while (!iof->getEOF()) {
+		if (iof->getLine(line)) {
+			if (!checkBlankString(line)) {
+				currentCoef = getCoefFromString(line);
+				if (!checkBlankString(line)) {
+					if (type == 0 || type == 2) {
+						addLineWithCoef(line, currentCoef);
+					}
+					else if (type == 1) {
+						invLine = inverse(line);
+						addLineWithCoef(invLine, currentCoef);
+					}
 				}
 			}
 		}
@@ -509,12 +696,15 @@ NgramNCEDataSet::readCoBiNgram(ioFile* iof) {
 
 void
 NgramNCEDataSet::writeReBiNgram(ioFile* iof) {
-	iof->writeInt(ngramNumber);
+	iof->writeInt(realNgramNumberAfterGrouping);
 	iof->writeInt(n);
 	int ngramId = 0;
 	for (ngramId = 0; ngramId < ngramNumber; ngramId++) {
-		iof->writeIntArray(data + ngramId * lengthPerNgram, n);
-		iof->writeFloat(coef[data[ngramId * lengthPerNgram + n + 1]]);
+		// write only n-grams with non-zero coefficients
+		if (coef[data[ngramId * lengthPerNgram + n + 1]] != 0) {
+			iof->writeIntArray(data + ngramId * lengthPerNgram, n);
+			iof->writeFloat(coef[data[ngramId * lengthPerNgram + n + 1]]);
+		}
     }
 }
 
@@ -529,16 +719,53 @@ NgramNCEDataSet::inverse(string line) {
 	return newLine;
 }
 
-void
-NgramNCEDataSet::sortNgram()
-{
-  qsort((void*) data, (size_t) ngramNumber, lengthPerNgram * sizeof(unsigned int),
-      compare);
+int
+nce_compare(const void *ngram1, const void *ngram2) {
+
+	int i;
+	int *pNgram1;
+	int *pNgram2;
+
+	pNgram1 = (int *) ngram1;
+	pNgram2 = (int *) ngram2;
+	i = 0;
+	do {
+
+		if (pNgram1[i] < pNgram2[i]) {
+			return -1;
+        }
+		else {
+			if (pNgram1[i] > pNgram2[i]) {
+				return 1;
+            }
+        }
+		i++;
+    }
+	while (pNgram1[i] != ID_END_NGRAM);
+	return 0;
 
 }
 
 void
+NgramNCEDataSet::sortNgram() {
+	// for test
+	cout << "NgramNCEDataSet::sortNgram sort" << endl;
+	if (sorted == 0) {
+		qsort((void*) data, (size_t) ngramNumber, lengthPerNgram * sizeof(unsigned int),
+				nce_compare);
+	}
+	else {
+		cout << "NgramNCEDataSet::sortNgram data has been sorted" << endl;
+	}
+	sorted = 1;
+}
+
+void
 NgramNCEDataSet::shuffle(int times) {
+	// for test
+	cout << "NgramNCEDataSet::shuffle shuffle" << endl;
+	// firstly, grouping n-grams
+	this->realNgramNumberAfterGrouping = groupingNgram();
 	int *tg = new int[lengthPerNgram * sizeof(int)];
 	int i;
 	int p1, p2;
@@ -554,14 +781,16 @@ NgramNCEDataSet::shuffle(int times) {
 
 int
 NgramNCEDataSet::writeReBiNgram() {
-
 	int i;
 	int ngramId = 0;
 	for (ngramId = 0; ngramId < ngramNumber; ngramId++) {
-		for (i = 0; i < lengthPerNgram; i++) {
-			cout << data[ngramId * lengthPerNgram + i] << " ";
-        }
-		cout << coef[data[ngramId * lengthPerNgram + n + 1]] << endl;
+		// write only n-grams with non-zero coefficients
+		if (coef[data[ngramId * lengthPerNgram + n + 1]] != 0) {
+			for (i = 0; i < lengthPerNgram; i++) {
+				cout << data[ngramId * lengthPerNgram + i] << " ";
+			}
+			cout << coef[data[ngramId * lengthPerNgram + n + 1]] << endl;
+		}
     }
 	return 1;
 }
@@ -570,8 +799,11 @@ float
 NgramNCEDataSet::computePerplexity() {
 	perplexity = 0;
 	for (int i = 0; i < probTensor.length; i++) {
-		perplexity += coef[data[i * lengthPerNgram + n + 1]]*probTensor(i);
+		// attention: coef and probTensor are in the same order (the order of n-gram before sortNgram() and shuffle())
+		perplexity += -coef[i]*log(probTensor(i));
     }
+	// for test
+	cout << "NgramNCEDataSet::computePerplexity perplexity: " << perplexity << endl;
 	perplexity = perplexity / ngramNumber;
 	return perplexity;
 }
@@ -582,4 +814,57 @@ NgramNCEDataSet::addLine(ioFile* iof) {
 	iof->getLine(line);
 	addLine(line);
 	return 1;
+}
+
+int
+NgramNCEDataSet::groupingNgram() {
+	// rearrange the n-gram, sum coefficients over the same n-grams
+	int realNgramNumber = 0;
+	if (this->groupContext == 1) {
+		// firstly, sort n-grams
+		this->sortNgram();
+		int ngramId = 0;
+		int firstOccurOfNgram = ngramId;
+		// sumOfCoef take the coef of firstOccurOfNgram
+		float sumOfCoef = coef[data[firstOccurOfNgram * lengthPerNgram + n + 1]];
+		int equal;
+		int i;
+		for (ngramId = 0; ngramId < ngramNumber - 1; ngramId++) {
+			equal = 1;
+			// compare n-grams, equal == 1 iff these are a same n-gram (context + word)
+			for (i = 0; i < n; i++) {
+				if (data[ngramId * lengthPerNgram + i] != data[(ngramId + 1) * lengthPerNgram + i]) {
+					equal = 0;
+					break;
+				}
+			}
+			if (equal == 0) {
+				coef[data[firstOccurOfNgram * lengthPerNgram + n + 1]] = sumOfCoef;
+				if (sumOfCoef != 0) {
+					// a real n-gram detected
+					// we eliminate all n-grams with coefficient 0, so realNgramNumber ++ only when sumOfCoef != 0
+					realNgramNumber += 1;
+				}
+				// re-initialize sumOfCoef and firstOccurOfNgram will be the next n-gram
+				firstOccurOfNgram = ngramId + 1;
+				sumOfCoef = coef[data[firstOccurOfNgram * lengthPerNgram + n + 1]];
+			}
+			else {
+				sumOfCoef += coef[data[(ngramId + 1) * lengthPerNgram + n + 1]];
+				coef[data[(ngramId + 1) * lengthPerNgram + n + 1]] = 0;
+			}
+		}
+		if (equal == 1) {
+			coef[data[firstOccurOfNgram * lengthPerNgram + n + 1]] = sumOfCoef;
+		}
+		if (sumOfCoef != 0) {
+			// the last real n-gram has not been counted
+			// we eliminate all n-grams with coefficient 0, so realNgramNumber ++ only when sumOfCoef != 0
+			realNgramNumber += 1;
+		}
+	}
+	else {
+		realNgramNumber = ngramNumber;
+	}
+	return realNgramNumber;
 }

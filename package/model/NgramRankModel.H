@@ -42,5 +42,8 @@ public:
   void
   trainOne(intTensor& ngram, float learningRate, int subBlockSize);
 
+  float
+  distance2(NeuralModel& anotherModel);
+
 };
 

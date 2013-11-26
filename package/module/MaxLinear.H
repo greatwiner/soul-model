@@ -47,6 +47,9 @@ public:
   read(ioFile *iof);
   void
   write(ioFile * iof);
+  float
+  distance2(Module& anotherModule);
+
   int elementNumber;
   int inputSize;
   int outputSize;

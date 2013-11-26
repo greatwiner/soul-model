@@ -61,7 +61,7 @@ Embeddings::backward(floatTensor& gradOutput) {
 }
 
 float
-Embeddings::distance2(Embeddings& anotherLkt) {
+Embeddings::distance2(Module& anotherLkt) {
 	floatTensor distanceMatrix;
 	distanceMatrix.copy(this->weight);
 	distanceMatrix.axpy(anotherLkt.weight, -1);

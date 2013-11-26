@@ -40,7 +40,7 @@ public:
 	updateParameters(float learningRate) = 0;
 
 	float
-	distance2(Embeddings& anotherLkt);
+	distance2(Module& anotherLkt);
 
 	virtual void
 	read(ioFile *iof) = 0;

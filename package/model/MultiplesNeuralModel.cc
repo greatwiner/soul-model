@@ -74,21 +74,21 @@ MultiplesNeuralModel::changeBlockSize(int blockSize) {
 }
 
 void
-MultiplesNeuralModel::trainOne(int modelIndex, intTensor& context, intTensor& word, float learningRate) {
+MultiplesNeuralModel::trainOne(int modelIndex, intTensor& context, intTensor& word, floatTensor& coefTensor, float learningRate) {
 	if (modelIndex < 0 || modelIndex >= this->modelNumber) {
 		cout << "MultiplesNeuralModel has only " << this->modelNumber << " models" << endl;
 		return;
 	}
-	models[modelIndex]->trainOne(context, word, learningRate);
+	models[modelIndex]->trainOne(context, word, coefTensor, learningRate);
 }
 
 void
-MultiplesNeuralModel::trainOne(int modelIndex, intTensor& context, intTensor& word, float learningRate, int subBlockSize) {
+MultiplesNeuralModel::trainOne(int modelIndex, intTensor& context, intTensor& word, floatTensor& coefTensor, float learningRate, int subBlockSize) {
 	if (modelIndex < 0 || modelIndex >= this->modelNumber) {
 		cout << "MultiplesNeuralModel has only " << this->modelNumber << " models" << endl;
 		return;
 	}
-	models[modelIndex]->trainOne(context, word, learningRate, subBlockSize);
+	models[modelIndex]->trainOne(context, word, coefTensor, learningRate, subBlockSize);
 }
 
 floatTensor&
@@ -505,12 +505,12 @@ MultiplesNeuralModel::sequenceTrain(char* prefixModel, int gz, char* prefixDatas
 }
 
 int
-MultiplesNeuralModel::trainTest(int modelIndex, int maxExampleNumber, float weightDecay, string learningRateType, float learningRate, float learningRateDecay, intTensor& gcontext, intTensor& gword) {
+MultiplesNeuralModel::trainTest(int modelIndex, int maxExampleNumber, float weightDecay, string learningRateType, float learningRate, float learningRateDecay, intTensor& gcontext, intTensor& gword, floatTensor& coefTensor) {
 	if (modelIndex < 0 || modelIndex >= this->modelNumber) {
 		cout << "MultiplesNeuralModel has only " << this->modelNumber << " models" << endl;
 		return -1;
 	}
-	return models[modelIndex]->trainTest(maxExampleNumber, weightDecay, learningRateType, learningRate, learningRateDecay, gcontext, gword);
+	return models[modelIndex]->trainTest(maxExampleNumber, weightDecay, learningRateType, learningRate, learningRateDecay, gcontext, gword, coefTensor);
 }
 
 int

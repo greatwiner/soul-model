@@ -87,5 +87,8 @@ public:
   shareWeight(floatTensor& weight);
   // If we need to output something
   ioFile infoIof;
+
+  virtual float
+  distance2(Module& anotherModule) = 0;
 };
 

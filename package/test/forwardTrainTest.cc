@@ -31,6 +31,13 @@ main(int argc, char *argv[])
   intTensor outputNetworkSize;
   intTensor context(n - 1, blockSize);
   intTensor word(blockSize, 1);
+  floatTensor coefTensor(blockSize, 1);
+  floatTensor coefTensor2(2, 1);
+
+  // take all coefficients 1 for each n-gram, can change here
+  coefTensor = 1;
+  coefTensor2 = 1;
+
   context(0, 0) = 0;
   context(1, 0) = 1;
   context(0, 1) = 1;
@@ -118,7 +125,7 @@ main(int argc, char *argv[])
 
   model->probabilityOne.write();
   model->trainTest(maxExampleNumber, weightDecay, learningRateType,
-      learningRate, learningRateDecay, context, word);
+      learningRate, learningRateDecay, context, word, coefTensor);
   cout << "posterior probs:" << endl;
   model->forwardOne(context, word);
   model->probabilityOne.write();
@@ -135,7 +142,7 @@ main(int argc, char *argv[])
   model->forwardOne(context, word);
   model->probabilityOne.write();
   model->trainTest(maxExampleNumber, weightDecay, learningRateType,
-      learningRate, learningRateDecay, context, word);
+      learningRate, learningRateDecay, context, word, coefTensor);
   cout << "posterior probs:" << endl;
   model->forwardOne(context, word);
   model->probabilityOne.write();
@@ -153,7 +160,7 @@ main(int argc, char *argv[])
 
   model->probabilityOne.write();
   model->trainTest(maxExampleNumber, weightDecay, learningRateType,
-      learningRate, learningRateDecay, context, word);
+      learningRate, learningRateDecay, context, word, coefTensor);
   cout << "posterior probs:" << endl;
   model->forwardOne(context, word);
   model->probabilityOne.write();
@@ -170,7 +177,7 @@ main(int argc, char *argv[])
 
   model->probabilityOne.write();
   model->trainTest(maxExampleNumber, weightDecay, learningRateType,
-      learningRate, learningRateDecay, context, word);
+      learningRate, learningRateDecay, context, word, coefTensor);
   cout << "posterior probs:" << endl;
   model->forwardOne(context, word);
   model->probabilityOne.write();

@@ -107,14 +107,13 @@ Linear::updateParameters(float learningRate)
 {
   // weight = - learningRate x input x gradOutput^T
   //        + weight - learningRate * weightDecay * weight
-  weight.gemm(input, 'N', gradOutput, 'T', -learningRate,
-      1 - learningRate * weightDecay);
+  weight.gemm(input, 'N', gradOutput, 'T', -learningRate, 1 - learningRate * weightDecay);
   // bias = -learningRate x gradOutput x V1col + bias
   bias.gemv(gradOutput, 'N', V1col, -learningRate, 1);
 }
 
 float
-Linear::distance2(Linear& anotherLinear) {
+Linear::distance2(Module& anotherLinear) {
 	floatTensor distMatrix;
 	distMatrix.copy(this->weight);
 	distMatrix.axpy(anotherLinear.weight, -1);
@@ -141,17 +140,12 @@ Linear::read(ioFile* iof)
   //cout << "Linear::read here 2" << endl;
 }
 void
-Linear::write(ioFile* iof)
-{
-  iof->writeString(name);
-  // for test
-  cout << "Linear::write name: " << name << endl;
-  weight.write(iof);
-  bias.write(iof);
-  if (name == "Linear_AG") {
-	  // for test
-	  cout << "Linear::write here" << endl;
-	  iof->writeFloat(INIT_VALUE_ADAG);
-	  iof->writeFloat(INIT_VALUE_ADAG);
-  }
+Linear::write(ioFile* iof) {
+	iof->writeString(name);
+	weight.write(iof);
+	bias.write(iof);
+	if (name == "Linear_AG") {
+		iof->writeFloat(INIT_VALUE_ADAG);
+		iof->writeFloat(INIT_VALUE_ADAG);
+	}
 }

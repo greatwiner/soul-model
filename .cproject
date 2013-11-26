@@ -1,7 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<?fileVersion 4.0.0?>
-
-<cproject storage_type_id="org.eclipse.cdt.core.XmlProjectDescriptionStorage">
+<?fileVersion 4.0.0?><cproject storage_type_id="org.eclipse.cdt.core.XmlProjectDescriptionStorage">
 	<storageModule moduleId="org.eclipse.cdt.core.settings">
 		<cconfiguration id="0.255776597">
 			<storageModule buildSystemId="org.eclipse.cdt.managedbuilder.core.configurationDataProvider" id="0.255776597" moduleId="org.eclipse.cdt.core.settings" name="Default">
@@ -33,6 +31,7 @@
 								<option id="org.eclipse.cdt.build.core.settings.holder.incpaths.1088346089" name="Include Paths" superClass="org.eclipse.cdt.build.core.settings.holder.incpaths" valueType="includePath">
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/dokhanh@m109.limsi.fr_soul-model/package/command}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/dokhanh@m109.limsi.fr_soul-model/package/model}&quot;"/>
+									<listOptionValue builtIn="false" value="/people/dokhanh/share/local/src/boost"/>
 								</option>
 								<inputType id="org.eclipse.cdt.build.core.settings.holder.inType.321694938" languageId="org.eclipse.cdt.core.g++" languageName="GNU C++" sourceContentType="org.eclipse.cdt.core.cxxSource,org.eclipse.cdt.core.cxxHeader" superClass="org.eclipse.cdt.build.core.settings.holder.inType"/>
 							</tool>
@@ -41,9 +40,6 @@
 							</tool>
 						</toolChain>
 					</folderInfo>
-					<fileInfo id="0.255776597.346116878" name="NeuralModel.cc" rcbsApplicability="disable" resourcePath="package/model/NeuralModel.cc" toolsToInvoke="org.eclipse.cdt.build.core.settings.holder.1670398181.1142667084">
-						<tool id="org.eclipse.cdt.build.core.settings.holder.1670398181.1142667084" name="GNU C++" superClass="org.eclipse.cdt.build.core.settings.holder.1670398181"/>
-					</fileInfo>
 				</configuration>
 			</storageModule>
 			<storageModule moduleId="org.eclipse.cdt.core.externalSettings"/>

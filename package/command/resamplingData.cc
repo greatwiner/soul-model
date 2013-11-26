@@ -5,10 +5,10 @@
 int
 main(int argc, char *argv[])
 {
-  if (argc != 10)
+  if (argc != 11)
     {
       cout
-          << "dataDesFileName inputVocFileName outputVocFileName n mapIUnk mapOUnk prefixOutputFileName minEpoch maxEpoch"
+          << "dataDesFileName inputVocFileName outputVocFileName n mapIUnk mapOUnk prefixOutputFileName minEpoch maxEpoch modelType"
           << endl;
       return 0;
     }
@@ -28,6 +28,7 @@ main(int argc, char *argv[])
       char* prefixOutputFileName = argv[7];
       int minEpochs = atoi(argv[8]);
       int maxEpochs = atoi(argv[9]);
+      string modelType(argv[10]);
       char outputFileName[260];
       ioFile iofC;
       if (!iofC.check(dataDesFileName, 1))
@@ -44,18 +45,27 @@ main(int argc, char *argv[])
         }
       SoulVocab* inputVoc = new SoulVocab(inputVocFileName);
       SoulVocab* outputVoc = new SoulVocab(outputVocFileName);
-      NgramDataSet* dataSet;
+      DataSet* dataSet;
       char * maxNgramNumberEnv;
       maxNgramNumberEnv = getenv("RESAMPLING_NGRAM_NUMBER");
-      if (maxNgramNumberEnv != NULL)
-        {
-          dataSet = new NgramDataSet(type, n, BOS, inputVoc, outputVoc,
-              mapIUnk, mapOUnk, atoi(maxNgramNumberEnv));
+      if (maxNgramNumberEnv != NULL) {
+    	  if (modelType == OVN_NCE) {
+    		  dataSet = new NgramNCEDataSet(type, n, BOS, inputVoc, outputVoc,
+    				  mapIUnk, mapOUnk, atoi(maxNgramNumberEnv));
+    	  }
+    	  else {
+    		  dataSet = new NgramDataSet(type, n, BOS, inputVoc, outputVoc, mapIUnk, mapOUnk, atoi(maxNgramNumberEnv));
+    	  }
         }
-      else
-        {
-          dataSet = new NgramDataSet(type, n, BOS, inputVoc, outputVoc,
-              mapIUnk, mapOUnk, RESAMPLING_NGRAM_NUMBER);
+      else {
+    	  if (modelType == OVN_NCE) {
+    		  dataSet = new NgramNCEDataSet(type, n, BOS, inputVoc, outputVoc,
+    		                mapIUnk, mapOUnk, RESAMPLING_NGRAM_NUMBER);
+    	  }
+    	  else {
+    		  dataSet = new NgramDataSet(type, n, BOS, inputVoc, outputVoc,
+    				  mapIUnk, mapOUnk, RESAMPLING_NGRAM_NUMBER);
+    	  }
         }
       if (dataSet->data == NULL)
         {
@@ -77,12 +87,17 @@ main(int argc, char *argv[])
           if (resampling)
             {
         	  // for test
-        	  cout << "resamplingData.cc here" << endl;
+        	  //cout << "resamplingData.cc here" << endl;
               resampling = dataSet->resamplingDataDes(dataDesFileName, type);
             }
           cout << "shuffle epoch: " << iter << " with " << dataSet->ngramNumber
               << " ngrams" << endl;
-          dataSet->shuffle(times);
+          if (modelType == OVN_NCE) {
+        	  dynamic_cast<NgramNCEDataSet*>(dataSet)->shuffle(times);
+          }
+          else {
+        	  dynamic_cast<NgramDataSet*>(dataSet)->shuffle(times);
+          }
 
           cout << "write to file : " << outputFileName << endl;
           iofO.takeWriteFile(outputFileName);

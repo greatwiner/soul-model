@@ -9,6 +9,9 @@
 class RecurrentDataSet : public DataSet
 {
 public:
+
+  // indicates if the data has been organized
+  int alreadyCreateTensor;
   // From DataSet
   RecurrentDataSet(int n, SoulVocab* inputVoc, SoulVocab* outputVoc, int cont,
       int blockSize, int maxNgramNumber);

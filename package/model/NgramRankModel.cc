@@ -401,3 +401,8 @@ NgramRankModel::write(ioFile* iof, int closeFile)
   }
 }
 
+float
+NgramRankModel::distance2(NeuralModel& anotherModel) {
+	// TODO
+	return 0;
+}

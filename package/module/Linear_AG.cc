@@ -101,7 +101,7 @@ Linear_AG::updateParameters(float learningRate) {
 }
 
 float
-Linear_AG::distance2(Linear_AG& anotherLinear) {
+Linear_AG::distance2(Module& anotherLinear) {
 	floatTensor distMatrix;
 	distMatrix.copy(this->weight);
 	distMatrix.axpy(anotherLinear.weight, -1);

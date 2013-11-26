@@ -90,7 +90,7 @@ FunctionModel::FunctionModel(int dim, int classNumber, int blockSize,
 }
 
 void
-FunctionModel::trainOne(floatTensor& readData, float learningRate,
+FunctionModel::trainOne(floatTensor& readData, floatTensor& coefTensor, float learningRate,
     int subBlockSize)
 {
   data = 0;
@@ -108,7 +108,7 @@ FunctionModel::trainOne(floatTensor& readData, float learningRate,
   baseNetwork->forward(data);
   //Special because we forward for the main outputNetwork[0]
   outputNetwork->forward(contextFeature);
-  gradInput = outputNetwork->backward(index);
+  gradInput = outputNetwork->backward(index, coefTensor);
   baseNetwork->backward(gradInput);
   outputNetwork->updateParameters(learningRate);
   baseNetwork->updateParameters(learningRate);
@@ -139,6 +139,7 @@ FunctionModel::train(char* dataFileName, int maxExampleNumber, int iteration,
   int nstep;
   nstep = maxExampleNumber * (iteration - 1);
   floatTensor readTensor(blockSize, dim + 1);
+  floatTensor coefTensor(blockSize, 1);
   int currentExampleNumber = 0;
   int percent = 1;
   float aPercent = maxExampleNumber * CONSTPRINT;
@@ -150,22 +151,15 @@ FunctionModel::train(char* dataFileName, int maxExampleNumber, int iteration,
   for (i = 0; i < blockNumber; i++)
     {
       //Read one line and then train
-      readTensor.readStrip(&dataIof); // read file n gram for word and context
+      this->readStripFloat(dataIof, readTensor, coefTensor); // read file n gram for word and context
 
       if (dataIof.getEOF())
         {
           break;
         }
       currentExampleNumber += blockSize;
-      if (learningRateType == LEARNINGRATE_NORMAL)
-        {
-          currentLearningRate = learningRate / (1 + nstep * learningRateDecay);
-        }
-      else if (learningRateType == LEARNINGRATE_DOWN)
-        {
-          currentLearningRate = learningRate;
-        }
-      trainOne(readTensor, currentLearningRate, blockSize);
+      currentLearningRate = this->takeCurrentLearningRate(learningRate, learningRateType, nstep, learningRateDecay);
+      trainOne(readTensor, coefTensor, currentLearningRate, blockSize);
       nstep += blockSize;
 #if PRINT_DEBUG
       if (currentExampleNumber > iPercent)
@@ -180,23 +174,15 @@ FunctionModel::train(char* dataFileName, int maxExampleNumber, int iteration,
   if (remainingNumber != 0 && !dataIof.getEOF())
     {
       floatTensor lastReadTensor(remainingNumber, dim + 1);
-      lastReadTensor.readStrip(&dataIof);
+      this->readStripFloat(dataIof, lastReadTensor, coefTensor);
       floatTensor subReadTensor;
       subReadTensor.sub(readTensor, 0, remainingNumber - 1, 0, dim);
       subReadTensor.copy(lastReadTensor);
 
       if (!dataIof.getEOF())
         {
-          if (learningRateType == LEARNINGRATE_NORMAL)
-            {
-              currentLearningRate = learningRate / (1 + nstep
-                  * learningRateDecay);
-            }
-          else if (learningRateType == LEARNINGRATE_DOWN)
-            {
-              currentLearningRate = learningRate;
-            }
-          trainOne(readTensor, currentLearningRate, remainingNumber);
+          currentLearningRate = this->takeCurrentLearningRate(learningRate, learningRateType, nstep, learningRateDecay);
+          trainOne(readTensor, coefTensor, currentLearningRate, remainingNumber);
         }
     }
 #if PRINT_DEBUG
@@ -584,3 +570,35 @@ FunctionModel::write(ioFile* iof)
   outputNetwork->write(iof);
 }
 
+float
+FunctionModel::takeCurrentLearningRate(float learningRate, string learningRateType, int nstep, float learningRateDecay) {
+	float currentLearningRate = 0;
+	if (learningRateType == LEARNINGRATE_NORMAL) {
+		currentLearningRate = learningRate / (1 + nstep * learningRateDecay);
+	}
+	else if (learningRateType == LEARNINGRATE_DOWN) {
+		currentLearningRate = learningRate;
+	}
+	else if (learningRateType == LEARNINGRATE_ADJUST) {
+		currentLearningRate = learningRate;
+	}
+	else {
+		if (name == OVN_AG) {
+			if (learningRateType == LEARNINGRATE_BAG) {
+				currentLearningRate = learningRate;
+			}
+			else if (learningRateType == LEARNINGRATE_DBAG) {
+				currentLearningRate = learningRate*sqrt(dynamic_cast<LinearSoftmax_AG*>(this->outputNetwork)->cumulGradWeight);
+			}
+			else {
+				cout << "NeuralModel::takeCurrentLearningRate learningRateType " << learningRateType << " does not match" << endl;
+				exit(1);
+			}
+		}
+		else {
+			cout << "NeuralModel::takeCurrentLearningRate what is your learning rate type?" << endl;
+			exit(1);
+		}
+	}
+	return currentLearningRate;
+}

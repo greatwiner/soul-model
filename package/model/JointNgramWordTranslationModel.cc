@@ -184,11 +184,13 @@ JointNgramWordTranslationModel::train(char** dataFileName, int* maxExampleNumber
 	intTensor readTensors[modelNumber];
 	intTensor contexts[modelNumber];
 	intTensor words[modelNumber];
+	floatTensor coefTensor[modelNumber];
 	for (int i = 0; i < modelNumber; i ++) {
 		readTensors[i].resize(models[i]->blockSize, N[i]);
 		contexts[i].sub(readTensors[i], 0, models[i]->blockSize - 1, N[i] - nm[i], N[i] - 2);
 		contexts[i].t();
 		words[i].select(readTensors[i], 1, N[i] - 1);
+		coefTensor[i].resize(models[i]->blockSize, 1);
 	}
 	int currentExampleNumber = 0;
 	int percent = 1;
@@ -209,18 +211,13 @@ JointNgramWordTranslationModel::train(char** dataFileName, int* maxExampleNumber
 	for (i = 0; i < maxBlockNumber; i++) {
 		for (int j = 0; j < modelNumber; j ++) {
 			if (i < blockNumbers[j]) {
-				readTensors[j].readStrip(&dataIof[j]); // read file n gram for word and context
+				models[i]->readStripInt(dataIof[j], readTensors[j], coefTensor[j]); // read file n-gram for word and context
 				if (dataIof[j].getEOF()) {
 					break;
 				}
 				currentExampleNumber += models[j]->blockSize;
-				if (learningRateType == LEARNINGRATE_NORMAL) {
-					currentLearningRate = learningRate / (1 + nstep * learningRateDecay);
-				}
-				else if (learningRateType == LEARNINGRATE_DOWN) {
-					currentLearningRate = learningRate;
-				}
-				models[j]->trainOne(contexts[j], words[j], currentLearningRate, models[j]->blockSize);
+				currentLearningRate = models[j]->takeCurrentLearningRate(learningRate, learningRateType, nstep, learningRateDecay);
+				models[j]->trainOne(contexts[j], words[j], coefTensor[j], currentLearningRate, models[j]->blockSize);
 				nstep += models[j]->blockSize;
 			}
 		}
@@ -238,19 +235,13 @@ JointNgramWordTranslationModel::train(char** dataFileName, int* maxExampleNumber
 			contexts[j] = 0;
 			words[j] = SIGN_NOT_WORD;
 			intTensor lastReadTensor(remainingNumbers[j], N[j]);
-			lastReadTensor.readStrip(&dataIof[j]);
+			models[j]->readStripInt(dataIof[j], lastReadTensor, coefTensor[j]);
 			intTensor subReadTensor;
 			subReadTensor.sub(readTensors[j], 0, remainingNumbers[j] - 1, 0, N[j] - 1);
 			subReadTensor.copy(lastReadTensor);
 			if (!dataIof[j].getEOF()) {
-				if (learningRateType == LEARNINGRATE_NORMAL) {
-					currentLearningRate = learningRate / (1 + nstep
-					  * learningRateDecay);
-				}
-				else if (learningRateType == LEARNINGRATE_DOWN) {
-					currentLearningRate = learningRate;
-				}
-				models[j]->trainOne(contexts[j], words[j], currentLearningRate, remainingNumbers[j]);
+				currentLearningRate = models[j]->takeCurrentLearningRate(learningRate, learningRateType, nstep, learningRateDecay);
+				models[j]->trainOne(contexts[j], words[j], coefTensor[j], currentLearningRate, remainingNumbers[j]);
 			}
 		}
 	}

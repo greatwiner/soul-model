@@ -729,9 +729,9 @@ floatTensor::initializeNormal(outils* otl) {
 float
 floatTensor::initializeNormalOneElement(outils* otl) {
 	// uniformly distributed float numbers
-	float U1=otl->genrand();
+	float U1 = otl->genrand();
 	if (U1 < 0.000001) U1 = 0.000001;
-	float U2=otl->genrand();
+	float U2 = otl->genrand();
 	return sqrt(-2*::log(U1))*cos(2*M_PI*U2);
 }
 

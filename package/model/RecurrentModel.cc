@@ -94,7 +94,7 @@ RecurrentModel::allocation()
     }
   probabilityOne.resize(blockSize, 1);
   int outputNetworkNumber = outputNetworkSize.size[0];
-  outputNetwork = new Module*[outputNetworkNumber];
+  outputNetwork = new ProbOutput*[outputNetworkNumber];
   LinearSoftmax* sl = new LinearSoftmax(hiddenLayerSize, outputNetworkSize(0),
       blockSize, otl);
   outputNetwork[0] = sl;
@@ -252,344 +252,284 @@ RecurrentModel::firstTime(intTensor& context)
 int
 RecurrentModel::train(char* dataFileString, int maxExampleNumber,
     int iteration, string learningRateType, float learningRate,
-    float learningRateDecay)
-{
-  ioFile dataIof;
-  dataIof.takeReadFile(dataFileString);
-  int ngramNumber;
-  dataIof.readInt(ngramNumber);
-  int N;
-  dataIof.readInt(N);
-  if (N < n)
-    {
-      cerr << "ERROR: N in data is wrong:" << N << " < " << n << endl;
-      exit(1);
+    float learningRateDecay) {
+	ioFile dataIof;
+	dataIof.takeReadFile(dataFileString);
+	int ngramNumber;
+	dataIof.readInt(ngramNumber);
+	int N;
+	dataIof.readInt(N);
+	if (N < n) {
+		cerr << "ERROR: N in data is wrong:" << N << " < " << n << endl;
+		exit(1);
     }
-  int dataBlockSize;
-  dataIof.readInt(dataBlockSize);
-  if (dataBlockSize != blockSize)
-    {
-      cerr << "ERROR: blockSize (" << dataBlockSize << ") in data is wrong"
-          << endl;
-      exit(1);
+	int dataBlockSize;
+	dataIof.readInt(dataBlockSize);
+	if (dataBlockSize != blockSize) {
+		cerr << "ERROR: blockSize (" << dataBlockSize << ") in data is wrong" << endl;
+		exit(1);
     }
-  if (maxExampleNumber > ngramNumber || maxExampleNumber == 0)
-    {
-      maxExampleNumber = ngramNumber;
+	if (maxExampleNumber > ngramNumber || maxExampleNumber == 0) {
+		maxExampleNumber = ngramNumber;
     }
-  float currentLearningRate;
-  int nstep;
-  nstep = maxExampleNumber * (iteration - 1);
-  intTensor readTensor(blockSize, N);
-  intTensor selectReadTensor0;
-  intTensor selectReadTensor1;
-  intTensor context;
-  intTensor word;
-  context.sub(readTensor, 0, blockSize - 1, N - n, N - 2);
-  context.t();
-  word.select(readTensor, 1, N - 1);
-  int currentExampleNumber = 0;
-  int percent = 1;
-  float aPercent = maxExampleNumber * CONSTPRINT;
-  float iPercent = aPercent * percent;
-  int blockNumber = maxExampleNumber / blockSize;
-  int remainingNumber = maxExampleNumber - blockSize * blockNumber;
-  int i, j;
-  cout << maxExampleNumber << " examples" << endl;
-  for (i = 0; i < blockNumber; i++)
-    {
-      //Read one line and then train
-      if (i == 0)
-        {
-          readTensor.readStrip(&dataIof); // read file n gram for word and context
+	float currentLearningRate;
+	int nstep;
+	nstep = maxExampleNumber * (iteration - 1);
+	intTensor readTensor(blockSize, N);
+	intTensor selectReadTensor0;
+	intTensor selectReadTensor1;
+	intTensor context;
+	intTensor word;
+	floatTensor coefTensor(blockSize, 1);
+	context.sub(readTensor, 0, blockSize - 1, N - n, N - 2);
+	context.t();
+	word.select(readTensor, 1, N - 1);
+	int currentExampleNumber = 0;
+	int percent = 1;
+	float aPercent = maxExampleNumber * CONSTPRINT;
+	float iPercent = aPercent * percent;
+	int blockNumber = maxExampleNumber / blockSize;
+	int remainingNumber = maxExampleNumber - blockSize * blockNumber;
+	int i, j;
+	cout << maxExampleNumber << " examples" << endl;
+	for (i = 0; i < blockNumber; i++) {
+		//Read one line and then train
+		if (i == 0) {
+			// read file n gram for word and context
+			this->readStripInt(dataIof, readTensor, coefTensor);
         }
-      else
-        {
-          for (j = 0; j < N - 1; j++)
-            {
-              selectReadTensor0.select(readTensor, 1, j);
-              selectReadTensor1.select(readTensor, 1, j + 1);
-              selectReadTensor0.copy(selectReadTensor1);
+		else {
+			for (j = 0; j < N - 1; j++) {
+				selectReadTensor0.select(readTensor, 1, j);
+				selectReadTensor1.select(readTensor, 1, j + 1);
+				selectReadTensor0.copy(selectReadTensor1);
             }
-          selectReadTensor0.select(readTensor, 1, N - 1);
-          selectReadTensor0.readStrip(&dataIof);
+			selectReadTensor0.select(readTensor, 1, N - 1);
+			selectReadTensor0.readStrip(&dataIof);
+			this->readStripInt(dataIof, selectReadTensor0, coefTensor);
         }
-      if (dataIof.getEOF())
-        {
-          break;
+		if (dataIof.getEOF()) {
+			break;
         }
-      currentExampleNumber += blockSize;
-      if (learningRateType == LEARNINGRATE_NORMAL)
-        {
-          currentLearningRate = learningRate / (1 + nstep * learningRateDecay);
-        }
-      else if (learningRateType == LEARNINGRATE_DOWN)
-        {
-          currentLearningRate = learningRate;
-        }
-      trainOne(context, word, currentLearningRate, blockSize);
-      nstep += blockSize;
+		currentExampleNumber += blockSize;
+		currentLearningRate = this->takeCurrentLearningRate(learningRate, learningRateType, nstep, learningRateDecay);
+		trainOne(context, word, coefTensor, currentLearningRate, blockSize);
+		nstep += blockSize;
 #if PRINT_DEBUG
-      if (currentExampleNumber > iPercent)
-        {
-          percent++;
-          iPercent = aPercent * percent;
-          cout << (float) currentExampleNumber / maxExampleNumber << " ... "
-              << flush;
+		if (currentExampleNumber > iPercent) {
+			percent++;
+			iPercent = aPercent * percent;
+			cout << (float) currentExampleNumber / maxExampleNumber << " ... "
+				 << flush;
         }
 #endif
     }
-  if (remainingNumber != 0 && !dataIof.getEOF())
-    {
-      context = 0;
-      word = SIGN_NOT_WORD;
-      intTensor lastReadTensor(remainingNumber, N);
-      lastReadTensor.readStrip(&dataIof);
-      intTensor subReadTensor;
-      subReadTensor.sub(readTensor, 0, remainingNumber - 1, 0, N - 1);
-      subReadTensor.copy(lastReadTensor);
-      if (!dataIof.getEOF())
-        {
-          if (learningRateType == LEARNINGRATE_NORMAL)
-            {
-              currentLearningRate = learningRate / (1 + nstep
-                  * learningRateDecay);
-            }
-          else if (learningRateType == LEARNINGRATE_DOWN)
-            {
-              currentLearningRate = learningRate;
-            }
-          trainOne(context, word, currentLearningRate, remainingNumber);
+	if (remainingNumber != 0 && !dataIof.getEOF()) {
+		context = 0;
+		word = SIGN_NOT_WORD;
+		intTensor lastReadTensor(remainingNumber, N);
+		this->readStripInt(dataIof, lastReadTensor, coefTensor);
+		intTensor subReadTensor;
+		subReadTensor.sub(readTensor, 0, remainingNumber - 1, 0, N - 1);
+		subReadTensor.copy(lastReadTensor);
+		if (!dataIof.getEOF()) {
+			currentLearningRate = takeCurrentLearningRate(learningRate, learningRateType, nstep, learningRateDecay);
+			trainOne(context, word, coefTensor, currentLearningRate, remainingNumber);
         }
     }
 #if PRINT_DEBUG
-  cout << endl;
+	cout << endl;
 #endif
-  return 1;
+	return 1;
 }
 
 int
-RecurrentModel::forwardProbability(intTensor& ngramTensor,
-    floatTensor& probTensor)
-{
+RecurrentModel::forwardProbability(intTensor& ngramTensor, floatTensor& probTensor) {
 	// for test
 	//cout << "RecurrentModel::forwardProbability here" << endl;
-  int bkBlockSize = blockSize;
-  if (cont && recurrent)
-    {
-      changeBlockSize(1);
+	int bkBlockSize = blockSize;
+	// in the continuous case, we do the inference with blockSize = 1
+	if (cont && recurrent) {
+		changeBlockSize(1);
     }
-  firstTime();
-  int localWord;
-  int idParent;
-  int i;
-  float localProb;
-  int idWord;
-  int ngramNumber = ngramTensor.size[0];
-  intTensor oneLocalCodeWord;
-  intTensor bContext(n - 1, blockSize);
-  intTensor selectContext;
-  intTensor selectBContext;
-  intTensor context;
-  context.sub(ngramTensor, 0, ngramNumber - 1, 0, n - 2);
-  intTensor contextFlag;
-  contextFlag.select(ngramTensor, 1, n + 2);
-  intTensor word;
-  word.select(ngramTensor, 1, n - 1);
-  intTensor order;
-  order.select(ngramTensor, 1, n + 1);
-  int ngramId = 0;
-  int ngramId2 = 0;
-  int rBlockSize;
-  int nextId;
-  int percent = 1;
-  float aPercent = ngramNumber * CONSTPRINT;
-  float iPercent = aPercent * percent;
-  bContext = 0;
-  do
-    {
-      ngramId2 = ngramId;
-      rBlockSize = 0;
+	firstTime();
+	int localWord;
+	int idParent;
+	int i;
+	float localProb;
+	int idWord;
+	int ngramNumber = ngramTensor.size[0];
+	intTensor oneLocalCodeWord;
+	intTensor bContext(n - 1, blockSize);
+	intTensor selectContext;
+	intTensor selectBContext;
+	intTensor context;
+	context.sub(ngramTensor, 0, ngramNumber - 1, 0, n - 2);
+	intTensor contextFlag;
+	contextFlag.select(ngramTensor, 1, n + 2);
+	intTensor word;
+	word.select(ngramTensor, 1, n - 1);
+	intTensor order;
+	order.select(ngramTensor, 1, n + 1);
+	int ngramId = 0;
+	int ngramId2 = 0;
+	int rBlockSize;
+	int nextId;
+	int percent = 1;
+	float aPercent = ngramNumber * CONSTPRINT;
+	float iPercent = aPercent * percent;
+	bContext = 0;
+	do {
+		ngramId2 = ngramId;
+		rBlockSize = 0;
 
-      while (rBlockSize < blockSize && ngramId < ngramNumber)
-        {
-          selectBContext.select(bContext, 1, rBlockSize);
-          selectContext.select(context, 0, ngramId);
-          selectBContext.copy(selectContext);
-          ngramId = contextFlag(ngramId);
-          rBlockSize++;
+		while (rBlockSize < blockSize && ngramId < ngramNumber) {
+			selectBContext.select(bContext, 1, rBlockSize);
+			selectContext.select(context, 0, ngramId);
+			selectBContext.copy(selectContext);
+			ngramId = contextFlag(ngramId);
+			rBlockSize++;
         }
-      rBlockSize = 0;
-      firstTime(bContext);
-      baseNetwork->forward(bContext);
-      mainProb = outputNetwork[0]->forward(contextFeature);
-      while (rBlockSize < blockSize && ngramId2 < ngramNumber)
-        {
-          doneForward = 0;
-          nextId = contextFlag(ngramId2);
-          for (; ngramId2 < nextId; ngramId2++)
-            {
-              if (order(ngramId2) != SIGN_NOT_WORD)
-                {
-                  intTensor oneLocalCodeWord;
-                  idWord = word(ngramId2);
-                  oneLocalCodeWord.select(codeWord, 0, idWord);
-                  localWord = oneLocalCodeWord(1);
-                  localProb = mainProb(localWord, rBlockSize);
-                  for (i = 2; i < maxCodeWordLength; i += 2)
-                    {
-                      if (oneLocalCodeWord(i) == SIGN_NOT_WORD)
-                        {
-                          break;
+		rBlockSize = 0;
+		firstTime(bContext);
+		baseNetwork->forward(bContext);
+		mainProb = outputNetwork[0]->forward(contextFeature);
+		while (rBlockSize < blockSize && ngramId2 < ngramNumber) {
+			doneForward = 0;
+			nextId = contextFlag(ngramId2);
+			for (; ngramId2 < nextId; ngramId2++) {
+				if (order(ngramId2) != SIGN_NOT_WORD) {
+					intTensor oneLocalCodeWord;
+					idWord = word(ngramId2);
+					oneLocalCodeWord.select(codeWord, 0, idWord);
+					localWord = oneLocalCodeWord(1);
+					localProb = mainProb(localWord, rBlockSize);
+					for (i = 2; i < maxCodeWordLength; i += 2) {
+						if (oneLocalCodeWord(i) == SIGN_NOT_WORD) {
+							break;
                         }
-                      localWord = oneLocalCodeWord(i + 1);
-                      idParent = oneLocalCodeWord(i);
-                      if (!doneForward(idParent))
-                        {
-                          selectContextFeature.select(contextFeature, 1,
-                              rBlockSize);
-                          outputNetwork[idParent]->forward(selectContextFeature);
-                          doneForward(idParent) = 1;
+						localWord = oneLocalCodeWord(i + 1);
+						idParent = oneLocalCodeWord(i);
+						if (!doneForward(idParent)) {
+							selectContextFeature.select(contextFeature, 1, rBlockSize);
+							outputNetwork[idParent]->forward(selectContextFeature);
+							doneForward(idParent) = 1;
                         }
-                      localProb *= outputNetwork[idParent]->output(localWord);
+						localProb *= outputNetwork[idParent]->output(localWord);
                     }
-                  probTensor(order(ngramId2)) = localProb;
+					probTensor(order(ngramId2)) = localProb;
                 }
             }
-          rBlockSize++;
+			rBlockSize++;
         }
 #if PRINT_DEBUG
-      if (ngramId > iPercent)
-        {
-          percent++;
-          iPercent = aPercent * percent;
-          cout << (float) ngramId / ngramNumber << " ... " << flush;
+		if (ngramId > iPercent) {
+			percent++;
+			iPercent = aPercent * percent;
+			cout << (float) ngramId / ngramNumber << " ... " << flush;
         }
 #endif
     }
-  while (ngramId < ngramNumber);
+	while (ngramId < ngramNumber);
 #if PRINT_DEBUG
-  cout << endl;
+	cout << endl;
 #endif
-  if (cont && recurrent)
-    {
-      changeBlockSize(bkBlockSize);
+	if (cont && recurrent) {
+		changeBlockSize(bkBlockSize);
     }
-  return 1;
+	return 1;
 }
 
 float
-RecurrentModel::distance2(RecurrentModel& anotherModel) {
+RecurrentModel::distance2(NeuralModel& anotherModel) {
     float distSquared = 0;
     distSquared += baseNetwork->lkt->distance2(*(anotherModel.baseNetwork->lkt));
     for (int i = 0; i < hiddenLayerSizeArray.size[0]; i++) {
-    	if (RRLinear* modules_casted=dynamic_cast<RRLinear*>(baseNetwork->modules[i])) {
-    		RRLinear* another_modules_casted=dynamic_cast<RRLinear*>(anotherModel.baseNetwork->modules[i]);
-    		distSquared+=modules_casted->distance2(*another_modules_casted);
-    	}
-    	if (Linear* modules_casted1=dynamic_cast<Linear*>(baseNetwork->modules[i])) {
-			Linear* another_modules_casted1=dynamic_cast<Linear*>(anotherModel.baseNetwork->modules[i]);
-			distSquared+=modules_casted1->distance2(*another_modules_casted1);
-		}
+    	distSquared += baseNetwork->modules[i]->distance2(*anotherModel.baseNetwork->modules[i]);
     }
     for (int i = 0; i < outputNetworkNumber; i++) {
-    	distSquared+=dynamic_cast<LinearSoftmax*>(outputNetwork[i])->distance2(*dynamic_cast<LinearSoftmax*>(anotherModel.outputNetwork[i]));
+    	distSquared += outputNetwork[i]->distance2(*anotherModel.outputNetwork[i]);
     }
     return distSquared;
 }
 
 void
-RecurrentModel::read(ioFile* iof, int allocation, int blockSize)
-{
+RecurrentModel::read(ioFile* iof, int allocation, int blockSize) {
+	string readFormat;
+	iof->readString(name);
+	iof->readString(readFormat);
+	inputVoc = new SoulVocab();
+	outputVoc = new SoulVocab();
+	iof->readInt(inputVoc->wordNumber);
+	iof->readInt(outputVoc->wordNumber);
+	if (blockSize != 0) {
+		this->blockSize = blockSize;
+    }
+	else {
+		this->blockSize = DEFAULT_BLOCK_SIZE;
+    }
+	iof->readInt(n);
+	iof->readInt(dimensionSize);
+	iof->readInt(hiddenNumber);
+	iof->readString(nonLinearType);
+	iof->readInt(maxCodeWordLength);
+	iof->readInt(outputNetworkNumber);
 	// for test
-	//cout << "RecurrentModel::read here 10" << endl;
-  string readFormat;
-  iof->readString(name);
-  iof->readString(readFormat);
-  // for test
-  //cout << "RecurrentModel::read here" << endl;
-  inputVoc = new SoulVocab();
-  outputVoc = new SoulVocab();
-  // for test
-  //cout << "RecurrentModel::read here 1" << endl;
-  iof->readInt(inputVoc->wordNumber);
-  iof->readInt(outputVoc->wordNumber);
-  // for test
-  //cout << "RecurrentModel::read here 2" << endl;
-  if (blockSize != 0)
-    {
-      this->blockSize = blockSize;
+	//cout << "RecurrentModel::read here 3" << endl;
+	codeWord.resize(outputVoc->wordNumber, maxCodeWordLength);
+	outputNetworkSize.resize(outputNetworkNumber, 1);
+	codeWord.read(iof);
+	outputNetworkSize.read(iof);
+	hiddenLayerSizeArray.resize(hiddenNumber, 1);
+	hiddenLayerSizeArray.read(iof);
+	hiddenLayerSize = hiddenLayerSizeArray(hiddenLayerSizeArray.length - 1);
+	// for test
+	//cout << "RecurrentModel::read here 4" << endl;
+	if (allocation) {
+		// for test
+		//cout << "RecurrentModel::read here 5" << endl;
+		this->allocation();
     }
-  else
-    {
-      this->blockSize = DEFAULT_BLOCK_SIZE;
+	// for test
+	//cout << "RecurrentModel::read here 6" << endl;
+	baseNetwork->read(iof);
+	int i;
+	// for test
+	//cout << "RecurrentModel::read here 7" << endl;
+	for (i = 0; i < outputNetworkSize.size[0]; i++) {
+		outputNetwork[i]->read(iof);
     }
-  iof->readInt(n);
-  iof->readInt(dimensionSize);
-  iof->readInt(hiddenNumber);
-  iof->readString(nonLinearType);
-  iof->readInt(maxCodeWordLength);
-  iof->readInt(outputNetworkNumber);
-  // for test
-  cout << "RecurrentModel::read here 3" << endl;
-  codeWord.resize(outputVoc->wordNumber, maxCodeWordLength);
-  outputNetworkSize.resize(outputNetworkNumber, 1);
-  codeWord.read(iof);
-  outputNetworkSize.read(iof);
-  hiddenLayerSizeArray.resize(hiddenNumber, 1);
-  hiddenLayerSizeArray.read(iof);
-  hiddenLayerSize = hiddenLayerSizeArray(hiddenLayerSizeArray.length - 1);
-  // for test
-  //cout << "RecurrentModel::read here 4" << endl;
-  if (allocation)
-    {
-	  // for test
-	  //cout << "RecurrentModel::read here 5" << endl;
-      this->allocation();
-    }
-  // for test
-  //cout << "RecurrentModel::read here 6" << endl;
-  baseNetwork->read(iof);
-  int i;
-  // for test
-  //cout << "RecurrentModel::read here 7" << endl;
-  for (i = 0; i < outputNetworkSize.size[0]; i++)
-    {
-      outputNetwork[i]->read(iof);
-    }
-  // for test
-  //cout << "RecurrentModel::read here 8" << endl;
-  inputVoc->read(iof);
-  // for test
-  //cout << "RecurrentModel::read here 9" << endl;
-  outputVoc->read(iof);
+	// for test
+	//cout << "RecurrentModel::read here 8" << endl;
+	inputVoc->read(iof);
+	// for test
+	//cout << "RecurrentModel::read here 9" << endl;
+	outputVoc->read(iof);
 }
 void
-RecurrentModel::write(ioFile* iof, int closeFile)
-{
-  iof->writeString(name);
-  iof->writeString(iof->format);
-  iof->writeInt(inputVoc->wordNumber);
-  iof->writeInt(outputVoc->wordNumber);
-  iof->writeInt(n);
-  iof->writeInt(dimensionSize);
-  iof->writeInt(hiddenNumber);
-  iof->writeString(nonLinearType);
-  iof->writeInt(maxCodeWordLength);
-  iof->writeInt(outputNetworkNumber);
-  codeWord.write(iof);
-  outputNetworkSize.write(iof);
-  hiddenLayerSizeArray.write(iof);
-  baseNetwork->write(iof);
-  int i;
-  for (i = 0; i < outputNetworkSize.size[0]; i++)
-    {
-      outputNetwork[i]->write(iof);
+RecurrentModel::write(ioFile* iof, int closeFile) {
+	iof->writeString(name);
+	iof->writeString(iof->format);
+	iof->writeInt(inputVoc->wordNumber);
+	iof->writeInt(outputVoc->wordNumber);
+	iof->writeInt(n);
+	iof->writeInt(dimensionSize);
+	iof->writeInt(hiddenNumber);
+	iof->writeString(nonLinearType);
+	iof->writeInt(maxCodeWordLength);
+	iof->writeInt(outputNetworkNumber);
+	codeWord.write(iof);
+	outputNetworkSize.write(iof);
+	hiddenLayerSizeArray.write(iof);
+	baseNetwork->write(iof);
+	int i;
+	for (i = 0; i < outputNetworkSize.size[0]; i++) {
+		outputNetwork[i]->write(iof);
     }
-  inputVoc->write(iof);
-  outputVoc->write(iof);
-  if (closeFile == 1) {
-	  iof->freeWriteFile();
-  }
+	inputVoc->write(iof);
+	outputVoc->write(iof);
+	if (closeFile == 1) {
+		iof->freeWriteFile();
+	}
 }
 

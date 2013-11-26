@@ -8,39 +8,18 @@
  Basically, this code represent a Linear Layer  join with a softmax
  Ask Linear.H for more
  *******************************************************************/
-class LinearSoftmax : public Module
+class LinearSoftmax : public ProbOutput
 {
 public:
-  /*same as Linear */
-  floatTensor gradOutput;
-  floatTensor input;
-  floatTensor softmaxVCol;
-  floatTensor V1col;
-  floatTensor softmaxV1row;
-
-  /* Specific, only used for bunch mode computation*/
-  floatTensor selectGradOutput;
-  floatTensor preOutput;
-  floatTensor selectOutput;
-  floatTensor selectPreOutput;
-  outils* otl;
   LinearSoftmax();
   LinearSoftmax(int inputSize, int outputSize, int blockSize, outils* otl);
   ~LinearSoftmax();
   void
   reset();
-  void
-  changeBlockSize(int blockSize);
   floatTensor&
-  forward(floatTensor& input);
-  floatTensor&
-  backward(floatTensor& word);
-  floatTensor&
-  backward(intTensor& word);
+  backward(intTensor& word, floatTensor& coefTensor);
   void
   updateParameters(float learningRate);
-  float
-  distance2(LinearSoftmax& anotherOutput);
   void
   read(ioFile *iof);
   void

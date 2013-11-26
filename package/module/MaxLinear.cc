@@ -191,3 +191,9 @@ MaxLinear::write(ioFile* iof)
   weight.write(iof);
   bias.write(iof);
 }
+
+float
+MaxLinear::distance2(Module& anotherModule) {
+	// TODO
+	return 0;
+}

@@ -81,3 +81,9 @@ BLinear::write(ioFile* iof)
   weight.write(iof);
   bias.write(iof);
 }
+
+float
+BLinear::distance2(Module& anotherModule) {
+	// TODO
+	return 0;
+}

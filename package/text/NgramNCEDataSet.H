@@ -1,6 +1,7 @@
 class NgramNCEDataSet : public DataSet {
 public:
 	int lengthPerNgram;
+	int realNgramNumberAfterGrouping;
 
 	// coefficient for each ngram;
 	float* coef;
@@ -23,7 +24,11 @@ public:
 	resamplingSentence(int totalLineNumber, int resamplingLineNumber,
 	int* resamplingLineId);
 	int
+	readTextNoCoef(ioFile* iof);
+	int
 	readText(ioFile* iof);
+	int
+	resamplingTextNoCoef(ioFile* iof, int totalLineNumber, int resamplingLineNumber);
 	int
 	resamplingText(ioFile* iof, int totalLineNumber, int resamplingLineNumber);
 
@@ -32,6 +37,9 @@ public:
 
 	int
 	readTextNgram(ioFile* iof);
+	// the same readTextNgram, but with a coefficient at the end of each line
+	int
+	readTextNgramWithCoef(ioFile* iof);
 
 	void
 	writeReBiNgram(ioFile* iof);
@@ -42,6 +50,9 @@ public:
 	//Other functions
 	void
 	shuffle(int times);
+	// grouping same n-gram in adding their coefficients, return the number of different n-grams
+	int
+	groupingNgram();
 
 	void
 	sortNgram();

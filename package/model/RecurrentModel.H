@@ -36,7 +36,7 @@ public:
   forwardProbability(intTensor& ngramTensor, floatTensor& probTensor);
 
   float
-  distance2(RecurrentModel& anotherModel);
+  distance2(NeuralModel& anotherModel);
 
   //IO functions
   void

@@ -236,3 +236,9 @@ RLinear::write(ioFile* iof)
       weight.write(iof);
     }
 }
+
+float
+RLinear::distance2(Module& anotherModule) {
+	// TODO
+	return 0;
+}

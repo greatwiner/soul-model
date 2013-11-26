@@ -48,3 +48,8 @@ Tanh::write(ioFile* iof)
 {
   iof->writeString((char*) "Tanh");
 }
+
+float
+Tanh::distance2(Module& anotherModule) {
+	return 0;
+}

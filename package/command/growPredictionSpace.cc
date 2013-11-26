@@ -99,10 +99,10 @@ main(int argc, char *argv[])
       inModel->outputNetworkSize.resize(newOutputNetworkSize);
       inModel->outputNetworkSize.copy(newOutputNetworkSize);
       //New outputNetwork
-      Module** oldOutputNetwork = inModel->outputNetwork;
+      ProbOutput** oldOutputNetwork = inModel->outputNetwork;
       inModel->outputNetworkNumber = newOutputNetworkSize.size[0];
 
-      inModel->outputNetwork = new Module*[inModel->outputNetworkNumber];
+      inModel->outputNetwork = new ProbOutput*[inModel->outputNetworkNumber];
       LinearSoftmax* sl = new LinearSoftmax(inModel->hiddenLayerSize,
           inModel->outputNetworkSize(0), inModel->blockSize, inModel->otl);
       inModel->outputNetwork[0] = sl;

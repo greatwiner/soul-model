@@ -48,4 +48,10 @@ public:
   int
   findPos(intTensor& pos, intTensor& dis);
 
+  void
+  shuffle(int times);
+
+  int
+  writeReBiNgram();
+
 };

@@ -22,8 +22,9 @@
   {\
     sourceModel = new RecurrentModel();\
   }\
-  else if (name##sourceModel == WTOVN )\
+  else if (name##sourceModel == WTOVN || name##sourceModel == WTOVN_NCE)\
   {\
+	/*cout << "mainModel::READMODEL here" << endl;*/\
     sourceModel = new NgramWordTranslationModel();\
   }\
   else if (name##sourceModel == PTOVN )\

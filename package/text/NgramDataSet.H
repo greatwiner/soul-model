@@ -38,6 +38,9 @@ public:
   writeReBiNgram(ioFile* iof);
 
   int
+  writeReBiNgram();
+
+  int
   readCoBiNgram(ioFile* iof);
 
   float

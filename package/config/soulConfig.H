@@ -51,7 +51,7 @@ using namespace std;
 #define ACC_RATE                        1.1
 // UNDO: if UNDO = 1, and LEARNINGRATE_TYPE = ADJUST, we back to the precedent model if the perplexity is not improved
 #define UNDO                            1
-// transfer from the old version without shareW in modules to the new version with shareW variable
+// transfer from the old version without haveMemory to the new version with haveMemory variable
 #define READ_SHARE_W                    1
 
 /*******************************************************************
@@ -94,6 +94,7 @@ using namespace std;
 // dwt: discriminative word tuple => word translation model
 // dt: discriminative tuple => word translation model
 #define WTOVN  "dwtovn" // word translation one vector n-gram
+#define WTOVN_NCE "dwtovn_nce" // word translation one vector n-gram nce
 #define PTOVN  "dtovn" // phrase translation one vector n-gram
 // All models below are not useful
 #define RANKOVN  "rankovn" // ranking one vector n-gram

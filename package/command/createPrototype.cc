@@ -1,28 +1,23 @@
 #include "mainModel.H"
-void
-getHiddenCode(char* input, intTensor& outputTensor)
-{
-  char hidden[260];
-  strcpy(hidden, input);
-  int hiddenNumber = 1;
-  for (int i = 0; i < strlen(input); i++)
-    {
-      if (hidden[i] == '_')
-        {
-          hidden[i] = ' ';
-          hiddenNumber++;
-        }
-    }
-  string strHidden = hidden;
-  istringstream streamHidden(strHidden);
-  string word;
-  outputTensor.resize(hiddenNumber, 1);
-  hiddenNumber = 0;
-  while (streamHidden >> word)
-    {
-      outputTensor(hiddenNumber) = atoi(word.c_str());
-      hiddenNumber++;
-    }
+void getHiddenCode(char* input, intTensor& outputTensor) {
+	char hidden[260];
+	strcpy(hidden, input);
+	int hiddenNumber = 1;
+	for (int i = 0; i < strlen(input); i++) {
+		if (hidden[i] == '_') {
+			hidden[i] = ' ';
+			hiddenNumber++;
+		}
+	}
+	string strHidden = hidden;
+	istringstream streamHidden(strHidden);
+	string word;
+	outputTensor.resize(hiddenNumber, 1);
+	hiddenNumber = 0;
+	while (streamHidden >> word) {
+		outputTensor(hiddenNumber) = atoi(word.c_str());
+		hiddenNumber++;
+	}
 }
 int
 main(int argc, char *argv[])
@@ -42,18 +37,15 @@ main(int argc, char *argv[])
           << endl;
       return 1;
     }
-  else
-    {
-      srand48(time(NULL));
-      srand(time(NULL));
-      NeuralModel* modelPrototype;
-      string name = argv[1];
-      if (name != CN && name != OVN && name != OVNB && name != MAXOVN && name != ROVN && name
-          != LBL && name != OVN_AG && name != OVN_NCE)
-        {
-          cerr << "Which model do you want?" << endl;
-          return 1;
-        }
+  else {
+		srand48 (time(NULL));srand(time(NULL));
+		NeuralModel* modelPrototype;
+		string name = argv[1];
+		if (name != CN && name != OVN && name != OVNB && name != MAXOVN && name != ROVN && name != LBL && name != OVN_AG && name != OVN_NCE)
+		{
+			cerr << "Which model do you want?" << endl;
+			return 1;
+		}
 
       char* contextVocFileName = argv[2];
       char* predictVocFileName = argv[3];

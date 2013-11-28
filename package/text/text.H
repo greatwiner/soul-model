@@ -13,6 +13,7 @@
 #include "NgramNCEDataSet.H"
 #include "NgramPhraseTranslationDataSet.H"
 #include "NgramWordTranslationDataSet.H"
+#include "NgramNCEWordTranslationDataSet.H"
 #include "RecurrentDataSet.H"
 #include "FunctionDataSet.H"
 

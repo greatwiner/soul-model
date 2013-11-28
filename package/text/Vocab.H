@@ -35,6 +35,9 @@ public:
   void
   write(ioFile* iof);
 
+  void
+  getWordByIndex(string* arrayOfString);
+
   int ss;
   int es;
   int unk;

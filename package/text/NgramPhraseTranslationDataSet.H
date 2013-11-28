@@ -67,7 +67,7 @@ public:
   shuffle(int times);
   void
   sortNgram();
-  void
+  int
   writeReBiNgram();
   float
   computePerplexity();

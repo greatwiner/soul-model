@@ -1,8 +1,7 @@
 #include "mainModel.H"
 #include "ioFile.H"
 
-int
-main(int argc, char* argv[]) {
+int main(int argc, char* argv[]) {
 	if (argc != 6) {
 		cout << "fileName outputFileName blockSize oldName newName" << endl;
 		return 1;
@@ -26,20 +25,20 @@ main(int argc, char* argv[]) {
 	if (model->name != oldName) {
 		cout << "Type is not good, the program will exit" << endl;
 		return 1;
-	}
-	else {
+	} else {
 		model->name = newName;
 		// for test
 		cout << "ovn2ovnb::main model->name: " << model->name << endl;
 		// change the names of corresponding modules with AdaGrad
 		if (model->name == OVN_AG) {
 			model->baseNetwork->lkt->name = "LookupTable_AG";
-			for (int i = 0; i < model->baseNetwork->size; i ++) {
-				if (Linear* casted_linear = dynamic_cast<Linear*>(model->baseNetwork->modules[i])) {
+			for (int i = 0; i < model->baseNetwork->size; i++) {
+				if (Linear* casted_linear =
+						dynamic_cast<Linear*>(model->baseNetwork->modules[i])) {
 					casted_linear->name = "Linear_AG";
 				}
 			}
-			for (int i = 0; i < model->outputNetworkNumber; i ++) {
+			for (int i = 0; i < model->outputNetworkNumber; i++) {
 				model->outputNetwork[i]->name = "LinearSoftmax_AG";
 			}
 		}

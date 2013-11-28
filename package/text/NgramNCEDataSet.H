@@ -1,13 +1,14 @@
 class NgramNCEDataSet : public DataSet {
 public:
 	int lengthPerNgram;
-	int realNgramNumberAfterGrouping;
 
 	// coefficient for each ngram;
 	float* coef;
 
 	NgramNCEDataSet(int type, int n, int BOS, SoulVocab* inputVoc,
 	      SoulVocab* outputVoc, int mapIUnk, int mapOUnk, int maxNgramNumber);
+
+	~NgramNCEDataSet();
 
 	int
 	setMaxNgramNumber(int maxNgramNumber);

@@ -36,6 +36,7 @@ all:
 	$(CC) $(FLAGS) separateModels.cc -o $(CBIN_PATH)separateModels.exe $(CLIB_INCLUDE) -lmodel -lmodule -ltext -ltensor -lioFile $(LLIB)
 	$(CC) $(FLAGS) rankCreatePrototype.cc -o $(CBIN_PATH)rankCreatePrototype.exe $(CLIB_INCLUDE) -lmodel -lmodule -ltext -ltensor -lioFile $(LLIB)
 	$(CC) $(FLAGS) rankResamplingData.cc -o $(CBIN_PATH)rankResamplingData.exe $(CLIB_INCLUDE) -lmodel -lmodule -ltext -ltensor -lioFile $(LLIB)
+	$(CC) $(FLAGS) disWordTupleCreatePrototype.cc -o $(CBIN_PATH)disWordTupleCreatePrototype.exe $(CLIB_INCLUDE) -lmodel -lmodule -ltext -ltensor -lioFile $(LLIB)
 	#$(CC) $(FLAGS) text2ProbIncrUnk.cc -o $(CBIN_PATH)text2ProbIncrUnk.exe $(CLIB_INCLUDE) -lmodel -lmodule -ltext -ltensor -lioFile $(LLIB)
 	#$(CC) $(FLAGS) generateText.cc -o $(CBIN_PATH)generateText.exe $(CLIB_INCLUDE) -lmodel -lmodule -ltext -ltensor -lioFile $(LLIB)
 	#$(CC) $(FLAGS) generateText2.cc -o $(CBIN_PATH)generateText2.exe $(CLIB_INCLUDE) -lmodel -lmodule -ltext -ltensor -lioFile $(LLIB)

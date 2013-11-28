@@ -6,7 +6,7 @@ all: copy $(CLIB_PATH)libtext.a
 copy:
 		cp *.H $(CINCLUDE_PATH)
 
-$(CLIB_PATH)libtext.a: $(CLIB_PATH)Vocab.o $(CLIB_PATH)DataSet.o $(CLIB_PATH)NgramDataSet.o $(CLIB_PATH)NgramRankDataSet.o $(CLIB_PATH)NgramNCEDataSet.o $(CLIB_PATH)RecurrentDataSet.o $(CLIB_PATH)NgramWordTranslationDataSet.o $(CLIB_PATH)NgramPhraseTranslationDataSet.o $(CLIB_PATH)FunctionDataSet.o
+$(CLIB_PATH)libtext.a: $(CLIB_PATH)Vocab.o $(CLIB_PATH)DataSet.o $(CLIB_PATH)NgramDataSet.o $(CLIB_PATH)NgramRankDataSet.o $(CLIB_PATH)NgramNCEDataSet.o $(CLIB_PATH)RecurrentDataSet.o $(CLIB_PATH)NgramWordTranslationDataSet.o $(CLIB_PATH)NgramNCEWordTranslationDataSet.o $(CLIB_PATH)NgramPhraseTranslationDataSet.o $(CLIB_PATH)FunctionDataSet.o
 		$(ARCH) $(ARCHFLAGS)  $(CLIB_PATH)libtext.a $(alev)
 	
 $(CLIB_PATH)Vocab.o: Vocab.cc
@@ -29,6 +29,9 @@ $(CLIB_PATH)RecurrentDataSet.o: RecurrentDataSet.cc
 		
 $(CLIB_PATH)NgramWordTranslationDataSet.o: NgramWordTranslationDataSet.cc
 		$(CC) $(CFLAGS_OBJECT) $(CLIB_INCLUDE) NgramWordTranslationDataSet.cc -o $(CLIB_PATH)NgramWordTranslationDataSet.o
+		
+$(CLIB_PATH)NgramNCEWordTranslationDataSet.o: NgramNCEWordTranslationDataSet.cc
+		$(CC) $(CFLAGS_OBJECT) $(CLIB_INCLUDE) NgramNCEWordTranslationDataSet.cc -o $(CLIB_PATH)NgramNCEWordTranslationDataSet.o
 		
 $(CLIB_PATH)NgramPhraseTranslationDataSet.o: NgramPhraseTranslationDataSet.cc
 		$(CC) $(CFLAGS_OBJECT) $(CLIB_INCLUDE) NgramPhraseTranslationDataSet.cc -o $(CLIB_PATH)NgramPhraseTranslationDataSet.o
